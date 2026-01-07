@@ -38,21 +38,33 @@
                             <x-heroicon-o-cube class="w-5 h-5 group-hover:text-[#14a2ba]" />
                             <span class="font-medium">Kelola Barang</span>
                         </div>
-                        <x-heroicon-o-chevron-down id="kelola-barang-icon" class="w-4 h-4 transition-transform duration-200 {{ request()->routeIs('user.stok-barang.*') || request()->routeIs('user.pemakaian.*') ? 'rotate-180' : '' }}" />
+                        <x-heroicon-o-chevron-down id="kelola-barang-icon" class="w-4 h-4 transition-transform duration-200 {{ request()->routeIs('user.stok-barang.*') || request()->routeIs('user.barang-masuk.*') || request()->routeIs('user.barang-keluar.*') || request()->routeIs('user.pemakaian.*') ? 'rotate-180' : '' }}" />
                     </button>
                     
                     <!-- Submenu -->
-                    <div id="kelola-barang-submenu" class="{{ request()->routeIs('user.stok-barang.*') || request()->routeIs('user.pemakaian.*') ? '' : 'hidden' }} ml-4 space-y-1">
+                    <div id="kelola-barang-submenu" class="{{ request()->routeIs('user.stok-barang.*') || request()->routeIs('user.barang-masuk.*') || request()->routeIs('user.barang-keluar.*') || request()->routeIs('user.pemakaian.*') ? '' : 'hidden' }} ml-4 space-y-1">
                         <!-- Stok Barang (Read Only) -->
                         <a href="{{ route('user.stok-barang.index') }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('user.stok-barang.*') ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
                             <x-heroicon-o-cube-transparent class="w-4 h-4" />
                             <span class="text-sm font-medium">Stok Barang</span>
                         </a>
+                        
+                        <!-- Barang Masuk (Read Only) -->
+                        <a href="{{ route('user.barang-masuk.index') }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('user.barang-masuk.*') ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
+                            <x-heroicon-o-arrow-down-tray class="w-4 h-4" />
+                            <span class="text-sm font-medium">Barang Masuk</span>
+                        </a>
 
-                        <!-- Barang Keluar / Pemakaian -->
-                        <a href="{{ route('user.pemakaian.index') }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('user.pemakaian.*') ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
+                        <!-- Barang Keluar (Read Only) -->
+                        <a href="{{ route('user.barang-keluar.index') }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('user.barang-keluar.*') ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
                             <x-heroicon-o-arrow-up-tray class="w-4 h-4" />
-                            <span class="text-sm font-medium">Pemakaian Barang</span>
+                            <span class="text-sm font-medium">Barang Keluar</span>
+                        </a>
+
+                        <!-- Pemakaian Barang -->
+                        <a href="{{ route('user.pemakaian.index') }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('user.pemakaian.*') ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
+                            <x-heroicon-o-clipboard-document-list class="w-4 h-4" />
+                            <span class="text-sm font-medium">Pemakaian Saya</span>
                         </a>
                     </div>
                 </div>

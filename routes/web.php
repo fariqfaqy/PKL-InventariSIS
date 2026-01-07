@@ -49,6 +49,14 @@ Route::prefix('user')->name('user.')->middleware(['auth', 'role:user'])->group(f
     Route::get('/stok-barang', [\App\Http\Controllers\User\StokBarangController::class, 'index'])->name('stok-barang.index');
     Route::get('/stok-barang/{id}', [\App\Http\Controllers\User\StokBarangController::class, 'show'])->name('stok-barang.show');
     
-    // Pemakaian Barang (CRUD Barang Keluar)
+    // Barang Masuk (Read Only untuk User)
+    Route::get('/barang-masuk', [\App\Http\Controllers\User\BarangMasukController::class, 'index'])->name('barang-masuk.index');
+    Route::get('/barang-masuk/{id}', [\App\Http\Controllers\User\BarangMasukController::class, 'show'])->name('barang-masuk.show');
+    
+    // Barang Keluar (Read Only untuk User - Lihat Semua)
+    Route::get('/barang-keluar', [\App\Http\Controllers\User\BarangKeluarController::class, 'index'])->name('barang-keluar.index');
+    Route::get('/barang-keluar/{id}', [\App\Http\Controllers\User\BarangKeluarController::class, 'show'])->name('barang-keluar.show');
+    
+    // Pemakaian Barang (CRUD Barang Keluar - Hanya Pemakaian Sendiri)
     Route::resource('pemakaian', \App\Http\Controllers\User\PemakaianController::class);
 });
