@@ -45,6 +45,10 @@ Route::prefix('user')->name('user.')->middleware(['auth', 'role:user'])->group(f
     Route::get('/settings', [UserController::class, 'settings'])->name('settings');
     Route::put('/settings', [UserController::class, 'updateSettings'])->name('settings.update');
     
+    // Stok Barang (Read Only untuk User)
+    Route::get('/stok-barang', [\App\Http\Controllers\User\StokBarangController::class, 'index'])->name('stok-barang.index');
+    Route::get('/stok-barang/{id}', [\App\Http\Controllers\User\StokBarangController::class, 'show'])->name('stok-barang.show');
+    
     // Pemakaian Barang (CRUD Barang Keluar)
     Route::resource('pemakaian', \App\Http\Controllers\User\PemakaianController::class);
 });
