@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\BarangMasukController;
+use App\Http\Controllers\Admin\BarangKeluarController;
+use App\Http\Controllers\Admin\StokBarangController;
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\User\UserController;
 
@@ -25,8 +28,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::resource('admins', AdminController::class);
     
+    // Kelola Barang
+    Route::resource('stok-barang', StokBarangController::class);
+    Route::resource('barang-masuk', BarangMasukController::class);
+    Route::resource('barang-keluar', BarangKeluarController::class);
+    
     // Add more admin routes here
-    // Route::resource('inventory', InventoryController::class);
     // Route::resource('reports', ReportController::class);
 });
 

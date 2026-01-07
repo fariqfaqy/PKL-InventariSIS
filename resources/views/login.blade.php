@@ -4,110 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - InventariSIS</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --bg-gradient-1: #FDD835;
-            --bg-gradient-2: #1E88E5;
-            --card-bg: #ffffff;
-            --text-primary: #333333;
-            --text-secondary: #666666;
-            --input-bg: #F5F5F5;
-            --input-border: #E0E0E0;
-            --logo-bg: #FDD835;
-            --system-name-color: #42A5F5;
-            --shadow: rgba(0, 0, 0, 0.1);
-            --shadow-hover: rgba(0, 0, 0, 0.15);
-        }
-
-        body.dark-mode {
-            --bg-gradient-1: #1a1042;
-            --bg-gradient-2: #0a0e27;
-            --card-bg: #151937;
-            --text-primary: #e8eaf6;
-            --text-secondary: #b0b5d1;
-            --input-bg: #1e2442;
-            --input-border: #2d3354;
-            --logo-bg: #FDD835;
-            --system-name-color: #8a61e6;
-            --shadow: rgba(138, 97, 230, 0.2);
-            --shadow-hover: rgba(138, 97, 230, 0.3);
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            transition: background 0.3s ease;
-        }
-
-        .dark-mode-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-        }
-
-        .toggle-btn {
-            background: var(--card-bg);
-            border: 2px solid var(--input-border);
-            width: 60px;
-            height: 32px;
-            border-radius: 16px;
-            cursor: pointer;
-            position: relative;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px var(--shadow);
-        }
-
-        .toggle-btn:hover {
-            box-shadow: 0 4px 12px var(--shadow-hover);
-        }
-
-        .toggle-btn::before {
-            content: '☀️';
-            position: absolute;
-            top: 3px;
-            left: 4px;
-            width: 22px;
-            height: 22px;
-            background: #1E88E5;
-            border-radius: 50%;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-        }
-
-        body.dark-mode .toggle-btn::before {
-            content: '🌙';
-            transform: translateX(28px);
-            background: #424242;
-        }
-
-        .login-container {
-            background: var(--card-bg);
-            border-radius: 16px;
-            box-shadow: 0 20px 60px var(--shadow), 0 0 0 1px var(--input-border);
-            overflow: hidden;
-            width: 100%;
-            max-width: 950px;
-            display: flex;
-            min-height: 550px;
-            transition: all 0.3s ease;
-            animation: slideUp 0.6s ease;
-        }
-
         @keyframes slideUp {
             from {
                 opacity: 0;
@@ -119,21 +17,13 @@
             }
         }
 
-        .login-left {
-            background: linear-gradient(180deg, #1E88E5 0%, #1565C0 100%);
-            padding: 60px 40px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            position: relative;
-            overflow: hidden;
+        @keyframes pulse-bg {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-30%, -30%) scale(1.1); }
         }
 
-        body.dark-mode .login-left {
-            background: linear-gradient(180deg, #8a61e6 0%, #5e35b1 100%);
+        .animate-slideUp {
+            animation: slideUp 0.6s ease;
         }
 
         .login-left::before {
@@ -142,307 +32,138 @@
             width: 200%;
             height: 200%;
             background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            animation: pulse 15s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: translate(-50%, -50%) scale(1); }
-            50% { transform: translate(-30%, -30%) scale(1.1); }
-        }
-
-        .logo-container {
-            background: var(--logo-bg);
-            padding: 35px;
-            border-radius: 16px;
-            margin-bottom: 35px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-            position: relative;
-            z-index: 1;
-            transition: transform 0.3s ease;
-        }
-
-        .logo-container:hover {
-            transform: scale(1.05) rotate(2deg);
-        }
-
-        .logo-container img {
-            width: 120px;
-            height: 120px;
-            object-fit: contain;
-            display: block;
-        }
-
-        .system-name {
-            font-size: 2.8rem;
-            font-weight: 800;
-            color: var(--system-name-color);
-            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4);
-            margin-bottom: 15px;
-            text-align: center;
-            position: relative;
-            z-index: 1;
-            letter-spacing: 1px;
-        }
-
-        .system-description {
-            font-size: 1rem;
-            color: rgba(255, 255, 255, 0.9);
-            text-align: center;
-            margin-top: 10px;
-        }
-
-        .login-right {
-            padding: 60px 50px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            background: var(--card-bg);
-            transition: background 0.3s ease;
-        }
-
-        .login-header {
-            margin-bottom: 40px;
-        }
-
-        .login-header h2 {
-            font-size: 2rem;
-            color: var(--text-primary);
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        .login-header p {
-            color: var(--text-secondary);
-            font-size: 1rem;
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 10px;
-            color: var(--text-primary);
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 16px 18px;
-            border: 2px solid var(--input-border);
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            background: var(--input-bg);
-            color: var(--text-primary);
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #1E88E5;
-            background: var(--card-bg);
-            box-shadow: 0 0 0 4px rgba(30, 136, 229, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .form-group input::placeholder {
-            color: var(--text-secondary);
-            opacity: 0.6;
-        }
-
-        .form-options {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        .remember-me {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .remember-me input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-
-        .remember-me label {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .remember-me input[type="checkbox"]:checked {
-            accent-color: #1E88E5;
-        }
-
-        .btn-login {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #1E88E5 0%, #1565C0 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 20px rgba(30, 136, 229, 0.3);
-            letter-spacing: 0.5px;
-        }
-
-        .btn-login:hover {
-            background: linear-gradient(135deg, #1565C0 0%, #0D47A1 100%);
-            box-shadow: 0 12px 28px rgba(30, 136, 229, 0.4);
-            transform: translateY(-3px);
-        }
-
-        .btn-login:active {
-            transform: translateY(-1px);
-        }
-
-        .alert {
-            padding: 14px 18px;
-            border-radius: 10px;
-            margin-bottom: 24px;
-            font-size: 0.95rem;
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .alert-error {
-            background: #FFEBEE;
-            color: #C62828;
-            border-left: 4px solid #EF5350;
-        }
-
-        body.dark-mode .alert-error {
-            background: #3d1f1f;
-            color: #ff6b6b;
-            border-left: 4px solid #ff6b6b;
-        }
-
-        .divider {
-            text-align: center;
-            margin: 30px 0;
-            color: #999;
-            font-size: 0.85rem;
-        }
-
-        @media (max-width: 768px) {
-            .login-container {
-                flex-direction: column;
-            }
-
-            .login-left {
-                padding: 40px 30px;
-            }
-
-            .logo-container {
-                padding: 20px;
-            }
-
-            .logo-container img {
-                width: 80px;
-                height: 80px;
-            }
-
-            .system-name {
-                font-size: 2rem;
-            }
-
-            .login-right {
-                padding: 40px 30px;
-            }
+            animation: pulse-bg 15s ease-in-out infinite;
         }
     </style>
 </head>
-<body>
-    <div class="dark-mode-toggle">
-        <button class="toggle-btn" onclick="toggleDarkMode()" aria-label="Toggle dark mode"></button>
+<body class="min-h-screen flex items-center justify-center p-5 transition-colors duration-300 bg-gradient-to-br from-[#14a2ba] to-[#0d7a8f] dark:from-slate-900 dark:to-slate-950">
+    <!-- Dark Mode Toggle -->
+    <div class="fixed top-5 right-5 z-50">
+        <button 
+            onclick="toggleDarkMode()" 
+            class="w-12 h-12 rounded-full border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 relative transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center group"
+            aria-label="Toggle dark mode"
+        >
+            <x-heroicon-o-sun class="w-6 h-6 text-[#14a2ba] dark:hidden transition-transform group-hover:rotate-45" />
+            <x-heroicon-o-moon class="w-6 h-6 text-[#14a2ba] hidden dark:block transition-transform group-hover:-rotate-12" />
+        </button>
     </div>
     
-    <div class="login-container">
-        <div class="login-left">
-            <div class="logo-container">
-                <img src="{{ asset('images/pln-logo.png') }}" alt="PLN Logo">
+    <!-- Login Container -->
+    <div class="w-full max-w-[950px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[550px] animate-slideUp transition-all duration-300">
+        <!-- Left Side - Logo & Branding -->
+        <div class="flex-1 bg-gradient-to-b from-[#14a2ba] to-[#0d7a8f] dark:from-[#0d7a8f] dark:to-slate-900 p-10 md:p-15 flex flex-col justify-center items-center text-white relative overflow-hidden">
+            <div class="absolute inset-0 login-left"></div>
+            
+            <div class="relative z-10 bg-white p-9 rounded-2xl mb-9 shadow-2xl transition-transform duration-300 hover:scale-105 hover:rotate-2">
+                <img src="{{ asset('images/pln-logo.png') }}" alt="PLN Logo" class="w-30 h-30 object-contain">
             </div>
-            <h1 class="system-name">InventariSIS</h1>
-            <p class="system-description">Sistem Inventaris Internal</p>
+            
+            <div class="relative z-10 flex items-center gap-3 mb-2">
+                <x-heroicon-o-cube class="w-10 h-10 text-white drop-shadow-lg" />
+                <h1 class="text-5xl font-extrabold text-white drop-shadow-lg text-center tracking-wide">
+                    InventariSIS
+                </h1>
+            </div>
+            <p class="relative z-10 text-base text-white/90 text-center mt-2.5 flex items-center gap-2 justify-center">
+                Sistem Inventaris Internal
+            </p>
         </div>
 
-        <div class="login-right">
-            <div class="login-header">
-                <h2>Selamat Datang</h2>
-                <p>Silakan masuk dengan akun Anda</p>
+        <!-- Right Side - Login Form -->
+        <div class="flex-1 p-10 md:p-12 flex flex-col justify-center bg-white dark:bg-gray-900 transition-colors duration-300">
+            <div class="mb-10">
+                <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2.5 flex items-center gap-3">
+                    <x-heroicon-o-hand-raised class="w-8 h-8 text-[#14a2ba]" />
+                    Selamat Datang
+                </h2>
+                <p class="text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                    <x-heroicon-o-arrow-right class="w-4 h-4" />
+                    Silakan masuk dengan akun Anda
+                </p>
             </div>
 
             @if(session('error'))
-                <div class="alert alert-error">
-                    {{ session('error') }}
+                <div class="bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-l-4 border-red-500 p-4 rounded-lg mb-6 animate-slideIn flex items-start gap-3">
+                    <x-heroicon-o-exclamation-circle class="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <span>{{ session('error') }}</span>
                 </div>
             @endif
 
             @if($errors->any())
-                <div class="alert alert-error">
-                    @foreach($errors->all() as $error)
-                        {{ $error }}<br>
-                    @endforeach
+                <div class="bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-l-4 border-red-500 p-4 rounded-lg mb-6 animate-slideIn">
+                    <div class="flex items-start gap-3">
+                        <x-heroicon-o-exclamation-triangle class="w-5 h-5 flex-shrink-0 mt-0.5" />
+                        <div>
+                            @foreach($errors->all() as $error)
+                                {{ $error }}<br>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('login') }}">
+            <form method="POST" action="{{ route('login') }}" class="space-y-6">
                 @csrf
 
-                <div class="form-group">
-                    <label for="email">Email / Username</label>
-                    <input 
-                        type="text" 
-                        id="email" 
-                        name="email" 
-                        value="{{ old('email') }}"
-                        required 
-                        autofocus
-                        placeholder="Masukkan email atau username"
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        required
-                        placeholder="Masukkan password"
-                    >
-                </div>
-
-                <div class="form-options">
-                    <div class="remember-me">
-                        <input type="checkbox" id="remember" name="remember">
-                        <label for="remember">Ingat Saya</label>
+                <div class="transition-transform duration-200">
+                    <label for="email" class="flex items-center gap-2 mb-2.5 text-gray-800 dark:text-gray-200 font-semibold text-sm">
+                        <x-heroicon-o-envelope class="w-4 h-4" />
+                        Email / Username
+                    </label>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="email" 
+                            name="email" 
+                            value="{{ old('email') }}"
+                            required 
+                            autofocus
+                            placeholder="Masukkan email atau username"
+                            class="w-full px-4.5 py-4 pl-11 border-2 border-gray-300 dark:border-gray-600 rounded-lg text-base transition-all duration-300 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 placeholder:text-gray-500/60 dark:placeholder:text-gray-500 focus:outline-none focus:border-[#14a2ba] focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_4px_rgba(20,162,186,0.15)] focus:-translate-y-0.5"
+                        >
+                        <x-heroicon-o-user class="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
                     </div>
                 </div>
 
-                <button type="submit" class="btn-login">
+                <div class="transition-transform duration-200">
+                    <label for="password" class="flex items-center gap-2 mb-2.5 text-gray-800 dark:text-gray-200 font-semibold text-sm">
+                        <x-heroicon-o-lock-closed class="w-4 h-4" />
+                        Password
+                    </label>
+                    <div class="relative">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            required
+                            placeholder="Masukkan password"
+                            class="w-full px-4.5 py-4 pl-11 border-2 border-gray-300 dark:border-gray-600 rounded-lg text-base transition-all duration-300 bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 placeholder:text-gray-500/60 dark:placeholder:text-gray-500 focus:outline-none focus:border-[#14a2ba] focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_4px_rgba(20,162,186,0.15)] focus:-translate-y-0.5"
+                        >
+                        <x-heroicon-o-key class="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-2">
+                        <input 
+                            type="checkbox" 
+                            id="remember" 
+                            name="remember"
+                            class="w-4.5 h-4.5 cursor-pointer accent-[#14a2ba]"
+                        >
+                        <label for="remember" class="text-gray-600 dark:text-gray-400 text-sm cursor-pointer select-none flex items-center gap-1.5">
+                            <x-heroicon-o-bookmark class="w-4 h-4" />
+                            Ingat Saya
+                        </label>
+                    </div>
+                </div>
+
+                <button 
+                    type="submit" 
+                    class="w-full py-4 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg text-lg font-bold cursor-pointer transition-all duration-300 shadow-lg shadow-[#14a2ba]/30 tracking-wide hover:from-[#0d7a8f] hover:to-[#0a5f6f] hover:shadow-xl hover:shadow-[#14a2ba]/40 hover:-translate-y-1 active:-translate-y-0 flex items-center justify-center gap-2"
+                >
+                    <x-heroicon-o-arrow-right-on-rectangle class="w-5 h-5" />
                     MASUK
                 </button>
             </form>
@@ -453,24 +174,14 @@
         // Check for saved dark mode preference
         const isDarkMode = localStorage.getItem('darkMode') === 'true';
         if (isDarkMode) {
-            document.body.classList.add('dark-mode');
+            document.documentElement.classList.add('dark');
         }
 
         function toggleDarkMode() {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
             localStorage.setItem('darkMode', isDark);
         }
-
-        // Add smooth focus animation
-        document.querySelectorAll('.form-group input').forEach(input => {
-            input.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'translateX(5px)';
-            });
-            input.addEventListener('blur', function() {
-                this.parentElement.style.transform = 'translateX(0)';
-            });
-        });
     </script>
 </body>
 </html>
