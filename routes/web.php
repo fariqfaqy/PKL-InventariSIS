@@ -29,7 +29,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::resource('admins', AdminController::class);
     
     // Kelola Barang
-    Route::resource('stok-barang', StokBarangController::class);
+    Route::resource('stok-barang', StokBarangController::class)->except(['create', 'store']);
     Route::resource('barang-masuk', BarangMasukController::class);
     Route::resource('barang-keluar', BarangKeluarController::class);
     

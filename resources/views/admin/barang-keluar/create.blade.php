@@ -20,28 +20,85 @@
         <form action="{{ route('admin.barang-keluar.store') }}" method="POST" class="space-y-6">
             @csrf
 
-            <!-- Pilih Barang -->
-            <div>
-                <label for="idbarang" class="block text-sm font-medium text-gray-700 mb-2">
-                    Pilih Barang <span class="text-red-500">*</span>
-                </label>
-                <select name="idbarang" id="idbarang" required
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('idbarang') border-red-500 @enderror">
-                    <option value="">-- Pilih Barang yang Tersedia --</option>
-                    @forelse($stocks as $stock)
-                    <option value="{{ $stock->idbarang }}" 
-                            data-stock="{{ $stock->stock }}"
-                            {{ old('idbarang') == $stock->idbarang ? 'selected' : '' }}>
-                        {{ $stock->kodebarang }} - {{ $stock->namabarang }} (Stok: {{ $stock->stock }})
-                    </option>
-                    @empty
-                    <option value="" disabled>Tidak ada barang tersedia</option>
-                    @endforelse
-                </select>
-                @error('idbarang')
-                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                @enderror
-                <p class="mt-1 text-xs text-gray-500">Hanya menampilkan barang yang memiliki stok</p>
+            <!-- Filter Cascade -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Filter Kategori -->
+                <div>
+                    <label for="filter_kategori" class="block text-sm font-medium text-gray-700 mb-2">
+                        Filter Kategori <span class="text-red-500">*</span>
+                    </label>
+                    <select id="filter_kategori" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
+                        <option value="">-- Pilih Kategori --</option>
+                        <option value="barang_sewa">Barang Sewa (3 Tahun)</option>
+                        <option value="habis_pakai">Habis Pakai</option>
+                    </select>
+                </div>
+
+                <!-- Filter Jenis -->
+                <div>
+                    <label for="filter_jenis" class="block text-sm font-medium text-gray-700 mb-2">
+                        Filter Jenis <span class="text-red-500">*</span>
+                    </label>
+                    <select id="filter_jenis" required disabled
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
+                        <option value="">-- Pilih Jenis --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Filter Merek -->
+                <div>
+                    <label for="filter_merek" class="block text-sm font-medium text-gray-700 mb-2">
+                        Filter Merek <span class="text-red-500">*</span>
+                    </label>
+                    <select id="filter_merek" required disabled
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
+                        <option value="">-- Pilih Merek --</option>
+                    </select>
+                </div>
+
+                <!-- Filter Tipe -->
+                <div>
+                    <label for="filter_tipe" class="block text-sm font-medium text-gray-700 mb-2">
+                        Filter Tipe <span class="text-red-500">*</span>
+                    </label>
+                    <select id="filter_tipe" required disabled
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
+                        <option value="">-- Pilih Tipe --</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Pilih Barang (Hidden - Auto filled) -->
+            <input type="hidden" name="idbarang" id="idbarang">
+
+            <!-- Info Barang yang Dipilih -->
+            <div id="selected-item-info" class="hidden bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-4">
+                <h3 class="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                    <x-heroicon-o-information-circle class="w-5 h-5" />
+                    Barang yang Dipilih
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-600">Kode:</span>
+                        <span id="display_kodebarang" class="font-medium text-gray-900 ml-2"></span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Nama:</span>
+                        <span id="display_namabarang" class="font-medium text-gray-900 ml-2"></span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Rak:</span>
+                        <span id="display_rack" class="font-medium text-gray-900 ml-2"></span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Stok Tersedia:</span>
+                        <span id="display_stock" class="font-bold text-green-600 ml-2"></span>
+                        <span class="text-gray-500">unit</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Tanggal -->
@@ -102,23 +159,129 @@
 </div>
 
 <script>
-// Update max qty based on selected item stock
-document.getElementById('idbarang').addEventListener('change', function() {
-    const selectedOption = this.options[this.selectedIndex];
-    const stock = selectedOption.getAttribute('data-stock');
-    const qtyInput = document.getElementById('qty');
-    const stockInfo = document.getElementById('stock-info');
+// Stock data from backend
+const stocksData = @json($stocks);
+
+// Cascade filter logic
+const filters = {
+    kategori: document.getElementById('filter_kategori'),
+    jenis: document.getElementById('filter_jenis'),
+    merek: document.getElementById('filter_merek'),
+    tipe: document.getElementById('filter_tipe')
+};
+
+// Filter kategori change
+filters.kategori.addEventListener('change', function() {
+    const kategori = this.value;
+    resetFilter(['jenis', 'merek', 'tipe']);
     
-    if (stock) {
-        qtyInput.max = stock;
-        stockInfo.textContent = `Stok tersedia: ${stock}`;
-        stockInfo.classList.remove('text-red-500');
-        stockInfo.classList.add('text-gray-500');
-    } else {
-        qtyInput.max = '';
-        stockInfo.textContent = '';
+    if (kategori) {
+        const jenisOptions = [...new Set(stocksData
+            .filter(s => s.kategori === kategori && s.stock > 0)
+            .map(s => s.jenis))];
+        
+        populateSelect(filters.jenis, jenisOptions);
+        filters.jenis.disabled = false;
     }
 });
+
+// Filter jenis change
+filters.jenis.addEventListener('change', function() {
+    const kategori = filters.kategori.value;
+    const jenis = this.value;
+    resetFilter(['merek', 'tipe']);
+    
+    if (jenis) {
+        const merekOptions = [...new Set(stocksData
+            .filter(s => s.kategori === kategori && s.jenis === jenis && s.stock > 0)
+            .map(s => s.merek))];
+        
+        populateSelect(filters.merek, merekOptions);
+        filters.merek.disabled = false;
+    }
+});
+
+// Filter merek change
+filters.merek.addEventListener('change', function() {
+    const kategori = filters.kategori.value;
+    const jenis = filters.jenis.value;
+    const merek = this.value;
+    resetFilter(['tipe']);
+    
+    if (merek) {
+        const tipeOptions = stocksData
+            .filter(s => s.kategori === kategori && s.jenis === jenis && s.merek === merek && s.stock > 0)
+            .map(s => ({ value: s.idbarang, text: s.tipe + ' (Stok: ' + s.stock + ')' }));
+        
+        populateSelectWithValue(filters.tipe, tipeOptions);
+        filters.tipe.disabled = false;
+    }
+});
+
+// Filter tipe change - final selection
+filters.tipe.addEventListener('change', function() {
+    const selectedId = this.value;
+    
+    if (selectedId) {
+        const selectedStock = stocksData.find(s => s.idbarang == selectedId);
+        
+        if (selectedStock) {
+            // Set hidden input
+            document.getElementById('idbarang').value = selectedStock.idbarang;
+            
+            // Display selected item info
+            document.getElementById('display_kodebarang').textContent = selectedStock.kodebarang;
+            document.getElementById('display_namabarang').textContent = selectedStock.namabarang;
+            document.getElementById('display_rack').textContent = 'Rak ' + selectedStock.rack.toUpperCase();
+            document.getElementById('display_stock').textContent = selectedStock.stock;
+            document.getElementById('selected-item-info').classList.remove('hidden');
+            
+            // Set max qty
+            const qtyInput = document.getElementById('qty');
+            qtyInput.max = selectedStock.stock;
+            
+            // Focus on qty
+            setTimeout(() => qtyInput.focus(), 100);
+        }
+    } else {
+        document.getElementById('selected-item-info').classList.add('hidden');
+        document.getElementById('idbarang').value = '';
+    }
+});
+
+function populateSelect(selectElement, options) {
+    selectElement.innerHTML = '<option value="">-- Pilih ' + selectElement.id.replace('filter_', '').charAt(0).toUpperCase() + selectElement.id.replace('filter_', '').slice(1) + ' --</option>';
+    options.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt;
+        option.textContent = opt;
+        selectElement.appendChild(option);
+    });
+}
+
+function populateSelectWithValue(selectElement, options) {
+    selectElement.innerHTML = '<option value="">-- Pilih Tipe --</option>';
+    options.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt.value;
+        option.textContent = opt.text;
+        selectElement.appendChild(option);
+    });
+}
+
+function resetFilter(filterNames) {
+    filterNames.forEach(name => {
+        const element = filters[name];
+        element.innerHTML = '<option value="">-- Pilih ' + name.charAt(0).toUpperCase() + name.slice(1) + ' --</option>';
+        element.disabled = true;
+        element.value = '';
+    });
+    
+    if (filterNames.includes('tipe')) {
+        document.getElementById('selected-item-info').classList.add('hidden');
+        document.getElementById('idbarang').value = '';
+    }
+}
 
 // Validate qty on input
 document.getElementById('qty').addEventListener('input', function() {

@@ -16,7 +16,7 @@
             </div>
         </div>
         <div class="flex gap-2">
-            <a href="{{ route('admin.stok-barang.edit', $stock->id) }}" 
+            <a href="{{ route('admin.stok-barang.edit', $stock->idbarang) }}" 
                 class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
                 <x-heroicon-o-pencil class="w-5 h-5 inline" /> Edit
             </a>

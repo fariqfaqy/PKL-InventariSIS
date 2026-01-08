@@ -27,7 +27,8 @@ class BarangMasukController extends Controller
      */
     public function create()
     {
-        return view('admin.barang-masuk.create');
+        $stocks = Stock::orderBy('kodebarang')->get(['kodebarang', 'namabarang', 'deskripsi', 'rack', 'stock', 'kategori', 'jenis', 'merek', 'tipe']);
+        return view('admin.barang-masuk.create', compact('stocks'));
     }
 
     /**
@@ -41,6 +42,11 @@ class BarangMasukController extends Controller
             'tanggal' => 'required|date',
             'keterangan' => 'required|string',
             'qty' => 'required|integer|min:1',
+            'rack' => 'required|in:1a,1b,1c,2a,2b,2c',
+            'kategori' => 'required|in:barang_sewa,habis_pakai',
+            'jenis' => 'required|string|max:100',
+            'merek' => 'required|string|max:100',
+            'tipe' => 'required|string|max:255',
         ]);
 
         // Check if stock exists by kodebarang
@@ -57,8 +63,12 @@ class BarangMasukController extends Controller
                 'namabarang' => $validated['namabarang'],
                 'stock' => $validated['qty'],
                 'deskripsi' => 'Barang baru',
-                'rack' => '1a',
-                'penginput' => Auth::user()->name,
+                'rack' => $validated['rack'],
+                'kategori' => $validated['kategori'],
+                'jenis' => $validated['jenis'],
+                'merek' => $validated['merek'],
+                'tipe' => $validated['tipe'],
+                'penginput' => auth()->user()->name,
             ]);
             $idbarang = $stock->idbarang;
         }
@@ -81,18 +91,18 @@ class BarangMasukController extends Controller
     /**
      * Display the specified incoming item.
      */
-    public function show(string $id)
+    public function show($idmasuk)
     {
-        $barangMasuk = IncomingTransaction::with('stock')->findOrFail($id);
+        $barangMasuk = IncomingTransaction::with('stock')->findOrFail($idmasuk);
         return view('admin.barang-masuk.show', compact('barangMasuk'));
     }
 
     /**
      * Show the form for editing the specified incoming item.
      */
-    public function edit(string $id)
+    public function edit($idmasuk)
     {
-        $barangMasuk = IncomingTransaction::findOrFail($id);
+        $barangMasuk = IncomingTransaction::findOrFail($idmasuk);
         $stocks = Stock::orderBy('namabarang')->get();
         return view('admin.barang-masuk.edit', compact('barangMasuk', 'stocks'));
     }
@@ -100,9 +110,9 @@ class BarangMasukController extends Controller
     /**
      * Update the specified incoming item in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $idmasuk)
     {
-        $barangMasuk = IncomingTransaction::findOrFail($id);
+        $barangMasuk = IncomingTransaction::findOrFail($idmasuk);
         
         $validated = $request->validate([
             'idbarang' => 'required|exists:stock,idbarang',
@@ -139,9 +149,9 @@ class BarangMasukController extends Controller
     /**
      * Remove the specified incoming item from storage.
      */
-    public function destroy(string $id)
+    public function destroy($idmasuk)
     {
-        $barangMasuk = IncomingTransaction::findOrFail($id);
+        $barangMasuk = IncomingTransaction::findOrFail($idmasuk);
         
         // Get stock and decrement quantity
         $stock = Stock::findOrFail($barangMasuk->idbarang);

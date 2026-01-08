@@ -31,6 +31,32 @@
                     <span class="font-medium">Dashboard</span>
                 </a>
 
+                <!-- Stok Barang (Parent with Submenu) -->
+                <div class="space-y-1">
+                    <button onclick="toggleSubmenu('stok-barang')" class="w-full flex items-center justify-between gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200 group">
+                        <div class="flex items-center gap-3">
+                            <x-heroicon-o-cube-transparent class="w-5 h-5 group-hover:text-[#14a2ba]" />
+                            <span class="font-medium">Stok Barang</span>
+                        </div>
+                        <x-heroicon-o-chevron-down id="stok-barang-icon" class="w-4 h-4 transition-transform duration-200" />
+                    </button>
+                    
+                    <!-- Submenu Stok Barang -->
+                    <div id="stok-barang-submenu" class="hidden ml-4 space-y-1">
+                        <!-- Barang Sewa -->
+                        <a href="{{ route('admin.stok-barang.index', ['kategori' => 'barang_sewa']) }}" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200 group">
+                            <x-heroicon-o-computer-desktop class="w-4 h-4" />
+                            <span class="text-sm font-medium">Barang Sewa</span>
+                        </a>
+                        
+                        <!-- Barang Habis Pakai -->
+                        <a href="{{ route('admin.stok-barang.index', ['kategori' => 'habis_pakai']) }}" class="flex items-center gap-3 px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200 group">
+                            <x-heroicon-o-shopping-bag class="w-4 h-4" />
+                            <span class="text-sm font-medium">Barang Habis Pakai</span>
+                        </a>
+                    </div>
+                </div>
+
                 <!-- Kelola Barang (Parent) -->
                 <div class="space-y-1">
                     <button onclick="toggleSubmenu('kelola-barang')" class="w-full flex items-center justify-between gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200 group">

@@ -11,10 +11,19 @@ class StokBarangController extends Controller
     /**
      * Display a listing of stock items.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $stocks = Stock::orderBy('namabarang')->paginate(10);
-        return view('admin.stok-barang.index', compact('stocks'));
+        $query = Stock::query();
+        
+        // Filter by kategori if provided
+        if ($request->has('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai'])) {
+            $query->where('kategori', $request->kategori);
+        }
+        
+        $stocks = $query->orderBy('namabarang')->paginate(10);
+        $kategori = $request->get('kategori');
+        
+        return view('admin.stok-barang.index', compact('stocks', 'kategori'));
     }
 
     /**
@@ -36,6 +45,10 @@ class StokBarangController extends Controller
             'deskripsi' => 'nullable|string',
             'stock' => 'required|integer|min:0',
             'rack' => 'required|in:1a,1b,1c,2a,2b,2c',
+            'kategori' => 'required|in:barang_sewa,habis_pakai',
+            'jenis' => 'required|string|max:100',
+            'merek' => 'required|string|max:100',
+            'tipe' => 'required|string|max:255',
         ]);
 
         Stock::create([
@@ -44,6 +57,10 @@ class StokBarangController extends Controller
             'deskripsi' => $validated['deskripsi'] ?? 'Barang baru',
             'stock' => $validated['stock'],
             'rack' => $validated['rack'],
+            'kategori' => $validated['kategori'],
+            'jenis' => $validated['jenis'],
+            'merek' => $validated['merek'],
+            'tipe' => $validated['tipe'],
             'penginput' => auth()->user()->name,
         ]);
 
@@ -54,34 +71,38 @@ class StokBarangController extends Controller
     /**
      * Display the specified stock item.
      */
-    public function show(string $id)
+    public function show($idbarang)
     {
-        $stock = Stock::with(['incomingTransactions', 'outgoingTransactions'])->findOrFail($id);
+        $stock = Stock::with(['incomingTransactions', 'outgoingTransactions'])->findOrFail($idbarang);
         return view('admin.stok-barang.show', compact('stock'));
     }
 
     /**
      * Show the form for editing the specified stock item.
      */
-    public function edit(string $id)
+    public function edit($idbarang)
     {
-        $stock = Stock::findOrFail($id);
+        $stock = Stock::findOrFail($idbarang);
         return view('admin.stok-barang.edit', compact('stock'));
     }
 
     /**
      * Update the specified stock item in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $idbarang)
     {
-        $stock = Stock::findOrFail($id);
+        $stock = Stock::findOrFail($idbarang);
         
         $validated = $request->validate([
-            'kodebarang' => 'required|string|max:255|unique:stock,kodebarang,' . $id . ',idbarang',
+            'kodebarang' => 'required|string|max:255|unique:stock,kodebarang,' . $idbarang . ',idbarang',
             'namabarang' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'stock' => 'required|integer|min:0',
             'rack' => 'required|in:1a,1b,1c,2a,2b,2c',
+            'kategori' => 'required|in:barang_sewa,habis_pakai',
+            'jenis' => 'required|string|max:100',
+            'merek' => 'required|string|max:100',
+            'tipe' => 'required|string|max:255',
         ]);
 
         $stock->update($validated);
@@ -93,9 +114,9 @@ class StokBarangController extends Controller
     /**
      * Remove the specified stock item from storage.
      */
-    public function destroy(string $id)
+    public function destroy($idbarang)
     {
-        $stock = Stock::findOrFail($id);
+        $stock = Stock::findOrFail($idbarang);
         $stock->delete();
 
         return redirect()->route('admin.stok-barang.index')

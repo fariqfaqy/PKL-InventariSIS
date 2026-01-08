@@ -20,6 +20,10 @@ class Stock extends Model
         'penginput',
         'kodebarang',
         'rack',
+        'kategori',
+        'jenis',
+        'merek',
+        'tipe',
     ];
 
     /**
