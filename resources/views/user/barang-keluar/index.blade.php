@@ -11,16 +11,6 @@
             <h2 class="text-2xl font-bold text-gray-800">Barang Keluar</h2>
             <p class="text-sm text-gray-500 mt-1">Riwayat semua barang keluar divisi</p>
         </div>
-        <div class="flex gap-2">
-            <div class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg border border-blue-200">
-                <x-heroicon-o-information-circle class="w-5 h-5" />
-                <span class="text-sm font-medium">Read Only</span>
-            </div>
-            <a href="{{ route('user.pemakaian.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-300">
-                <x-heroicon-o-clipboard-document-list class="w-5 h-5" />
-                <span class="font-medium">Pemakaian Saya</span>
-            </a>
-        </div>
     </div>
 
     <!-- Filter Section -->

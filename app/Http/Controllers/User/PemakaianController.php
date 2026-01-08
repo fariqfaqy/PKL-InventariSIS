@@ -53,7 +53,7 @@ class PemakaianController extends Controller
                 return back()->with('error', 'Stok tidak mencukupi! Stok tersedia: ' . $stock->stock . ' unit');
             }
 
-            // Create transaksi keluar
+            // Create transaksi keluar dengan kategori dan durasi dari stock
             OutgoingTransaction::create([
                 'idbarang' => $request->idbarang,
                 'qty' => $request->qty,
@@ -61,6 +61,8 @@ class PemakaianController extends Controller
                 'namabarang_k' => $stock->namabarang,
                 'kodebarang_k' => $stock->kodebarang,
                 'penginput' => Auth::user()->email,
+                'kategori' => $stock->kategori,
+                'durasi_sewa' => $stock->durasi_sewa,
             ]);
 
             // Update stok

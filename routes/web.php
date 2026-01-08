@@ -59,4 +59,8 @@ Route::prefix('user')->name('user.')->middleware(['auth', 'role:user'])->group(f
     
     // Pemakaian Barang (CRUD Barang Keluar - Hanya Pemakaian Sendiri)
     Route::resource('pemakaian', \App\Http\Controllers\User\PemakaianController::class);
+    
+    // Barang di Rak (CRUD - Kelola Barang di Rak)
+    Route::get('/barang-rak/check-stock/{idbarang}', [\App\Http\Controllers\User\BarangRakController::class, 'checkStock'])->name('barang-rak.check-stock');
+    Route::resource('barang-rak', \App\Http\Controllers\User\BarangRakController::class);
 });

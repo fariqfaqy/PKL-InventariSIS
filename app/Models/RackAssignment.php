@@ -5,28 +5,25 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class OutgoingTransaction extends Model
+class RackAssignment extends Model
 {
     use HasFactory;
 
-    protected $table = 'keluar';
-    protected $primaryKey = 'idkeluar';
-
     protected $fillable = [
+        'user_id',
         'idbarang',
-        'tanggal',
-        'penerima',
+        'rack',
         'qty',
-        'namabarang_k',
-        'penginput',
-        'kodebarang_k',
-        'kategori',
-        'durasi_sewa',
+        'keterangan',
     ];
 
-    protected $casts = [
-        'tanggal' => 'datetime',
-    ];
+    /**
+     * Relationship: Belongs to User
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     /**
      * Relationship: Belongs to Stock

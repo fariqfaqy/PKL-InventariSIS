@@ -24,6 +24,7 @@ class Stock extends Model
         'jenis',
         'merek',
         'tipe',
+        'durasi_sewa',
     ];
 
     /**
@@ -40,6 +41,14 @@ class Stock extends Model
     public function outgoingTransactions()
     {
         return $this->hasMany(OutgoingTransaction::class, 'idbarang', 'idbarang');
+    }
+
+    /**
+     * Relationship: Stock has many rack assignments
+     */
+    public function rackAssignments()
+    {
+        return $this->hasMany(RackAssignment::class, 'idbarang', 'idbarang');
     }
 
     /**

@@ -1,101 +1,95 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Pemakaian - InventariSIS</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --bg-primary: #f4f6f9; --bg-secondary: #ffffff; --text-primary: #333333; --text-secondary: #666666; --border-color: #e0e0e0; }
-        body.dark-mode { --bg-primary: #0a0e27; --bg-secondary: #151937; --text-primary: #e8eaf6; --text-secondary: #b0b5d1; --border-color: #2d3354; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-primary); transition: all 0.3s; }
-        body.dark-mode { background: linear-gradient(135deg, #0a0e27 0%, #1a1042 50%, #0f1535 100%); }
-        .header { background: linear-gradient(135deg, #1E88E5, #1565C0); color: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
-        .header h1 { font-size: 2rem; font-weight: 800; }
-        .dark-mode-toggle { background: rgba(255,255,255,0.2); border: none; width: 50px; height: 28px; border-radius: 14px; cursor: pointer; position: relative; }
-        .dark-mode-toggle::before { content: '☀️'; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; background: white; border-radius: 50%; transition: all 0.3s; font-size: 12px; display: flex; align-items: center; justify-content: center; }
-        body.dark-mode .dark-mode-toggle::before { content: '🌙'; transform: translateX(22px); background: #424242; }
-        .container { max-width: 800px; margin: 0 auto; padding: 40px; }
-        .breadcrumb { margin-bottom: 20px; }
-        .breadcrumb a { color: #1E88E5; text-decoration: none; }
-        .form-card { background: var(--bg-secondary); padding: 40px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        body.dark-mode .form-card { box-shadow: 0 4px 20px rgba(138, 97, 230, 0.15), 0 0 15px rgba(66, 133, 244, 0.08); border: 1px solid rgba(138, 97, 230, 0.15); }
-        .form-card h2 { font-size: 1.8rem; color: var(--text-primary); margin-bottom: 30px; font-weight: 700; }
-        .form-group { margin-bottom: 25px; }
-        .form-group label { display: block; margin-bottom: 10px; color: var(--text-primary); font-weight: 600; font-size: 0.95rem; }
-        .form-group input { width: 100%; padding: 14px 16px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 1rem; background: var(--bg-primary); color: var(--text-primary); transition: all 0.3s; }
-        .form-group input:focus { outline: none; border-color: #1E88E5; box-shadow: 0 0 0 4px rgba(30,136,229,0.1); }
-        .form-group input:disabled { opacity: 0.6; cursor: not-allowed; }
-        .info-box { background: #E3F2FD; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #1E88E5; }
-        body.dark-mode .info-box { background: rgba(138, 97, 230, 0.12); border-left-color: #8a61e6; color: var(--text-primary); }
-        .btn-group { display: flex; gap: 15px; margin-top: 30px; }
-        .btn-primary { background: linear-gradient(135deg, #1E88E5, #667eea); color: white; padding: 14px 32px; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: all 0.3s; flex: 1; }
-        .btn-secondary { background: var(--border-color); color: var(--text-primary); padding: 14px 32px; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; }
-        .alert-error { background: #F8D7DA; color: #721C24; padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #DC3545; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <div><h1>📦 InventariSIS</h1></div>
-        <button class="dark-mode-toggle" onclick="toggleDarkMode()"></button>
-    </div>
-    <div class="container">
-        <div class="breadcrumb">
-            <a href="{{ route('user.dashboard') }}">Dashboard</a> / 
-            <a href="{{ route('user.pemakaian.index') }}">Riwayat Pemakaian</a> / 
-            Edit
+@extends('layouts.user')
+
+@section('title', 'Edit Pemakaian')
+@section('subtitle', 'Edit pemakaian barang')
+
+@section('content')
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800">✏️ Edit Pemakaian Barang</h2>
+            <p class="text-sm text-gray-500 mt-1">Ubah data pemakaian barang Anda</p>
         </div>
+        <a href="{{ route('user.pemakaian.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300">
+            <x-heroicon-o-arrow-left class="w-4 h-4" />
+            <span class="font-medium">Kembali</span>
+        </a>
+    </div>
 
-        @if(session('error'))
-        <div class="alert-error">{{ session('error') }}</div>
-        @endif
+    @if(session('error'))
+    <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center gap-3">
+        <x-heroicon-o-x-circle class="w-5 h-5" />
+        <span>{{ session('error') }}</span>
+    </div>
+    @endif
 
-        <div class="form-card">
-            <h2>✏️ Edit Pemakaian Barang</h2>
+    <!-- Form Card -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <form action="{{ route('user.pemakaian.update', $pemakaian->idkeluar) }}" method="POST" class="space-y-6">
+            @csrf
+            @method('PUT')
             
-            <form action="{{ route('user.pemakaian.update', $pemakaian->idkeluar) }}" method="POST">
-                @csrf
-                @method('PUT')
-                
-                <div class="info-box">
-                    <strong>Barang:</strong> {{ $pemakaian->kodebarang_k }} - {{ $pemakaian->namabarang_k }}<br>
-                    <strong>Tanggal:</strong> {{ $pemakaian->tanggal->format('d/m/Y H:i') }}
+            <!-- Info Barang -->
+            <div class="bg-blue-50 border-l-4 border-[#14a2ba] p-4 rounded-lg space-y-2">
+                <div>
+                    <span class="font-semibold text-gray-700">Barang:</span>
+                    <span class="text-gray-900">{{ $pemakaian->kodebarang_k }} - {{ $pemakaian->namabarang_k }}</span>
+                    @if($pemakaian->kategori)
+                        @if($pemakaian->kategori == 'barang_sewa')
+                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">🔄 Barang Sewa</span>
+                        @else
+                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">📦 Habis Pakai</span>
+                        @endif
+                    @endif
                 </div>
+                <div>
+                    <span class="font-semibold text-gray-700">Tanggal:</span>
+                    <span class="text-gray-900">{{ $pemakaian->tanggal->format('d/m/Y H:i') }}</span>
+                </div>
+                @if($pemakaian->kategori == 'barang_sewa' && $pemakaian->durasi_sewa)
+                <div>
+                    <span class="font-semibold text-gray-700">Durasi Sewa:</span>
+                    <span class="text-gray-900">{{ $pemakaian->durasi_sewa }} bulan</span>
+                </div>
+                @endif
+            </div>
 
-                <div class="form-group">
-                    <label for="qty">Jumlah yang Digunakan *</label>
-                    <input type="number" name="qty" id="qty" min="1" required 
-                           value="{{ old('qty', $pemakaian->qty) }}">
-                    @error('qty')
-                    <small style="color:#DC3545">{{ $message }}</small>
-                    @enderror
-                    <small style="color:var(--text-secondary)">Jumlah sebelumnya: {{ $pemakaian->qty }} unit</small>
-                </div>
+            <!-- Jumlah -->
+            <div>
+                <label for="qty" class="block text-sm font-medium text-gray-700 mb-2">Jumlah yang Digunakan *</label>
+                <input type="number" name="qty" id="qty" min="1" required 
+                       value="{{ old('qty', $pemakaian->qty) }}"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
+                @error('qty')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+                <p class="mt-1 text-sm text-gray-500">Jumlah sebelumnya: {{ $pemakaian->qty }} unit</p>
+            </div>
 
-                <div class="form-group">
-                    <label for="penerima">Penerima / Keterangan *</label>
-                    <input type="text" name="penerima" id="penerima" required 
-                           value="{{ old('penerima', $pemakaian->penerima) }}">
-                    @error('penerima')
-                    <small style="color:#DC3545">{{ $message }}</small>
-                    @enderror
-                </div>
+            <!-- Penerima -->
+            <div>
+                <label for="penerima" class="block text-sm font-medium text-gray-700 mb-2">Penerima / Keterangan *</label>
+                <input type="text" name="penerima" id="penerima" required 
+                       value="{{ old('penerima', $pemakaian->penerima) }}"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
+                @error('penerima')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
 
-                <div class="btn-group">
-                    <button type="submit" class="btn-primary">✓ Update Pemakaian</button>
-                    <a href="{{ route('user.pemakaian.index') }}" class="btn-secondary">Batal</a>
-                </div>
-            </form>
-        </div>
+            <!-- Buttons -->
+            <div class="flex gap-3 pt-4">
+                <button type="submit" class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-300">
+                    <x-heroicon-o-check class="w-5 h-5" />
+                    <span class="font-medium">Update Pemakaian</span>
+                </button>
+                <a href="{{ route('user.pemakaian.index') }}" class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300">
+                    <x-heroicon-o-x-mark class="w-5 h-5" />
+                    <span class="font-medium">Batal</span>
+                </a>
+            </div>
+        </form>
     </div>
-
-    <script>
-        const isDark = localStorage.getItem('darkMode') === 'true';
-        if (isDark) document.body.classList.add('dark-mode');
-        function toggleDarkMode() { 
-            document.body.classList.toggle('dark-mode'); 
-            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode')); 
-        }
-    </script>
-</body>
-</html>
+</div>
+@endsection

@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Stock;
 use App\Models\IncomingTransaction;
 use App\Models\OutgoingTransaction;
+use App\Models\RackAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
@@ -33,14 +35,18 @@ class DashboardController extends Controller
         $stokMenengah = Stock::whereBetween('stock', [5, 9])->count();
         $stokKritis = Stock::where('stock', '<=', 4)->count();
 
-        // Ringkasan jumlah barang per rak
-        $barangPerRak = Stock::select('rack', DB::raw('count(*) as total'), DB::raw('sum(stock) as total_stock'))
+        // Ringkasan jumlah barang per rak (dari rack_assignments user)
+        $barangPerRak = RackAssignment::where('user_id', Auth::id())
+            ->select('rack', 
+                DB::raw('count(DISTINCT idbarang) as total'), 
+                DB::raw('sum(qty) as total_stock')
+            )
             ->groupBy('rack')
             ->get()
             ->keyBy('rack');
 
-        // Rak list
-        $raks = ['1a', '1b', '1c', '2a', '2b', '2c', '3a', '3b', '3c'];
+        // Rak list - tampilkan semua rak
+        $raks = collect(['1a', '1b', '1c', '2a', '2b', '2c']);
 
         // Recent transactions barang keluar (untuk user)
         $recentTransactions = OutgoingTransaction::with('stock')

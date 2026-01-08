@@ -4,7 +4,9 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Stock;
+use App\Models\RackAssignment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class StokBarangController extends Controller
 {
@@ -19,15 +21,17 @@ class StokBarangController extends Controller
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('no_equipment', 'like', "%{$search}%")
-                  ->orWhere('nama_barang', 'like', "%{$search}%")
-                  ->orWhere('rack', 'like', "%{$search}%");
+                $q->where('kodebarang', 'like', "%{$search}%")
+                  ->orWhere('namabarang', 'like', "%{$search}%");
             });
         }
 
-        // Filter berdasarkan rak
+        // Filter berdasarkan rak (dari rack_assignments user)
         if ($request->has('rack') && $request->rack != '') {
-            $query->where('rack', $request->rack);
+            $query->whereHas('rackAssignments', function($q) use ($request) {
+                $q->where('user_id', Auth::id())
+                  ->where('rack', $request->rack);
+            });
         }
 
         // Filter berdasarkan status stok
@@ -46,9 +50,21 @@ class StokBarangController extends Controller
         }
 
         $stocks = $query->orderBy('created_at', 'desc')->paginate(15);
-        $racks = Stock::distinct()->pluck('rack');
+        
+        // Get racks from user's rack assignments
+        $racks = RackAssignment::where('user_id', Auth::id())
+            ->distinct()
+            ->pluck('rack')
+            ->sort();
 
-        return view('user.stok-barang.index', compact('stocks', 'racks'));
+        // Get rack assignments for each stock
+        $stockIds = $stocks->pluck('idbarang');
+        $rackAssignments = RackAssignment::where('user_id', Auth::id())
+            ->whereIn('idbarang', $stockIds)
+            ->get()
+            ->groupBy('idbarang');
+
+        return view('user.stok-barang.index', compact('stocks', 'racks', 'rackAssignments'));
     }
 
     /**

@@ -94,7 +94,7 @@
     </div>
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         @foreach($raks as $rak)
-        <a href="{{ route('user.stok-barang.index', ['rack' => $rak]) }}" class="bg-gradient-to-br from-gray-50 to-gray-100 hover:from-[#14a2ba]/10 hover:to-[#0d7a8f]/10 rounded-lg p-4 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-md border border-gray-200 hover:border-[#14a2ba]">
+        <a href="{{ route('user.barang-rak.index', ['rack' => $rak]) }}" class="bg-gradient-to-br from-gray-50 to-gray-100 hover:from-[#14a2ba]/10 hover:to-[#0d7a8f]/10 rounded-lg p-4 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-md border border-gray-200 hover:border-[#14a2ba]">
             <div class="text-3xl font-bold text-[#14a2ba] mb-1">{{ strtoupper($rak) }}</div>
             <div class="text-xs text-gray-500 font-medium mb-2">Rak {{ strtoupper($rak) }}</div>
             <div class="text-sm font-semibold text-gray-700">

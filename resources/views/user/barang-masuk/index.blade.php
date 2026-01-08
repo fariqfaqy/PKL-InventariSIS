@@ -11,10 +11,6 @@
             <h2 class="text-2xl font-bold text-gray-800">Barang Masuk</h2>
             <p class="text-sm text-gray-500 mt-1">Riwayat barang yang masuk ke divisi</p>
         </div>
-        <div class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg border border-blue-200">
-            <x-heroicon-o-information-circle class="w-5 h-5" />
-            <span class="text-sm font-medium">Read Only</span>
-        </div>
     </div>
 
     <!-- Filter Section -->

@@ -1,0 +1,134 @@
+@extends('layouts.user')
+
+@section('title', 'Barang di Rak')
+
+@section('content')
+<div class="p-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800">Barang di Rak</h2>
+            <p class="text-gray-600 mt-1">Kelola penempatan barang di rak penyimpanan</p>
+        </div>
+        <a href="{{ route('user.barang-rak.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-200">
+            <x-heroicon-o-plus class="w-5 h-5" />
+            <span class="font-medium">Tambah Barang</span>
+        </a>
+    </div>
+
+    @if(session('success'))
+        <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-lg flex items-center gap-3">
+            <x-heroicon-o-check-circle class="w-5 h-5 text-green-500" />
+            <p class="text-green-700 font-medium">{{ session('success') }}</p>
+        </div>
+    @endif
+
+    <!-- Filter & Search Card -->
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <form method="GET" action="{{ route('user.barang-rak.index') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Search -->
+            <div class="md:col-span-1">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Cari Barang</label>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Kode atau nama barang..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
+            </div>
+            
+            <!-- Filter Rak -->
+            <div class="md:col-span-1">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Filter Rak</label>
+                <select name="rack" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
+                    <option value="">Semua Rak</option>
+                    @foreach($racks as $rack)
+                        <option value="{{ $rack }}" {{ request('rack') == $rack ? 'selected' : '' }}>Rak {{ strtoupper($rack) }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Button -->
+            <div class="md:col-span-1 flex items-end gap-2">
+                <button type="submit" class="flex-1 px-4 py-2 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
+                    <x-heroicon-o-magnifying-glass class="w-5 h-5" />
+                    <span class="font-medium">Cari</span>
+                </button>
+                @if(request('search') || request('rack'))
+                    <a href="{{ route('user.barang-rak.index') }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-200">
+                        <x-heroicon-o-x-mark class="w-5 h-5" />
+                    </a>
+                @endif
+            </div>
+        </form>
+    </div>
+
+    <!-- Table Card -->
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-sm font-semibold">No</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold">Rak</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold">Kode Barang</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold">Nama Barang</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold">Jumlah</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold">Keterangan</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold">Tanggal</th>
+                        <th class="px-6 py-4 text-center text-sm font-semibold">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    @forelse($assignments as $index => $assignment)
+                        <tr class="hover:bg-gray-50 transition-colors duration-150">
+                            <td class="px-6 py-4 text-sm text-gray-700">{{ $assignments->firstItem() + $index }}</td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+                                    <x-heroicon-o-archive-box class="w-4 h-4" />
+                                    {{ strtoupper($assignment->rack) }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm font-mono text-gray-700">{{ $assignment->stock->kodebarang }}</td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-800">{{ $assignment->stock->namabarang }}</td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-sm font-semibold rounded-lg">
+                                    {{ $assignment->qty }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ $assignment->keterangan ?? '-' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ $assignment->created_at->format('d M Y') }}</td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <a href="{{ route('user.barang-rak.edit', $assignment->id) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200" title="Edit">
+                                        <x-heroicon-o-pencil class="w-5 h-5" />
+                                    </a>
+                                    <form action="{{ route('user.barang-rak.destroy', $assignment->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus barang dari rak ini?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200" title="Hapus">
+                                            <x-heroicon-o-trash class="w-5 h-5" />
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center justify-center text-gray-400">
+                                    <x-heroicon-o-archive-box class="w-16 h-16 mb-4" />
+                                    <p class="text-lg font-medium">Belum ada barang di rak</p>
+                                    <p class="text-sm mt-1">Mulai tambahkan barang ke rak penyimpanan</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        @if($assignments->hasPages())
+            <div class="px-6 py-4 border-t border-gray-200">
+                {{ $assignments->links() }}
+            </div>
+        @endif
+    </div>
+</div>
+@endsection
