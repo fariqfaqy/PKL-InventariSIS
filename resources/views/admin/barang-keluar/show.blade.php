@@ -54,6 +54,18 @@
                 <label class="block text-sm font-medium text-gray-500 mb-1">Penginput</label>
                 <p class="text-gray-800">{{ $barangKeluar->penginput }}</p>
             </div>
+            @if($barangKeluar->durasi_sewa)
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Durasi Sewa</label>
+                <p class="text-gray-800 font-semibold">{{ $barangKeluar->durasi_sewa }} Tahun</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Tanggal Expire</label>
+                <p class="text-red-600 font-bold">
+                    {{ \Carbon\Carbon::parse($barangKeluar->tanggal)->addYears($barangKeluar->durasi_sewa)->format('d/m/Y') }}
+                </p>
+            </div>
+            @endif
         </div>
     </div>
 

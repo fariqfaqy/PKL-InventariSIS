@@ -30,7 +30,7 @@
                     <select id="filter_kategori" required
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
                         <option value="">-- Pilih Kategori --</option>
-                        <option value="barang_sewa">Barang Sewa (3 Tahun)</option>
+                        <option value="barang_sewa">Barang Sewa</option>
                         <option value="habis_pakai">Habis Pakai</option>
                     </select>
                 </div>
@@ -73,6 +73,7 @@
 
             <!-- Pilih Barang (Hidden - Auto filled) -->
             <input type="hidden" name="idbarang" id="idbarang">
+            <input type="hidden" name="durasi_sewa" id="durasi_sewa">
 
             <!-- Info Barang yang Dipilih -->
             <div id="selected-item-info" class="hidden bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-4">
@@ -97,6 +98,10 @@
                         <span class="text-gray-600">Stok Tersedia:</span>
                         <span id="display_stock" class="font-bold text-green-600 ml-2"></span>
                         <span class="text-gray-500">unit</span>
+                    </div>
+                    <div id="display_durasi_container" class="hidden">
+                        <span class="text-gray-600">Durasi Sewa:</span>
+                        <span id="display_durasi_sewa" class="font-medium text-purple-600 ml-2"></span>
                     </div>
                 </div>
             </div>
@@ -132,15 +137,33 @@
             <!-- Penerima -->
             <div>
                 <label for="penerima" class="block text-sm font-medium text-gray-700 mb-2">
-                    Penerima <span class="text-red-500">*</span>
+                    Penerima / Peminjam <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="penerima" id="penerima" required
                     value="{{ old('penerima') }}"
-                    placeholder="Masukkan nama penerima"
+                    placeholder="Masukkan nama penerima/peminjam"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('penerima') border-red-500 @enderror">
                 @error('penerima')
                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                 @enderror
+            </div>
+
+            <!-- Info Tanggal Expire untuk Barang Sewa -->
+            <div id="expire-info" class="hidden bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
+                <h3 class="font-semibold text-purple-900 mb-2 flex items-center gap-2">
+                    <x-heroicon-o-calendar class="w-5 h-5" />
+                    Informasi Peminjaman
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-600">Peminjam:</span>
+                        <span id="display_peminjam" class="font-medium text-gray-900 ml-2">-</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-600">Tanggal Expire:</span>
+                        <span id="display_expire" class="font-bold text-red-600 ml-2">-</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Buttons -->
@@ -234,6 +257,17 @@ filters.tipe.addEventListener('change', function() {
             document.getElementById('display_namabarang').textContent = selectedStock.namabarang;
             document.getElementById('display_rack').textContent = 'Rak ' + selectedStock.rack.toUpperCase();
             document.getElementById('display_stock').textContent = selectedStock.stock;
+            
+            // Handle durasi sewa for barang sewa
+            if (selectedStock.kategori === 'barang_sewa' && selectedStock.durasi_sewa) {
+                document.getElementById('display_durasi_sewa').textContent = selectedStock.durasi_sewa + ' Tahun';
+                document.getElementById('display_durasi_container').classList.remove('hidden');
+                document.getElementById('durasi_sewa').value = selectedStock.durasi_sewa;
+            } else {
+                document.getElementById('display_durasi_container').classList.add('hidden');
+                document.getElementById('durasi_sewa').value = '';
+            }
+            
             document.getElementById('selected-item-info').classList.remove('hidden');
             
             // Set max qty
@@ -246,6 +280,7 @@ filters.tipe.addEventListener('change', function() {
     } else {
         document.getElementById('selected-item-info').classList.add('hidden');
         document.getElementById('idbarang').value = '';
+        document.getElementById('durasi_sewa').value = '';
     }
 });
 
@@ -298,5 +333,33 @@ document.getElementById('qty').addEventListener('input', function() {
         stockInfo.classList.add('text-gray-500');
     }
 });
+
+// Update expire info when penerima or tanggal changes
+function updateExpireInfo() {
+    const durasi = document.getElementById('durasi_sewa').value;
+    const peminjam = document.getElementById('penerima').value;
+    const tanggal = document.getElementById('tanggal').value;
+    
+    if (durasi && tanggal) {
+        // Calculate expire date
+        const tanggalKeluar = new Date(tanggal);
+        const expireDate = new Date(tanggalKeluar);
+        expireDate.setFullYear(expireDate.getFullYear() + parseInt(durasi));
+        
+        // Format expire date
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        const expireFormatted = expireDate.toLocaleDateString('id-ID', options);
+        
+        // Show expire info
+        document.getElementById('display_peminjam').textContent = peminjam || '-';
+        document.getElementById('display_expire').textContent = expireFormatted;
+        document.getElementById('expire-info').classList.remove('hidden');
+    } else {
+        document.getElementById('expire-info').classList.add('hidden');
+    }
+}
+
+document.getElementById('penerima').addEventListener('input', updateExpireInfo);
+document.getElementById('tanggal').addEventListener('change', updateExpireInfo);
 </script>
 @endsection

@@ -33,9 +33,9 @@
 
                 <!-- Kelola Barang (Parent) -->
                 <div class="space-y-1">
-                    <button onclick="toggleSubmenu('kelola-barang')" class="w-full flex items-center justify-between gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200 group">
+                    <button onclick="toggleSubmenu('kelola-barang')" class="w-full flex items-center justify-between gap-3 px-4 py-3 {{ request()->routeIs('user.stok-barang.*') || request()->routeIs('user.barang-masuk.*') || request()->routeIs('user.barang-keluar.*') || request()->routeIs('user.pemakaian.*') || request()->routeIs('user.barang-rak.*') ? 'text-[#14a2ba] bg-[#14a2ba]/5' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
                         <div class="flex items-center gap-3">
-                            <x-heroicon-o-cube class="w-5 h-5 group-hover:text-[#14a2ba]" />
+                            <x-heroicon-o-cube class="w-5 h-5 {{ request()->routeIs('user.stok-barang.*') || request()->routeIs('user.barang-masuk.*') || request()->routeIs('user.barang-keluar.*') || request()->routeIs('user.pemakaian.*') || request()->routeIs('user.barang-rak.*') ? 'text-[#14a2ba]' : 'group-hover:text-[#14a2ba]' }}" />
                             <span class="font-medium">Kelola Barang</span>
                         </div>
                         <x-heroicon-o-chevron-down id="kelola-barang-icon" class="w-4 h-4 transition-transform duration-200 {{ request()->routeIs('user.stok-barang.*') || request()->routeIs('user.barang-masuk.*') || request()->routeIs('user.barang-keluar.*') || request()->routeIs('user.pemakaian.*') || request()->routeIs('user.barang-rak.*') ? 'rotate-180' : '' }}" />

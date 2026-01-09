@@ -33,16 +33,16 @@
 
                 <!-- Stok Barang (Parent with Submenu) -->
                 <div class="space-y-1">
-                    <button onclick="toggleSubmenu('stok-barang')" class="w-full flex items-center justify-between gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200 group">
+                    <button onclick="toggleSubmenu('stok-barang')" class="w-full flex items-center justify-between gap-3 px-4 py-3 {{ request()->routeIs('admin.stok-barang.*') ? 'text-[#14a2ba] bg-[#14a2ba]/5' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
                         <div class="flex items-center gap-3">
-                            <x-heroicon-o-cube-transparent class="w-5 h-5 group-hover:text-[#14a2ba]" />
+                            <x-heroicon-o-cube-transparent class="w-5 h-5 {{ request()->routeIs('admin.stok-barang.*') ? 'text-[#14a2ba]' : 'group-hover:text-[#14a2ba]' }}" />
                             <span class="font-medium">Stok Barang</span>
                         </div>
-                        <x-heroicon-o-chevron-down id="stok-barang-icon" class="w-4 h-4 transition-transform duration-200" />
+                        <x-heroicon-o-chevron-down id="stok-barang-icon" class="w-4 h-4 transition-transform duration-200 {{ request()->routeIs('admin.stok-barang.*') ? 'rotate-180' : '' }}" />
                     </button>
                     
                     <!-- Submenu Stok Barang -->
-                    <div id="stok-barang-submenu" class="hidden ml-4 space-y-1">
+                    <div id="stok-barang-submenu" class="{{ request()->routeIs('admin.stok-barang.*') ? '' : 'hidden' }} ml-4 space-y-1">
                         <!-- Barang Sewa -->
                         <a href="{{ route('admin.stok-barang.index', ['kategori' => 'barang_sewa']) }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('admin.stok-barang.*') && request('kategori') == 'barang_sewa' ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
                             <x-heroicon-o-computer-desktop class="w-4 h-4" />
@@ -59,16 +59,16 @@
 
                 <!-- Kelola Barang (Parent) -->
                 <div class="space-y-1">
-                    <button onclick="toggleSubmenu('kelola-barang')" class="w-full flex items-center justify-between gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200 group">
+                    <button onclick="toggleSubmenu('kelola-barang')" class="w-full flex items-center justify-between gap-3 px-4 py-3 {{ request()->routeIs('admin.barang-masuk.*') || request()->routeIs('admin.barang-keluar.*') ? 'text-[#14a2ba] bg-[#14a2ba]/5' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
                         <div class="flex items-center gap-3">
-                            <x-heroicon-o-cube class="w-5 h-5 group-hover:text-[#14a2ba]" />
+                            <x-heroicon-o-cube class="w-5 h-5 {{ request()->routeIs('admin.barang-masuk.*') || request()->routeIs('admin.barang-keluar.*') ? 'text-[#14a2ba]' : 'group-hover:text-[#14a2ba]' }}" />
                             <span class="font-medium">Kelola Barang</span>
                         </div>
-                        <x-heroicon-o-chevron-down id="kelola-barang-icon" class="w-4 h-4 transition-transform duration-200" />
+                        <x-heroicon-o-chevron-down id="kelola-barang-icon" class="w-4 h-4 transition-transform duration-200 {{ request()->routeIs('admin.barang-masuk.*') || request()->routeIs('admin.barang-keluar.*') ? 'rotate-180' : '' }}" />
                     </button>
                     
                     <!-- Submenu -->
-                    <div id="kelola-barang-submenu" class="hidden ml-4 space-y-1">
+                    <div id="kelola-barang-submenu" class="{{ request()->routeIs('admin.barang-masuk.*') || request()->routeIs('admin.barang-keluar.*') ? '' : 'hidden' }} ml-4 space-y-1">
                         <!-- Barang Masuk -->
                         <a href="{{ route('admin.barang-masuk.index') }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('admin.barang-masuk.*') ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
                             <x-heroicon-o-arrow-down-tray class="w-4 h-4" />
@@ -84,8 +84,8 @@
                 </div>
 
                 <!-- Kelola User -->
-                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200 group">
-                    <x-heroicon-o-users class="w-5 h-5 group-hover:text-[#14a2ba]" />
+                <a href="{{ route('admin.users.index') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('admin.users.*') ? 'text-white bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f]' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
+                    <x-heroicon-o-users class="w-5 h-5 {{ request()->routeIs('admin.users.*') ? '' : 'group-hover:text-[#14a2ba]' }}" />
                     <span class="font-medium">Kelola User</span>
                 </a>
 
@@ -185,13 +185,8 @@
             const submenu = document.getElementById(menuId + '-submenu');
             const icon = document.getElementById(menuId + '-icon');
             
-            if (submenu.classList.contains('hidden')) {
-                submenu.classList.remove('hidden');
-                icon.classList.add('rotate-180');
-            } else {
-                submenu.classList.add('hidden');
-                icon.classList.remove('rotate-180');
-            }
+            submenu.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
         }
     </script>
 </body>

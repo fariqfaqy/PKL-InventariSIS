@@ -32,7 +32,7 @@ class BarangKeluarController extends Controller
             ->orderBy('jenis')
             ->orderBy('merek')
             ->orderBy('tipe')
-            ->get(['idbarang', 'kodebarang', 'namabarang', 'stock', 'rack', 'kategori', 'jenis', 'merek', 'tipe']);
+            ->get(['idbarang', 'kodebarang', 'namabarang', 'stock', 'rack', 'kategori', 'jenis', 'merek', 'tipe', 'durasi_sewa']);
         return view('admin.barang-keluar.create', compact('stocks'));
     }
 
@@ -66,6 +66,8 @@ class BarangKeluarController extends Controller
             'namabarang_k' => $stock->namabarang,
             'kodebarang_k' => $stock->kodebarang,
             'penginput' => Auth::user()->name,
+            'kategori' => $stock->kategori,
+            'durasi_sewa' => $stock->kategori === 'barang_sewa' ? $stock->durasi_sewa : null,
         ]);
 
         // Update stock quantity

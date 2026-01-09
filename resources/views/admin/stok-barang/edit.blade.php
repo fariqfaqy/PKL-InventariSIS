@@ -92,7 +92,7 @@
                     <select name="kategori" id="kategori" required
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('kategori') border-red-500 @enderror">
                         <option value="">-- Pilih Kategori --</option>
-                        <option value="barang_sewa" {{ old('kategori', $stock->kategori) == 'barang_sewa' ? 'selected' : '' }}>Barang Sewa (3 Tahun)</option>
+                        <option value="barang_sewa" {{ old('kategori', $stock->kategori) == 'barang_sewa' ? 'selected' : '' }}>Barang Sewa</option>
                         <option value="habis_pakai" {{ old('kategori', $stock->kategori) == 'habis_pakai' ? 'selected' : '' }}>Habis Pakai</option>
                     </select>
                     @error('kategori')

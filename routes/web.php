@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\BarangMasukController;
 use App\Http\Controllers\Admin\BarangKeluarController;
 use App\Http\Controllers\Admin\StokBarangController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\User\UserController;
 
@@ -32,6 +33,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::resource('stok-barang', StokBarangController::class)->except(['create', 'store']);
     Route::resource('barang-masuk', BarangMasukController::class);
     Route::resource('barang-keluar', BarangKeluarController::class);
+    
+    // Kelola User
+    Route::resource('users', AdminUserController::class);
     
     // Add more admin routes here
     // Route::resource('reports', ReportController::class);

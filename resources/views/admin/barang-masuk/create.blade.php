@@ -53,8 +53,9 @@
                             class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('kodebarang') border-red-500 @enderror"
                             oninput="updateKodeBarang()">
                         <input type="hidden" name="kodebarang" id="kodebarang" value="{{ old('kodebarang') }}">
+                        <input type="hidden" name="rack" id="rack" value="{{ old('rack') }}">
                     </div>
-                    <p class="mt-1 text-xs text-gray-500">Format: [Rak][3 digit angka]. Contoh: 1A001</p>
+                    <p class="mt-1 text-xs text-gray-500">Format: [Rak][3 digit angka]. Contoh: 1A001. Rak akan otomatis terisi.</p>
                     @error('kodebarang')
                     <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
@@ -85,7 +86,7 @@
                     <select name="kategori" id="kategori" required
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('kategori') border-red-500 @enderror">
                         <option value="">-- Pilih Kategori --</option>
-                        <option value="barang_sewa" {{ old('kategori') == 'barang_sewa' ? 'selected' : '' }}>Barang Sewa (3 Tahun)</option>
+                        <option value="barang_sewa" {{ old('kategori') == 'barang_sewa' ? 'selected' : '' }}>Barang Sewa</option>
                         <option value="habis_pakai" {{ old('kategori') == 'habis_pakai' ? 'selected' : '' }}>Habis Pakai</option>
                     </select>
                     @error('kategori')
@@ -138,39 +139,17 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Rak -->
-                <div>
-                    <label for="rack" class="block text-sm font-medium text-gray-700 mb-2">
-                        Rak <span class="text-red-500">*</span>
-                    </label>
-                    <select name="rack" id="rack" required
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('rack') border-red-500 @enderror">
-                        <option value="">-- Pilih Rak --</option>
-                        <option value="1a" {{ old('rack') == '1a' ? 'selected' : '' }}>Rak 1A</option>
-                        <option value="1b" {{ old('rack') == '1b' ? 'selected' : '' }}>Rak 1B</option>
-                        <option value="1c" {{ old('rack') == '1c' ? 'selected' : '' }}>Rak 1C</option>
-                        <option value="2a" {{ old('rack') == '2a' ? 'selected' : '' }}>Rak 2A</option>
-                        <option value="2b" {{ old('rack') == '2b' ? 'selected' : '' }}>Rak 2B</option>
-                        <option value="2c" {{ old('rack') == '2c' ? 'selected' : '' }}>Rak 2C</option>
-                    </select>
-                    @error('rack')
-                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Tanggal -->
-                <div>
-                    <label for="tanggal" class="block text-sm font-medium text-gray-700 mb-2">
-                        Tanggal <span class="text-red-500">*</span>
-                    </label>
-                    <input type="datetime-local" name="tanggal" id="tanggal" required
-                        value="{{ old('tanggal', now()->format('Y-m-d\TH:i')) }}"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('tanggal') border-red-500 @enderror">
-                    @error('tanggal')
-                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                    @enderror
-                </div>
+            <!-- Tanggal -->
+            <div>
+                <label for="tanggal" class="block text-sm font-medium text-gray-700 mb-2">
+                    Tanggal <span class="text-red-500">*</span>
+                </label>
+                <input type="datetime-local" name="tanggal" id="tanggal" required
+                    value="{{ old('tanggal', now()->format('Y-m-d\TH:i')) }}"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('tanggal') border-red-500 @enderror">
+                @error('tanggal')
+                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                @enderror
             </div>
 
             <!-- Jumlah -->
@@ -229,19 +208,21 @@ function updateKodeBarang() {
         const newKode = prefix + suffix;
         kodebarang.value = newKode;
         
+        // Auto-fill rack field (hidden)
+        const rackHidden = document.getElementById('rack');
+        if (rackHidden) {
+            rackHidden.value = prefix.toLowerCase();
+        }
+        
         // Check if kode barang exists in stock
         checkExistingStock(newKode);
     } else {
         kodebarang.value = '';
-        resetForm();
-    }
-    
-    // Auto-sync rack selection
-    if (prefix) {
-        const rackSelect = document.getElementById('rack');
-        if (rackSelect) {
-            rackSelect.value = prefix.toLowerCase();
+        const rackHidden = document.getElementById('rack');
+        if (rackHidden) {
+            rackHidden.value = '';
         }
+        resetForm();
     }
 }
 
@@ -258,11 +239,6 @@ function checkExistingStock(kodebarang) {
         document.getElementById('existing-stock-alert').classList.remove('hidden');
         document.getElementById('current-stock-display').textContent = existingStock.stock;
         document.getElementById('autofill-hint').classList.remove('hidden');
-        
-        // Set rack automatically
-        document.getElementById('rack').value = existingStock.rack;
-        document.getElementById('rack').classList.add('bg-gray-50');
-        document.getElementById('rack').disabled = true;
         
         // Auto-fill category fields
         document.getElementById('kategori').value = existingStock.kategori;
@@ -299,10 +275,6 @@ function resetForm() {
     
     document.getElementById('existing-stock-alert').classList.add('hidden');
     document.getElementById('autofill-hint').classList.add('hidden');
-    
-    const rackSelect = document.getElementById('rack');
-    rackSelect.classList.remove('bg-gray-50');
-    rackSelect.disabled = false;
     
     // Reset category fields
     const kategori = document.getElementById('kategori');

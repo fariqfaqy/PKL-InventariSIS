@@ -10,7 +10,7 @@
             <h2 class="text-2xl font-bold text-gray-800">
                 @if(isset($kategori))
                     @if($kategori == 'barang_sewa')
-                        Stok Barang Sewa (3 Tahun)
+                        Stok Barang Sewa
                     @else
                         Stok Barang Habis Pakai
                     @endif
