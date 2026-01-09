@@ -8,7 +8,7 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h2 class="text-2xl font-bold text-gray-800">✏️ Edit Pemakaian Barang</h2>
+            <h2 class="text-2xl font-bold text-gray-800">Edit Pemakaian Barang</h2>
             <p class="text-sm text-gray-500 mt-1">Ubah data pemakaian barang Anda</p>
         </div>
         <a href="{{ route('user.pemakaian.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300">
@@ -37,9 +37,9 @@
                     <span class="text-gray-900">{{ $pemakaian->kodebarang_k }} - {{ $pemakaian->namabarang_k }}</span>
                     @if($pemakaian->kategori)
                         @if($pemakaian->kategori == 'barang_sewa')
-                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">🔄 Barang Sewa</span>
+                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Barang Sewa</span>
                         @else
-                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">📦 Habis Pakai</span>
+                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">Habis Pakai</span>
                         @endif
                     @endif
                 </div>

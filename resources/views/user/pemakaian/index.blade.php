@@ -44,6 +44,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penerima</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
@@ -65,14 +66,14 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                             @if($item->kategori == 'barang_sewa')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                    🔄 Sewa
+                                    Sewa
                                 </span>
                                 @if($item->durasi_sewa)
                                     <div class="text-xs text-gray-500 mt-1">{{ $item->durasi_sewa }} bulan</div>
                                 @endif
                             @elseif($item->kategori == 'habis_pakai')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">
-                                    📦 Habis Pakai
+                                    Habis Pakai
                                 </span>
                             @else
                                 <span class="text-xs text-gray-400">-</span>
@@ -86,24 +87,51 @@
                         <td class="px-6 py-4 text-sm text-gray-900">
                             {{ $item->penerima }}
                         </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            @if($item->status == 'selesai')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Selesai
+                                </span>
+                                @if($item->tanggal_selesai)
+                                    <div class="text-xs text-gray-500 mt-1">{{ $item->tanggal_selesai->format('d/m/Y H:i') }}</div>
+                                @endif
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    Sedang Dipakai
+                                </span>
+                            @endif
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                             <div class="flex items-center justify-center gap-2">
-                                <a href="{{ route('user.pemakaian.edit', $item->idkeluar) }}" class="text-yellow-600 hover:text-yellow-700 transition-colors" title="Edit">
-                                    <x-heroicon-o-pencil class="w-5 h-5" />
-                                </a>
-                                <form action="{{ route('user.pemakaian.destroy', $item->idkeluar) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus pemakaian ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-700 transition-colors" title="Hapus">
-                                        <x-heroicon-o-trash class="w-5 h-5" />
-                                    </button>
-                                </form>
+                                @if($item->status == 'sedang_dipakai')
+                                    <!-- Tombol Selesai Dipakai -->
+                                    <form action="{{ route('user.pemakaian.selesai', $item->idkeluar) }}" method="POST" class="inline" onsubmit="return confirm('Tandai pemakaian barang ini selesai? Status akan berubah menjadi \'Selesai\'.')">
+                                        @csrf
+                                        <button type="submit" class="text-green-600 hover:text-green-700 transition-colors" title="Selesai Dipakai">
+                                            <x-heroicon-o-check-circle class="w-5 h-5" />
+                                        </button>
+                                    </form>
+                                    <!-- Tombol Edit -->
+                                    <a href="{{ route('user.pemakaian.edit', $item->idkeluar) }}" class="text-yellow-600 hover:text-yellow-700 transition-colors" title="Edit">
+                                        <x-heroicon-o-pencil class="w-5 h-5" />
+                                    </a>
+                                    <!-- Tombol Hapus -->
+                                    <form action="{{ route('user.pemakaian.destroy', $item->idkeluar) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus pemakaian ini?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-red-600 hover:text-red-700 transition-colors" title="Hapus">
+                                            <x-heroicon-o-trash class="w-5 h-5" />
+                                        </button>
+                                    </form>
+                                @else
+                                    <span class="text-xs text-gray-400 italic">Pemakaian selesai</span>
+                                @endif
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="px-6 py-12 text-center">
+                        <td colspan="9" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center justify-center text-gray-500">
                                 <x-heroicon-o-inbox class="w-16 h-16 mb-4 opacity-30" />
                                 <p class="text-lg font-medium">Belum ada pemakaian barang</p>

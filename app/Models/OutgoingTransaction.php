@@ -22,10 +22,13 @@ class OutgoingTransaction extends Model
         'kodebarang_k',
         'kategori',
         'durasi_sewa',
+        'status',
+        'tanggal_selesai',
     ];
 
     protected $casts = [
         'tanggal' => 'datetime',
+        'tanggal_selesai' => 'datetime',
     ];
 
     /**
