@@ -37,11 +37,12 @@
                     @foreach($barangs as $barang)
                     <option value="{{ $barang->idbarang }}" 
                             data-stock="{{ $barang->stock }}"
+                            data-rack-qty="{{ $rackQty[$barang->idbarang] ?? 0 }}"
                             data-nama="{{ $barang->namabarang }}"
                             data-kode="{{ $barang->kodebarang }}"
                             data-kategori="{{ $barang->kategori }}"
                             data-durasi="{{ $barang->durasi_sewa }}">
-                        {{ $barang->kodebarang }} - {{ $barang->namabarang }} (Stok: {{ $barang->stock }})
+                        {{ $barang->kodebarang }} - {{ $barang->namabarang }} (Di Rak Anda: {{ $rackQty[$barang->idbarang] ?? 0 }})
                     </option>
                     @endforeach
                 </select>
@@ -51,19 +52,47 @@
             </div>
 
             <!-- Info Stok -->
-            <div id="stockInfo" class="hidden bg-blue-50 border-l-4 border-[#14a2ba] p-4 rounded-lg">
-                <div class="space-y-2">
-                    <div>
-                        <span class="text-sm text-gray-600">Stok Tersedia:</span>
-                        <span id="stockValue" class="ml-2 text-lg font-bold text-[#14a2ba]">0 unit</span>
+            <div id="stockInfo" class="hidden space-y-3">
+                <!-- Warning Box -->
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+                    <div class="flex items-start">
+                        <x-heroicon-o-exclamation-triangle class="w-5 h-5 text-yellow-400 mt-0.5 mr-3 flex-shrink-0" />
+                        <div class="space-y-1">
+                            <p class="text-sm font-semibold text-yellow-800">Perhatian!</p>
+                            <p class="text-sm text-yellow-700">
+                                Anda hanya bisa menggunakan <span id="rackQtyValue" class="font-bold">0</span> unit 
+                                (barang yang ada di rak Anda).
+                            </p>
+                            <p id="stockDiffInfo" class="text-xs text-yellow-600 mt-1 hidden">
+                                <span id="stockDiffValue"></span>
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <span class="text-sm text-gray-600">Kategori Barang:</span>
-                        <span id="kategoriValue" class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">-</span>
-                    </div>
-                    <div id="durasiInfo" class="hidden">
-                        <span class="text-sm text-gray-600">Durasi Sewa:</span>
-                        <span id="durasiValue" class="ml-2 font-semibold text-gray-800">-</span>
+                </div>
+
+                <!-- Info Detail -->
+                <div class="bg-blue-50 border-l-4 border-[#14a2ba] p-4 rounded-lg">
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Stok Total Gudang:</span>
+                            <span id="stockValue" class="text-sm font-semibold text-gray-800">0 unit</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Di Rak Anda:</span>
+                            <span id="rackQtyDisplay" class="text-sm font-bold text-[#14a2ba]">0 unit</span>
+                        </div>
+                        <div class="border-t border-blue-200 pt-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Kategori Barang:</span>
+                                <span id="kategoriValue" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">-</span>
+                            </div>
+                        </div>
+                        <div id="durasiInfo" class="hidden">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Durasi Sewa:</span>
+                                <span id="durasiValue" class="text-sm font-semibold text-gray-800">-</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -112,21 +141,38 @@ function updateStockInfo() {
     const option = select.options[select.selectedIndex];
     const stockInfo = document.getElementById('stockInfo');
     const stockValue = document.getElementById('stockValue');
+    const rackQtyValue = document.getElementById('rackQtyValue');
+    const rackQtyDisplay = document.getElementById('rackQtyDisplay');
+    const stockDiffInfo = document.getElementById('stockDiffInfo');
+    const stockDiffValue = document.getElementById('stockDiffValue');
     const kategoriValue = document.getElementById('kategoriValue');
     const durasiInfo = document.getElementById('durasiInfo');
     const durasiValue = document.getElementById('durasiValue');
+    const qtyInput = document.getElementById('qty');
     
     if (option.value) {
-        const stock = option.dataset.stock;
+        const stock = parseInt(option.dataset.stock);
+        const rackQty = parseInt(option.dataset.rackQty);
         const kategori = option.dataset.kategori;
         const durasi = option.dataset.durasi;
         
         stockValue.textContent = stock + ' unit';
+        rackQtyValue.textContent = rackQty + ' unit';
+        rackQtyDisplay.textContent = rackQty + ' unit';
+        
+        // Show difference info if stock > rack qty
+        if (stock > rackQty) {
+            const diff = stock - rackQty;
+            stockDiffInfo.classList.remove('hidden');
+            stockDiffValue.textContent = `Masih ada ${diff} unit di gudang yang belum masuk rak Anda.`;
+        } else {
+            stockDiffInfo.classList.add('hidden');
+        }
         
         // Update kategori
         if (kategori === 'barang_sewa') {
-            kategoriValue.textContent = '🔄 Barang Sewa';
-            kategoriValue.className = 'ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800';
+            kategoriValue.textContent = 'Barang Sewa';
+            kategoriValue.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800';
             
             // Show durasi sewa
             if (durasi && durasi !== 'null') {
@@ -136,18 +182,22 @@ function updateStockInfo() {
                 durasiInfo.classList.add('hidden');
             }
         } else {
-            kategoriValue.textContent = '📦 Habis Pakai';
-            kategoriValue.className = 'ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800';
+            kategoriValue.textContent = 'Habis Pakai';
+            kategoriValue.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800';
             durasiInfo.classList.add('hidden');
         }
         
         stockInfo.classList.remove('hidden');
         
-        // Update max value for qty input
-        document.getElementById('qty').max = stock;
+        // Update max value for qty input based on rack qty
+        qtyInput.max = rackQty;
+        qtyInput.placeholder = `Maksimal ${rackQty} unit`;
     } else {
         stockInfo.classList.add('hidden');
+        qtyInput.max = '';
+        qtyInput.placeholder = 'Masukkan jumlah barang';
     }
+}
 }
 </script>
 @endsection

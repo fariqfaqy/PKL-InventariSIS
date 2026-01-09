@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Stock;
 use App\Models\OutgoingTransaction;
+use App\Models\RackAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -29,8 +30,25 @@ class PemakaianController extends Controller
      */
     public function create()
     {
-        $barangs = Stock::where('stock', '>', 0)->orderBy('namabarang')->get();
-        return view('user.pemakaian.create', compact('barangs'));
+        // Hanya tampilkan barang yang ada di rak user dengan qty > 0
+        $barangIds = RackAssignment::where('user_id', Auth::id())
+            ->where('qty', '>', 0)
+            ->pluck('idbarang');
+
+        $barangs = Stock::whereIn('idbarang', $barangIds)
+            ->where('stock', '>', 0)
+            ->orderBy('namabarang')
+            ->get();
+
+        // Get qty di rak untuk setiap barang
+        $rackQty = RackAssignment::where('user_id', Auth::id())
+            ->whereIn('idbarang', $barangIds)
+            ->where('qty', '>', 0)
+            ->select('idbarang', DB::raw('SUM(qty) as total_qty'))
+            ->groupBy('idbarang')
+            ->pluck('total_qty', 'idbarang');
+
+        return view('user.pemakaian.create', compact('barangs', 'rackQty'));
     }
 
     /**
@@ -47,6 +65,20 @@ class PemakaianController extends Controller
         DB::beginTransaction();
         try {
             $stock = Stock::findOrFail($request->idbarang);
+
+            // Validasi barang ada di rak user
+            $totalQtyInRack = RackAssignment::where('user_id', Auth::id())
+                ->where('idbarang', $request->idbarang)
+                ->where('qty', '>', 0)
+                ->sum('qty');
+
+            if ($totalQtyInRack == 0) {
+                return back()->with('error', 'Barang belum ada di rak Anda! Tambahkan barang ke rak terlebih dahulu.');
+            }
+
+            if ($totalQtyInRack < $request->qty) {
+                return back()->with('error', 'Qty di rak Anda tidak mencukupi! Qty tersedia di rak: ' . $totalQtyInRack . ' unit');
+            }
 
             // Validasi stok mencukupi
             if ($stock->stock < $request->qty) {
@@ -67,6 +99,26 @@ class PemakaianController extends Controller
 
             // Update stok
             $stock->decrement('stock', $request->qty);
+
+            // Update stok di rak (kurangi qty dari rack_assignments milik user ini)
+            $rackAssignments = RackAssignment::where('user_id', Auth::id())
+                ->where('idbarang', $request->idbarang)
+                ->where('qty', '>', 0)
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            $remainingQty = $request->qty;
+            foreach ($rackAssignments as $rackAssignment) {
+                if ($remainingQty <= 0) break;
+
+                if ($rackAssignment->qty >= $remainingQty) {
+                    $rackAssignment->decrement('qty', $remainingQty);
+                    $remainingQty = 0;
+                } else {
+                    $remainingQty -= $rackAssignment->qty;
+                    $rackAssignment->update(['qty' => 0]);
+                }
+            }
 
             DB::commit();
             return redirect()->route('user.pemakaian.index')->with('success', 'Pemakaian barang berhasil dicatat!');
@@ -116,8 +168,46 @@ class PemakaianController extends Controller
             // Update stok
             if ($diff > 0) {
                 $stock->decrement('stock', $diff);
+                
+                // Kurangi stok di rak juga
+                $rackAssignments = RackAssignment::where('user_id', Auth::id())
+                    ->where('idbarang', $pemakaian->idbarang)
+                    ->where('qty', '>', 0)
+                    ->orderBy('created_at', 'asc')
+                    ->get();
+
+                $remainingQty = $diff;
+                foreach ($rackAssignments as $rackAssignment) {
+                    if ($remainingQty <= 0) break;
+
+                    if ($rackAssignment->qty >= $remainingQty) {
+                        $rackAssignment->decrement('qty', $remainingQty);
+                        $remainingQty = 0;
+                    } else {
+                        $remainingQty -= $rackAssignment->qty;
+                        $rackAssignment->update(['qty' => 0]);
+                    }
+                }
             } else if ($diff < 0) {
                 $stock->increment('stock', abs($diff));
+                
+                // Tambah kembali stok di rak
+                $rackAssignment = RackAssignment::where('user_id', Auth::id())
+                    ->where('idbarang', $pemakaian->idbarang)
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+
+                if ($rackAssignment) {
+                    $rackAssignment->increment('qty', abs($diff));
+                } else {
+                    // Jika tidak ada rack assignment, buat baru dengan rack default
+                    RackAssignment::create([
+                        'user_id' => Auth::id(),
+                        'idbarang' => $pemakaian->idbarang,
+                        'rack' => '1a',
+                        'qty' => abs($diff),
+                    ]);
+                }
             }
 
             // Update pemakaian
@@ -148,6 +238,24 @@ class PemakaianController extends Controller
             // Kembalikan stok
             $stock->increment('stock', $pemakaian->qty);
 
+            // Kembalikan stok di rak juga
+            $rackAssignment = RackAssignment::where('user_id', Auth::id())
+                ->where('idbarang', $pemakaian->idbarang)
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            if ($rackAssignment) {
+                $rackAssignment->increment('qty', $pemakaian->qty);
+            } else {
+                // Jika tidak ada rack assignment, buat baru dengan rack default
+                RackAssignment::create([
+                    'user_id' => Auth::id(),
+                    'idbarang' => $pemakaian->idbarang,
+                    'rack' => '1a',
+                    'qty' => $pemakaian->qty,
+                ]);
+            }
+
             // Hapus pemakaian
             $pemakaian->delete();
 
@@ -156,6 +264,32 @@ class PemakaianController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Gagal menghapus pemakaian: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Mark the specified pemakaian as completed.
+     */
+    public function selesai($id)
+    {
+        DB::beginTransaction();
+        try {
+            $pemakaian = OutgoingTransaction::where('penginput', Auth::user()->email)
+                ->where('status', 'sedang_dipakai')
+                ->findOrFail($id);
+
+            // Update status dan tanggal selesai
+            // Stok TIDAK dikembalikan, tetap berkurang dan barang tetap di tabel keluar
+            $pemakaian->update([
+                'status' => 'selesai',
+                'tanggal_selesai' => now(),
+            ]);
+
+            DB::commit();
+            return redirect()->route('user.pemakaian.index')->with('success', 'Pemakaian barang telah selesai!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menyelesaikan pemakaian: ' . $e->getMessage());
         }
     }
 }

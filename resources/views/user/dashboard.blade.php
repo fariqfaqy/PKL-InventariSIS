@@ -176,49 +176,49 @@
 
         <div class="stats-grid">
             <div class="stat-card">
-                <h3>📦 Total Barang</h3>
+                <h3>Total Barang</h3>
                 <div class="number">{{ $totalBarang }}</div>
                 <div class="sub-info">Total Stok: {{ $totalStok ?? 0 }} unit</div>
             </div>
             <div class="stat-card">
-                <h3>📥 Barang Masuk</h3>
+                <h3>Barang Masuk</h3>
                 <div class="number">{{ $totalBarangMasuk }}</div>
                 <div class="sub-info">Hari ini: {{ $barangMasukHariIni ?? 0 }} unit</div>
             </div>
             <div class="stat-card">
-                <h3>📤 Barang Keluar</h3>
+                <h3>Barang Keluar</h3>
                 <div class="number">{{ $totalBarangKeluar }}</div>
                 <div class="sub-info">Hari ini: {{ $barangKeluarHariIni ?? 0 }} unit</div>
             </div>
         </div>
 
-        <h2 class="section-title">📊 Status Stok Barang</h2>
+        <h2 class="section-title">Status Stok Barang</h2>
         <div class="status-grid">
             <div class="status-card aman">
-                <div class="icon">🟢</div>
+                <div class="icon">●</div>
                 <h4>Stok Aman</h4>
                 <div class="count">{{ $stokAman }}</div>
                 <small style="color:#4CAF50; font-weight: 600;">≥ 10 unit</small>
             </div>
             <div class="status-card menengah">
-                <div class="icon">🟡</div>
+                <div class="icon">●</div>
                 <h4>Stok Menengah</h4>
                 <div class="count">{{ $stokMenengah }}</div>
                 <small style="color:#FFC107; font-weight: 600;">5-9 unit</small>
             </div>
             <div class="status-card kritis">
-                <div class="icon">🔴</div>
+                <div class="icon">●</div>
                 <h4>Stok Kritis</h4>
                 <div class="count">{{ $stokKritis }}</div>
                 <small style="color:#F44336; font-weight: 600;">≤ 4 unit</small>
             </div>
         </div>
 
-        <h2 class="section-title">🗄️ Lokasi Rak Penyimpanan</h2>
+        <h2 class="section-title">Lokasi Rak Penyimpanan</h2>
         <div class="rack-grid">
             @foreach($raks as $rak)
             <a href="#" class="rack-card">
-                <div class="rack-icon">📦</div>
+                <div class="rack-icon">■</div>
                 <h4>Rak {{ strtoupper($rak) }}</h4>
                 <div class="count">{{ $barangPerRak[$rak]->total ?? 0 }}</div>
                 <small>Total: {{ $barangPerRak[$rak]->total_stock ?? 0 }} unit</small>
@@ -226,7 +226,7 @@
             @endforeach
         </div>
 
-        <h2 class="section-title">📤 Catat Pemakaian Barang</h2>
+        <h2 class="section-title">Catat Pemakaian Barang</h2>
         <div class="quick-action">
             <p style="color: var(--text-secondary); margin-bottom: 20px;">
                 Klik tombol di bawah untuk mencatat pemakaian barang yang Anda gunakan.

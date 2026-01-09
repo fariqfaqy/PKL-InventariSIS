@@ -17,6 +17,11 @@ class StokBarangController extends Controller
     {
         $query = Stock::query();
 
+        // Filter berdasarkan kategori
+        if ($request->has('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai'])) {
+            $query->where('kategori', $request->kategori);
+        }
+
         // Filter berdasarkan pencarian
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
@@ -51,20 +56,24 @@ class StokBarangController extends Controller
 
         $stocks = $query->orderBy('created_at', 'desc')->paginate(15);
         
-        // Get racks from user's rack assignments
+        // Get racks from user's rack assignments (only racks with qty > 0)
         $racks = RackAssignment::where('user_id', Auth::id())
+            ->where('qty', '>', 0)
             ->distinct()
             ->pluck('rack')
             ->sort();
 
-        // Get rack assignments for each stock
+        // Get rack assignments for each stock (only with qty > 0)
         $stockIds = $stocks->pluck('idbarang');
         $rackAssignments = RackAssignment::where('user_id', Auth::id())
             ->whereIn('idbarang', $stockIds)
+            ->where('qty', '>', 0)
             ->get()
             ->groupBy('idbarang');
 
-        return view('user.stok-barang.index', compact('stocks', 'racks', 'rackAssignments'));
+        $kategori = $request->get('kategori');
+
+        return view('user.stok-barang.index', compact('stocks', 'racks', 'rackAssignments', 'kategori'));
     }
 
     /**
