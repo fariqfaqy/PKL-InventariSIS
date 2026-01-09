@@ -27,6 +27,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->midd
 // Admin Routes
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/stats', [AdminDashboardController::class, 'statsApi'])->name('dashboard.stats');
     Route::resource('admins', AdminController::class);
     
     // Kelola Barang

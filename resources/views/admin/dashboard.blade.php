@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Admin - InventariSIS</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/pln-logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50 transition-colors duration-300">
@@ -172,16 +173,16 @@
                         <div class="flex items-center justify-between mb-3">
                             <div>
                                 <p class="text-gray-500 text-sm font-medium uppercase">Total Barang</p>
-                                <h4 class="text-3xl font-bold text-[#14a2ba] mt-2">0</h4>
+                                <h4 id="totalBarang" class="text-3xl font-bold text-[#14a2ba] mt-2">{{ $stats['totalBarang'] }}</h4>
                             </div>
                             <div class="bg-[#14a2ba]/10 p-3 rounded-lg">
                                 <x-heroicon-o-cube class="w-8 h-8 text-[#14a2ba]" />
                             </div>
                         </div>
                         <div class="flex items-center gap-1 text-sm">
-                            <x-heroicon-o-arrow-trending-up class="w-4 h-4 text-green-500" />
-                            <span class="text-green-500 font-medium">0%</span>
-                            <span class="text-gray-500">dari bulan lalu</span>
+                            <x-heroicon-o-clock class="w-4 h-4 text-blue-500" />
+                            <span class="text-blue-500 font-medium">Real-time</span>
+                            <span class="text-gray-500">diperbarui otomatis</span>
                         </div>
                     </div>
 
@@ -190,15 +191,15 @@
                         <div class="flex items-center justify-between mb-3">
                             <div>
                                 <p class="text-gray-500 text-sm font-medium uppercase">Total User</p>
-                                <h4 class="text-3xl font-bold text-[#16b8d1] mt-2">2</h4>
+                                <h4 id="totalUser" class="text-3xl font-bold text-[#16b8d1] mt-2">{{ $stats['totalUser'] }}</h4>
                             </div>
                             <div class="bg-[#16b8d1]/10 p-3 rounded-lg">
                                 <x-heroicon-o-users class="w-8 h-8 text-[#16b8d1]" />
                             </div>
                         </div>
                         <div class="flex items-center gap-1 text-sm">
-                            <x-heroicon-o-arrow-trending-up class="w-4 h-4 text-green-500" />
-                            <span class="text-green-500 font-medium">2 Active</span>
+                            <x-heroicon-o-clock class="w-4 h-4 text-blue-500" />
+                            <span class="text-blue-500 font-medium">{{ $stats['totalUser'] }} Active</span>
                             <span class="text-gray-500">users</span>
                         </div>
                     </div>
@@ -208,14 +209,14 @@
                         <div class="flex items-center justify-between mb-3">
                             <div>
                                 <p class="text-gray-500 text-sm font-medium uppercase">Barang Masuk</p>
-                                <h4 class="text-3xl font-bold text-[#0d7a8f] mt-2">0</h4>
+                                <h4 id="barangMasuk" class="text-3xl font-bold text-[#0d7a8f] mt-2">{{ $stats['barangMasuk'] }}</h4>
                             </div>
                             <div class="bg-[#0d7a8f]/10 p-3 rounded-lg">
                                 <x-heroicon-o-arrow-down-tray class="w-8 h-8 text-[#0d7a8f]" />
                             </div>
                         </div>
                         <div class="flex items-center gap-1 text-sm">
-                            <x-heroicon-o-minus class="w-4 h-4 text-gray-400" />
+                            <x-heroicon-o-calendar class="w-4 h-4 text-gray-400" />
                             <span class="text-gray-500">Bulan ini</span>
                         </div>
                     </div>
@@ -225,14 +226,14 @@
                         <div class="flex items-center justify-between mb-3">
                             <div>
                                 <p class="text-gray-500 text-sm font-medium uppercase">Barang Keluar</p>
-                                <h4 class="text-3xl font-bold text-[#17ceea] mt-2">0</h4>
+                                <h4 id="barangKeluar" class="text-3xl font-bold text-[#17ceea] mt-2">{{ $stats['barangKeluar'] }}</h4>
                             </div>
                             <div class="bg-[#17ceea]/10 p-3 rounded-lg">
                                 <x-heroicon-o-arrow-up-tray class="w-8 h-8 text-[#17ceea]" />
                             </div>
                         </div>
                         <div class="flex items-center gap-1 text-sm">
-                            <x-heroicon-o-minus class="w-4 h-4 text-gray-400" />
+                            <x-heroicon-o-calendar class="w-4 h-4 text-gray-400" />
                             <span class="text-gray-500">Bulan ini</span>
                         </div>
                     </div>
@@ -343,4 +344,46 @@
                 icon.classList.remove('rotate-180');
             }
         }
+
+        // Real-time Dashboard Stats Update
+        function updateDashboardStats() {
+            fetch('{{ route('admin.dashboard.stats') }}')
+                .then(response => response.json())
+                .then(data => {
+                    // Update stats dengan animasi
+                    animateValue('totalBarang', parseInt(document.getElementById('totalBarang').textContent), data.totalBarang, 500);
+                    animateValue('totalUser', parseInt(document.getElementById('totalUser').textContent), data.totalUser, 500);
+                    animateValue('barangMasuk', parseInt(document.getElementById('barangMasuk').textContent), data.barangMasuk, 500);
+                    animateValue('barangKeluar', parseInt(document.getElementById('barangKeluar').textContent), data.barangKeluar, 500);
+                })
+                .catch(error => {
+                    console.error('Error fetching dashboard stats:', error);
+                });
+        }
+
+        // Animasi angka saat update
+        function animateValue(elementId, start, end, duration) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            const range = end - start;
+            const increment = range / (duration / 16); // 60fps
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+                    element.textContent = end;
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.round(current);
+                }
+            }, 16);
+        }
+
+        // Update stats setiap 5 detik
+        setInterval(updateDashboardStats, 5000);
+
+        // Update stats pertama kali setelah 1 detik
+        setTimeout(updateDashboardStats, 1000);
     </script>
