@@ -15,6 +15,13 @@ class BarangMasukController extends Controller
     {
         $query = IncomingTransaction::with('stock');
 
+        // Filter berdasarkan kategori barang (barang_sewa/habis_pakai)
+        if ($request->has('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai'])) {
+            $query->whereHas('stock', function($q) use ($request) {
+                $q->where('kategori', $request->kategori);
+            });
+        }
+
         // Filter berdasarkan pencarian
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
@@ -30,8 +37,9 @@ class BarangMasukController extends Controller
         }
 
         $barangMasuk = $query->orderBy('tanggal', 'desc')->paginate(15);
+        $kategori = $request->kategori;
 
-        return view('user.barang-masuk.index', compact('barangMasuk'));
+        return view('user.barang-masuk.index', compact('barangMasuk', 'kategori'));
     }
 
     /**

@@ -20,6 +20,7 @@ class IncomingTransaction extends Model
         'namabarang_m',
         'penginput',
         'kodebarang_m',
+        'tipe',
     ];
 
     protected $casts = [

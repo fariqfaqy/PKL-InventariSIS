@@ -20,15 +20,26 @@ class OutgoingTransaction extends Model
         'namabarang_k',
         'penginput',
         'kodebarang_k',
+        'tipe',
         'kategori',
         'durasi_sewa',
         'status',
         'tanggal_selesai',
+        'status_approval',
+        'tanggal_pinjam',
+        'tanggal_kembali',
+        'tipe_request',
+        'catatan_admin',
+        'diproses_oleh',
+        'tanggal_diproses',
     ];
 
     protected $casts = [
         'tanggal' => 'datetime',
         'tanggal_selesai' => 'datetime',
+        'tanggal_pinjam' => 'date',
+        'tanggal_kembali' => 'date',
+        'tanggal_diproses' => 'datetime',
     ];
 
     /**

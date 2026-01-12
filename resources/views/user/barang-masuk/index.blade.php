@@ -1,6 +1,6 @@
 @extends('layouts.user')
 
-@section('title', 'Barang Masuk')
+@section('title', 'Barang Masuk' . (isset($kategori) ? ' - ' . ($kategori == 'barang_sewa' ? 'Barang Sewa' : 'Barang Habis Pakai') : ''))
 @section('subtitle', 'Lihat data barang masuk divisi')
 
 @section('content')
@@ -8,14 +8,34 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h2 class="text-2xl font-bold text-gray-800">Barang Masuk</h2>
-            <p class="text-sm text-gray-500 mt-1">Riwayat barang yang masuk ke divisi</p>
+            <div class="flex items-center gap-3">
+                <h2 class="text-2xl font-bold text-gray-800">
+                    Barang Masuk
+                    @if(isset($kategori))
+                        <span class="text-[#14a2ba]">{{ $kategori == 'barang_sewa' ? 'Barang Sewa' : 'Barang Habis Pakai' }}</span>
+                    @endif
+                </h2>
+                <span class="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full border border-gray-300">
+                    <x-heroicon-o-eye class="w-3 h-3" />
+                    Read Only
+                </span>
+            </div>
+            <p class="text-sm text-gray-500 mt-1">
+                @if(isset($kategori))
+                    Riwayat barang masuk {{ $kategori == 'barang_sewa' ? 'sewa' : 'habis pakai' }} (Hanya lihat, admin yang mengelola)
+                @else
+                    Riwayat semua barang yang masuk ke divisi (Hanya lihat, admin yang mengelola)
+                @endif
+            </p>
         </div>
     </div>
 
     <!-- Filter Section -->
     <div class="bg-white rounded-xl shadow-md p-4">
         <form method="GET" action="{{ route('user.barang-masuk.index') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            @if(isset($kategori))
+                <input type="hidden" name="kategori" value="{{ $kategori }}">
+            @endif
             <!-- Search -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Cari Barang</label>
@@ -50,6 +70,7 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode Barang</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Barang</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
@@ -66,6 +87,19 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ $item->tanggal->format('d/m/Y H:i') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            @if($item->stock && $item->stock->kategori == 'barang_sewa')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    <x-heroicon-o-computer-desktop class="w-3 h-3 mr-1" />
+                                    Barang Sewa
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">
+                                    <x-heroicon-o-shopping-bag class="w-3 h-3 mr-1" />
+                                    Habis Pakai
+                                </span>
+                            @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ $item->kodebarang_m }}
@@ -93,7 +127,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="px-6 py-12 text-center">
+                        <td colspan="9" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center justify-center text-gray-500">
                                 <x-heroicon-o-inbox class="w-16 h-16 mb-4 opacity-30" />
                                 <p class="text-lg font-medium">Belum ada data barang masuk</p>

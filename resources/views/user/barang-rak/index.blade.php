@@ -5,15 +5,15 @@
 @section('content')
 <div class="p-6">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
-        <div>
+    <div class="mb-6">
+        <div class="flex items-center gap-3">
             <h2 class="text-2xl font-bold text-gray-800">Barang di Rak</h2>
-            <p class="text-gray-600 mt-1">Kelola penempatan barang di rak penyimpanan</p>
+            <span class="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full border border-gray-300">
+                <x-heroicon-o-eye class="w-3 h-3" />
+                Read Only
+            </span>
         </div>
-        <a href="{{ route('user.barang-rak.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-200">
-            <x-heroicon-o-plus class="w-5 h-5" />
-            <span class="font-medium">Tambah Barang</span>
-        </a>
+        <p class="text-gray-600 mt-1">Lihat penempatan barang di rak penyimpanan (Admin yang mengelola penempatan barang)</p>
     </div>
 
     @if(session('success'))
@@ -71,7 +71,6 @@
                         <th class="px-6 py-4 text-left text-sm font-semibold">Jumlah</th>
                         <th class="px-6 py-4 text-left text-sm font-semibold">Keterangan</th>
                         <th class="px-6 py-4 text-left text-sm font-semibold">Tanggal</th>
-                        <th class="px-6 py-4 text-center text-sm font-semibold">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -93,28 +92,14 @@
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-600">{{ $assignment->keterangan ?? '-' }}</td>
                             <td class="px-6 py-4 text-sm text-gray-600">{{ $assignment->created_at->format('d M Y') }}</td>
-                            <td class="px-6 py-4 text-center">
-                                <div class="flex items-center justify-center gap-2">
-                                    <a href="{{ route('user.barang-rak.edit', $assignment->id) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200" title="Edit">
-                                        <x-heroicon-o-pencil class="w-5 h-5" />
-                                    </a>
-                                    <form action="{{ route('user.barang-rak.destroy', $assignment->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus barang dari rak ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200" title="Hapus">
-                                            <x-heroicon-o-trash class="w-5 h-5" />
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-6 py-12 text-center">
+                            <td colspan="7" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center justify-center text-gray-400">
                                     <x-heroicon-o-archive-box class="w-16 h-16 mb-4" />
                                     <p class="text-lg font-medium">Belum ada barang di rak</p>
-                                    <p class="text-sm mt-1">Mulai tambahkan barang ke rak penyimpanan</p>
+                                    <p class="text-sm mt-1">Admin akan menambahkan barang melalui barang masuk</p>
                                 </div>
                             </td>
                         </tr>

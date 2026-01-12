@@ -30,25 +30,12 @@ class PemakaianController extends Controller
      */
     public function create()
     {
-        // Hanya tampilkan barang yang ada di rak user dengan qty > 0
-        $barangIds = RackAssignment::where('user_id', Auth::id())
-            ->where('qty', '>', 0)
-            ->pluck('idbarang');
-
-        $barangs = Stock::whereIn('idbarang', $barangIds)
-            ->where('stock', '>', 0)
+        // Tampilkan semua barang yang ada stoknya
+        $barangs = Stock::where('stock', '>', 0)
             ->orderBy('namabarang')
             ->get();
 
-        // Get qty di rak untuk setiap barang
-        $rackQty = RackAssignment::where('user_id', Auth::id())
-            ->whereIn('idbarang', $barangIds)
-            ->where('qty', '>', 0)
-            ->select('idbarang', DB::raw('SUM(qty) as total_qty'))
-            ->groupBy('idbarang')
-            ->pluck('total_qty', 'idbarang');
-
-        return view('user.pemakaian.create', compact('barangs', 'rackQty'));
+        return view('user.pemakaian.create', compact('barangs'));
     }
 
     /**
@@ -60,32 +47,34 @@ class PemakaianController extends Controller
             'idbarang' => 'required|exists:stock,idbarang',
             'qty' => 'required|integer|min:1',
             'penerima' => 'required|string|max:255',
+            'tipe_request' => 'required|in:peminjaman,permintaan',
+            'tanggal_pinjam' => 'required_if:tipe_request,peminjaman|date|after_or_equal:today',
+            'tanggal_kembali' => 'required_if:tipe_request,peminjaman|date|after:tanggal_pinjam',
+        ], [
+            'tanggal_pinjam.required_if' => 'Tanggal pinjam wajib diisi untuk peminjaman barang sewa',
+            'tanggal_kembali.required_if' => 'Tanggal kembali wajib diisi untuk peminjaman barang sewa',
+            'tanggal_kembali.after' => 'Tanggal kembali harus setelah tanggal pinjam',
         ]);
 
         DB::beginTransaction();
         try {
             $stock = Stock::findOrFail($request->idbarang);
 
-            // Validasi barang ada di rak user
-            $totalQtyInRack = RackAssignment::where('user_id', Auth::id())
-                ->where('idbarang', $request->idbarang)
-                ->where('qty', '>', 0)
-                ->sum('qty');
-
-            if ($totalQtyInRack == 0) {
-                return back()->with('error', 'Barang belum ada di rak Anda! Tambahkan barang ke rak terlebih dahulu.');
+            // Validasi tipe request sesuai dengan kategori barang
+            if ($request->tipe_request == 'peminjaman' && $stock->kategori != 'barang_sewa') {
+                return back()->withInput()->with('error', 'Peminjaman hanya untuk barang sewa!');
             }
-
-            if ($totalQtyInRack < $request->qty) {
-                return back()->with('error', 'Qty di rak Anda tidak mencukupi! Qty tersedia di rak: ' . $totalQtyInRack . ' unit');
+            
+            if ($request->tipe_request == 'permintaan' && $stock->kategori != 'habis_pakai') {
+                return back()->withInput()->with('error', 'Permintaan hanya untuk barang habis pakai!');
             }
 
             // Validasi stok mencukupi
             if ($stock->stock < $request->qty) {
-                return back()->with('error', 'Stok tidak mencukupi! Stok tersedia: ' . $stock->stock . ' unit');
+                return back()->withInput()->with('error', 'Stok tidak mencukupi! Stok tersedia: ' . $stock->stock . ' unit');
             }
 
-            // Create transaksi keluar dengan kategori dan durasi dari stock
+            // Create transaksi keluar dengan status pending (menunggu approval admin)
             OutgoingTransaction::create([
                 'idbarang' => $request->idbarang,
                 'qty' => $request->qty,
@@ -95,36 +84,19 @@ class PemakaianController extends Controller
                 'penginput' => Auth::user()->email,
                 'kategori' => $stock->kategori,
                 'durasi_sewa' => $stock->durasi_sewa,
+                'tipe_request' => $request->tipe_request,
+                'tanggal_pinjam' => $request->tipe_request == 'peminjaman' ? $request->tanggal_pinjam : null,
+                'tanggal_kembali' => $request->tipe_request == 'peminjaman' ? $request->tanggal_kembali : null,
+                'status_approval' => 'pending',
             ]);
 
-            // Update stok
-            $stock->decrement('stock', $request->qty);
-
-            // Update stok di rak (kurangi qty dari rack_assignments milik user ini)
-            $rackAssignments = RackAssignment::where('user_id', Auth::id())
-                ->where('idbarang', $request->idbarang)
-                ->where('qty', '>', 0)
-                ->orderBy('created_at', 'asc')
-                ->get();
-
-            $remainingQty = $request->qty;
-            foreach ($rackAssignments as $rackAssignment) {
-                if ($remainingQty <= 0) break;
-
-                if ($rackAssignment->qty >= $remainingQty) {
-                    $rackAssignment->decrement('qty', $remainingQty);
-                    $remainingQty = 0;
-                } else {
-                    $remainingQty -= $rackAssignment->qty;
-                    $rackAssignment->update(['qty' => 0]);
-                }
-            }
+            // TIDAK update stok dulu, tunggu admin approve
 
             DB::commit();
-            return redirect()->route('user.pemakaian.index')->with('success', 'Pemakaian barang berhasil dicatat!');
+            return redirect()->route('user.pemakaian.index')->with('success', 'Request pemakaian berhasil diajukan! Menunggu persetujuan admin.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal mencatat pemakaian: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Gagal mengajukan request: ' . $e->getMessage());
         }
     }
 

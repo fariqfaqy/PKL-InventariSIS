@@ -1,6 +1,6 @@
 @extends('layouts.user')
 
-@section('title', 'Barang Keluar')
+@section('title', 'Barang Keluar' . (isset($tipe) ? ' - ' . ($tipe == 'peminjaman' ? 'Peminjaman (Sewa)' : 'Permintaan (Habis Pakai)') : ''))
 @section('subtitle', 'Lihat semua pemakaian barang divisi')
 
 @section('content')
@@ -8,14 +8,38 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h2 class="text-2xl font-bold text-gray-800">Barang Keluar</h2>
-            <p class="text-sm text-gray-500 mt-1">Riwayat semua barang keluar divisi</p>
+            <div class="flex items-center gap-3">
+                <h2 class="text-2xl font-bold text-gray-800">
+                    Barang Keluar
+                    @if(isset($tipe))
+                        <span class="text-[#14a2ba]">{{ $tipe == 'peminjaman' ? 'Peminjaman' : 'Permintaan' }}</span>
+                    @endif
+                </h2>
+                <span class="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full border border-gray-300">
+                    <x-heroicon-o-eye class="w-3 h-3" />
+                    Read Only
+                </span>
+            </div>
+            <p class="text-sm text-gray-500 mt-1">
+                @if(isset($tipe))
+                    @if($tipe == 'peminjaman')
+                        Riwayat peminjaman barang sewa (Hanya lihat, admin yang mengelola)
+                    @else
+                        Riwayat permintaan barang habis pakai (Hanya lihat, admin yang mengelola)
+                    @endif
+                @else
+                    Riwayat semua barang keluar divisi (Hanya lihat, admin yang mengelola)
+                @endif
+            </p>
         </div>
     </div>
 
     <!-- Filter Section -->
     <div class="bg-white rounded-xl shadow-md p-4">
         <form method="GET" action="{{ route('user.barang-keluar.index') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            @if(isset($tipe))
+                <input type="hidden" name="tipe" value="{{ $tipe }}">
+            @endif
             <!-- Search -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Cari Barang / Penerima</label>
@@ -50,6 +74,7 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode Barang</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Barang</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
@@ -68,6 +93,19 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ $item->tanggal->format('d/m/Y H:i') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            @if($item->kategori == 'barang_sewa')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
+                                    Peminjaman
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    <x-heroicon-o-document-text class="w-3 h-3 mr-1" />
+                                    Permintaan
+                                </span>
+                            @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ $item->kodebarang_k }}

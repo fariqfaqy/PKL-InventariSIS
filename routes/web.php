@@ -66,7 +66,6 @@ Route::prefix('user')->name('user.')->middleware(['auth', 'role:user'])->group(f
     Route::resource('pemakaian', \App\Http\Controllers\User\PemakaianController::class);
     Route::post('/pemakaian/{id}/selesai', [\App\Http\Controllers\User\PemakaianController::class, 'selesai'])->name('pemakaian.selesai');
     
-    // Barang di Rak (CRUD - Kelola Barang di Rak)
-    Route::get('/barang-rak/check-stock/{idbarang}', [\App\Http\Controllers\User\BarangRakController::class, 'checkStock'])->name('barang-rak.check-stock');
-    Route::resource('barang-rak', \App\Http\Controllers\User\BarangRakController::class);
+    // Barang di Rak (Read Only - User hanya lihat, admin yang input via barang masuk)
+    Route::get('/barang-rak', [\App\Http\Controllers\User\BarangRakController::class, 'index'])->name('barang-rak.index');
 });
