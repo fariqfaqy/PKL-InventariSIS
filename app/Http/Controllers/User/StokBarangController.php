@@ -31,12 +31,9 @@ class StokBarangController extends Controller
             });
         }
 
-        // Filter berdasarkan rak (dari rack_assignments user)
+        // Filter berdasarkan rak (dari kolom rack di stock)
         if ($request->has('rack') && $request->rack != '') {
-            $query->whereHas('rackAssignments', function($q) use ($request) {
-                $q->where('user_id', Auth::id())
-                  ->where('rack', $request->rack);
-            });
+            $query->where('rack', $request->rack);
         }
 
         // Filter berdasarkan status stok
@@ -56,24 +53,15 @@ class StokBarangController extends Controller
 
         $stocks = $query->orderBy('created_at', 'desc')->paginate(15);
         
-        // Get racks from user's rack assignments (only racks with qty > 0)
-        $racks = RackAssignment::where('user_id', Auth::id())
-            ->where('qty', '>', 0)
+        // Get racks yang tersedia (dari kolom rack di stock)
+        $racks = Stock::whereNotNull('rack')
             ->distinct()
             ->pluck('rack')
             ->sort();
 
-        // Get rack assignments for each stock (only with qty > 0)
-        $stockIds = $stocks->pluck('idbarang');
-        $rackAssignments = RackAssignment::where('user_id', Auth::id())
-            ->whereIn('idbarang', $stockIds)
-            ->where('qty', '>', 0)
-            ->get()
-            ->groupBy('idbarang');
-
         $kategori = $request->get('kategori');
 
-        return view('user.stok-barang.index', compact('stocks', 'racks', 'rackAssignments', 'kategori'));
+        return view('user.stok-barang.index', compact('stocks', 'racks', 'kategori'));
     }
 
     /**

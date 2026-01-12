@@ -7,9 +7,14 @@
 <div class="space-y-6">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-            <h2 class="text-2xl font-bold text-gray-800">📤 Ajukan Request Pemakaian</h2>
-            <p class="text-sm text-gray-500 mt-1">Ajukan permintaan barang habis pakai atau peminjaman barang sewa</p>
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-[#14a2ba] to-[#0d7a8f] rounded-xl flex items-center justify-center shadow-lg">
+                <x-heroicon-o-document-plus class="w-7 h-7 text-white" />
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">Ajukan Request Pemakaian</h2>
+                <p class="text-sm text-gray-500 mt-1">Ajukan permintaan barang habis pakai atau peminjaman barang sewa</p>
+            </div>
         </div>
         <a href="{{ route('user.pemakaian.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300">
             <x-heroicon-o-arrow-left class="w-4 h-4" />
@@ -31,36 +36,12 @@
             
             <!-- Pilih Tipe Request -->
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Request *</label>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <label class="relative flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-[#14a2ba] transition-colors">
-                        <input type="radio" name="tipe_request" value="permintaan" required class="peer sr-only" onchange="toggleTipeRequest()">
-                        <div class="peer-checked:border-[#14a2ba] peer-checked:bg-[#14a2ba]/5 absolute inset-0 rounded-lg border-2"></div>
-                        <div class="relative flex items-center gap-3 w-full">
-                            <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                <x-heroicon-o-document-text class="w-6 h-6 text-blue-600" />
-                            </div>
-                            <div class="flex-1">
-                                <p class="font-semibold text-gray-800">Permintaan</p>
-                                <p class="text-xs text-gray-500">Barang Habis Pakai</p>
-                            </div>
-                        </div>
-                    </label>
-                    
-                    <label class="relative flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-[#14a2ba] transition-colors">
-                        <input type="radio" name="tipe_request" value="peminjaman" required class="peer sr-only" onchange="toggleTipeRequest()">
-                        <div class="peer-checked:border-[#14a2ba] peer-checked:bg-[#14a2ba]/5 absolute inset-0 rounded-lg border-2"></div>
-                        <div class="relative flex items-center gap-3 w-full">
-                            <div class="flex-shrink-0 w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                                <x-heroicon-o-arrow-path class="w-6 h-6 text-purple-600" />
-                            </div>
-                            <div class="flex-1">
-                                <p class="font-semibold text-gray-800">Peminjaman</p>
-                                <p class="text-xs text-gray-500">Barang Sewa</p>
-                            </div>
-                        </div>
-                    </label>
-                </div>
+                <label for="tipe_request" class="block text-sm font-medium text-gray-700 mb-2">Tipe Request *</label>
+                <select name="tipe_request" id="tipe_request" required onchange="toggleTipeRequest()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
+                    <option value="">-- Pilih Tipe Request --</option>
+                    <option value="permintaan">Permintaan (Barang Habis Pakai)</option>
+                    <option value="peminjaman">Peminjaman (Barang Sewa)</option>
+                </select>
                 @error('tipe_request')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
@@ -70,21 +51,24 @@
             <div>
                 <label for="idbarang" class="block text-sm font-medium text-gray-700 mb-2">Pilih Barang *</label>
                 <select name="idbarang" id="idbarang" required onchange="updateStockInfo()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
-                    <option value="">-- Pilih Barang --</option>
-                    @foreach($barangs as $barang)
-                    <option value="{{ $barang->idbarang }}" 
-                            data-stock="{{ $barang->stock }}"
-                            data-nama="{{ $barang->namabarang }}"
-                            data-kode="{{ $barang->kodebarang }}"
-                            data-kategori="{{ $barang->kategori }}"
-                            data-durasi="{{ $barang->durasi_sewa }}">
-                        {{ $barang->kodebarang }} - {{ $barang->namabarang }} (Stok: {{ $barang->stock }})
-                    </option>
-                    @endforeach
+                    <option value="">-- Pilih tipe request terlebih dahulu --</option>
                 </select>
                 @error('idbarang')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
+                <!-- Hidden data untuk barang -->
+                <div id="barangData" style="display: none;">
+                    @foreach($barangs as $barang)
+                    <div class="barang-item" 
+                         data-id="{{ $barang->idbarang }}"
+                         data-stock="{{ $barang->stock }}"
+                         data-nama="{{ $barang->namabarang }}"
+                         data-kode="{{ $barang->kodebarang }}"
+                         data-kategori="{{ $barang->kategori }}"
+                         data-durasi="{{ $barang->durasi_sewa }}">
+                    </div>
+                    @endforeach
+                </div>
             </div>
 
             <!-- Info Stok -->
@@ -189,16 +173,84 @@
 
 <script>
 function toggleTipeRequest() {
-    const tipeRequest = document.querySelector('input[name="tipe_request"]:checked')?.value;
+    const tipeRequestSelect = document.getElementById('tipe_request');
+    const tipeRequest = tipeRequestSelect.value;
     const tanggalSection = document.getElementById('tanggalSection');
     const tanggalPinjam = document.getElementById('tanggal_pinjam');
     const tanggalKembali = document.getElementById('tanggal_kembali');
+    const barangSelect = document.getElementById('idbarang');
     
+    console.log('Tipe request dipilih:', tipeRequest);
+    
+    // Reset select barang
+    barangSelect.innerHTML = '<option value="">-- Pilih Barang --</option>';
+    document.getElementById('stockInfo').classList.add('hidden');
+    
+    if (!tipeRequest) {
+        barangSelect.innerHTML = '<option value="">-- Pilih tipe request terlebih dahulu --</option>';
+        tanggalSection.classList.add('hidden');
+        tanggalPinjam.required = false;
+        tanggalKembali.required = false;
+        return;
+    }
+    
+    // Ambil data barang dari hidden div
+    const barangItems = document.querySelectorAll('.barang-item');
+    let filteredCount = 0;
+    
+    console.log('Total barang items:', barangItems.length);
+    
+    barangItems.forEach(item => {
+        const kategori = item.getAttribute('data-kategori');
+        const id = item.getAttribute('data-id');
+        const kode = item.getAttribute('data-kode');
+        const nama = item.getAttribute('data-nama');
+        const stock = item.getAttribute('data-stock');
+        const durasi = item.getAttribute('data-durasi');
+        
+        console.log('Barang:', kode, '| Kategori:', kategori);
+        
+        let shouldShow = false;
+        
+        if (tipeRequest === 'peminjaman' && kategori === 'barang_sewa') {
+            shouldShow = true;
+        } else if (tipeRequest === 'permintaan' && kategori === 'habis_pakai') {
+            shouldShow = true;
+        }
+        
+        if (shouldShow) {
+            const option = document.createElement('option');
+            option.value = id;
+            option.textContent = kode + ' - ' + nama + ' (Stok: ' + stock + ')';
+            option.setAttribute('data-stock', stock);
+            option.setAttribute('data-nama', nama);
+            option.setAttribute('data-kode', kode);
+            option.setAttribute('data-kategori', kategori);
+            option.setAttribute('data-durasi', durasi);
+            barangSelect.appendChild(option);
+            filteredCount++;
+            console.log('Barang ditambahkan:', kode);
+        }
+    });
+    
+    console.log('Filtered count:', filteredCount);
+    
+    // Update placeholder dan tanggal section
     if (tipeRequest === 'peminjaman') {
+        if (filteredCount === 0) {
+            barangSelect.innerHTML = '<option value="">-- Tidak ada barang sewa tersedia --</option>';
+        } else {
+            barangSelect.options[0].text = '-- Pilih barang sewa --';
+        }
         tanggalSection.classList.remove('hidden');
         tanggalPinjam.required = true;
         tanggalKembali.required = true;
-    } else {
+    } else if (tipeRequest === 'permintaan') {
+        if (filteredCount === 0) {
+            barangSelect.innerHTML = '<option value="">-- Tidak ada barang habis pakai tersedia --</option>';
+        } else {
+            barangSelect.options[0].text = '-- Pilih barang habis pakai --';
+        }
         tanggalSection.classList.add('hidden');
         tanggalPinjam.required = false;
         tanggalKembali.required = false;

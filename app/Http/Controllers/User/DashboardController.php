@@ -35,11 +35,11 @@ class DashboardController extends Controller
         $stokMenengah = Stock::whereBetween('stock', [5, 9])->count();
         $stokKritis = Stock::where('stock', '<=', 4)->count();
 
-        // Ringkasan jumlah barang per rak (dari rack_assignments user)
-        $barangPerRak = RackAssignment::where('user_id', Auth::id())
+        // Ringkasan jumlah barang per rak (dari kolom rack di stock)
+        $barangPerRak = Stock::whereNotNull('rack')
             ->select('rack', 
-                DB::raw('count(DISTINCT idbarang) as total'), 
-                DB::raw('sum(qty) as total_stock')
+                DB::raw('count(*) as total'), 
+                DB::raw('sum(stock) as total_stock')
             )
             ->groupBy('rack')
             ->get()

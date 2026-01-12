@@ -94,16 +94,10 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            @if(isset($rackAssignments[$stock->idbarang]) && $rackAssignments[$stock->idbarang]->count() > 0)
-                                <div class="flex flex-wrap gap-1">
-                                    @foreach($rackAssignments[$stock->idbarang] as $assignment)
-                                        @if($assignment->qty > 0)
-                                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                {{ strtoupper($assignment->rack) }} ({{ $assignment->qty }})
-                                            </span>
-                                        @endif
-                                    @endforeach
-                                </div>
+                            @if($stock->rack)
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                    {{ strtoupper($stock->rack) }}
+                                </span>
                             @else
                                 <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-500">
                                     Belum di rak

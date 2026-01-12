@@ -30,8 +30,9 @@ class PemakaianController extends Controller
      */
     public function create()
     {
-        // Tampilkan semua barang yang ada stoknya
-        $barangs = Stock::where('stock', '>', 0)
+        // Tampilkan hanya barang yang sudah ada di rak dan ada stoknya
+        $barangs = Stock::whereNotNull('rack')
+            ->where('stock', '>', 0)
             ->orderBy('namabarang')
             ->get();
 
