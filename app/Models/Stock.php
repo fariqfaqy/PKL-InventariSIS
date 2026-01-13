@@ -25,6 +25,8 @@ class Stock extends Model
         'merek',
         'tipe',
         'durasi_sewa',
+        'tanggal_mulai_sewa',
+        'tanggal_akhir_sewa',
     ];
 
     /**

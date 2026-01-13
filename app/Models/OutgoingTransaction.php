@@ -32,6 +32,8 @@ class OutgoingTransaction extends Model
         'catatan_admin',
         'diproses_oleh',
         'tanggal_diproses',
+        'tanggal_mulai_sewa',
+        'tanggal_akhir_sewa',
     ];
 
     protected $casts = [
@@ -40,6 +42,8 @@ class OutgoingTransaction extends Model
         'tanggal_pinjam' => 'date',
         'tanggal_kembali' => 'date',
         'tanggal_diproses' => 'datetime',
+        'tanggal_mulai_sewa' => 'date',
+        'tanggal_akhir_sewa' => 'date',
     ];
 
     /**

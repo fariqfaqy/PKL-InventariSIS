@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Stock;
 use App\Models\OutgoingTransaction;
+use App\Models\RequestBarang;
 use App\Models\RackAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,12 +18,19 @@ class PemakaianController extends Controller
      */
     public function index()
     {
+        // Ambil semua request user dari RequestBarang
+        $requests = RequestBarang::with('stock')
+            ->where('user_id', Auth::id())
+            ->orderBy('tanggal_request', 'desc')
+            ->paginate(20);
+
+        // Ambil barang keluar yang sudah disetujui (untuk history)
         $pemakaian = OutgoingTransaction::with('stock')
-            ->where('penginput', Auth::user()->email)
+            ->where('penginput', Auth::user()->name)
             ->orderBy('tanggal', 'desc')
             ->paginate(20);
 
-        return view('user.pemakaian.index', compact('pemakaian'));
+        return view('user.pemakaian.index', compact('requests', 'pemakaian'));
     }
 
     /**
@@ -30,8 +38,8 @@ class PemakaianController extends Controller
      */
     public function create()
     {
-        // Tampilkan hanya barang yang sudah ada di rak dan ada stoknya
-        $barangs = Stock::whereNotNull('rack')
+        // Tampilkan hanya barang sewa dan habis pakai yang ada stoknya (exclude aset tetap)
+        $barangs = Stock::whereIn('kategori', ['barang_sewa', 'habis_pakai'])
             ->where('stock', '>', 0)
             ->orderBy('namabarang')
             ->get();
@@ -44,17 +52,28 @@ class PemakaianController extends Controller
      */
     public function store(Request $request)
     {
+        // Debug log
+        \Log::info('Pemakaian Store Request', $request->all());
+
         $request->validate([
             'idbarang' => 'required|exists:stock,idbarang',
             'qty' => 'required|integer|min:1',
-            'penerima' => 'required|string|max:255',
+            'keperluan' => 'required|string',
             'tipe_request' => 'required|in:peminjaman,permintaan',
-            'tanggal_pinjam' => 'required_if:tipe_request,peminjaman|date|after_or_equal:today',
-            'tanggal_kembali' => 'required_if:tipe_request,peminjaman|date|after:tanggal_pinjam',
+            'tanggal_pinjam' => 'nullable|required_if:tipe_request,peminjaman|date|after_or_equal:today',
+            'tanggal_kembali' => 'nullable|required_if:tipe_request,peminjaman|date|after:tanggal_pinjam',
+            'catatan_user' => 'nullable|string',
         ], [
+            'idbarang.required' => 'Barang harus dipilih',
+            'idbarang.exists' => 'Barang yang dipilih tidak valid',
+            'qty.required' => 'Jumlah harus diisi',
+            'qty.min' => 'Jumlah minimal 1',
+            'tipe_request.required' => 'Tipe request harus dipilih',
+            'tipe_request.in' => 'Tipe request tidak valid',
             'tanggal_pinjam.required_if' => 'Tanggal pinjam wajib diisi untuk peminjaman barang sewa',
             'tanggal_kembali.required_if' => 'Tanggal kembali wajib diisi untuk peminjaman barang sewa',
             'tanggal_kembali.after' => 'Tanggal kembali harus setelah tanggal pinjam',
+            'keperluan.required' => 'Keperluan wajib diisi',
         ]);
 
         DB::beginTransaction();
@@ -63,61 +82,82 @@ class PemakaianController extends Controller
 
             // Validasi tipe request sesuai dengan kategori barang
             if ($request->tipe_request == 'peminjaman' && $stock->kategori != 'barang_sewa') {
+                \Log::warning('Tipe request tidak sesuai kategori', [
+                    'tipe_request' => $request->tipe_request,
+                    'kategori' => $stock->kategori
+                ]);
                 return back()->withInput()->with('error', 'Peminjaman hanya untuk barang sewa!');
             }
             
             if ($request->tipe_request == 'permintaan' && $stock->kategori != 'habis_pakai') {
+                \Log::warning('Tipe request tidak sesuai kategori', [
+                    'tipe_request' => $request->tipe_request,
+                    'kategori' => $stock->kategori
+                ]);
                 return back()->withInput()->with('error', 'Permintaan hanya untuk barang habis pakai!');
             }
 
             // Validasi stok mencukupi
             if ($stock->stock < $request->qty) {
+                \Log::warning('Stok tidak mencukupi', [
+                    'requested_qty' => $request->qty,
+                    'available_stock' => $stock->stock
+                ]);
                 return back()->withInput()->with('error', 'Stok tidak mencukupi! Stok tersedia: ' . $stock->stock . ' unit');
             }
 
-            // Create transaksi keluar dengan status pending (menunggu approval admin)
-            OutgoingTransaction::create([
+            // Determine tipe_request untuk RequestBarang
+            $tipeRequestBarang = $request->tipe_request == 'peminjaman' ? 'pinjam_sewa' : 'pakai_habis_pakai';
+
+            // Create RequestBarang untuk approval admin
+            $requestBarang = RequestBarang::create([
+                'user_id' => Auth::id(),
                 'idbarang' => $request->idbarang,
                 'qty' => $request->qty,
-                'penerima' => $request->penerima,
-                'namabarang_k' => $stock->namabarang,
-                'kodebarang_k' => $stock->kodebarang,
-                'penginput' => Auth::user()->email,
-                'kategori' => $stock->kategori,
-                'durasi_sewa' => $stock->durasi_sewa,
-                'tipe_request' => $request->tipe_request,
-                'tanggal_pinjam' => $request->tipe_request == 'peminjaman' ? $request->tanggal_pinjam : null,
-                'tanggal_kembali' => $request->tipe_request == 'peminjaman' ? $request->tanggal_kembali : null,
-                'status_approval' => 'pending',
+                'tipe_request' => $tipeRequestBarang,
+                'keperluan' => $request->keperluan,
+                'catatan_user' => $request->catatan_user ?? null,
+                'tanggal_mulai_sewa' => $request->tipe_request == 'peminjaman' ? $request->tanggal_pinjam : null,
+                'tanggal_akhir_sewa' => $request->tipe_request == 'peminjaman' ? $request->tanggal_kembali : null,
+                'status' => 'pending',
+                'tanggal_request' => now(),
             ]);
 
-            // TIDAK update stok dulu, tunggu admin approve
+            \Log::info('RequestBarang created successfully', ['id' => $requestBarang->id_request]);
 
             DB::commit();
-            return redirect()->route('user.pemakaian.index')->with('success', 'Request pemakaian berhasil diajukan! Menunggu persetujuan admin.');
+            return redirect()->route('user.pemakaian.index')->with('success', 'Request berhasil diajukan! Menunggu persetujuan admin.');
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Error creating request', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return back()->withInput()->with('error', 'Gagal mengajukan request: ' . $e->getMessage());
         }
     }
 
     /**
      * Show the form for editing the specified pemakaian.
+     * DISABLED: User tidak boleh edit transaksi yang sudah diapprove admin
+     * Hanya bisa batalkan RequestBarang yang masih pending
      */
     public function edit($id)
     {
-        $pemakaian = OutgoingTransaction::where('penginput', Auth::user()->email)
-            ->findOrFail($id);
-        $barangs = Stock::orderBy('namabarang')->get();
-        
-        return view('user.pemakaian.edit', compact('pemakaian', 'barangs'));
+        return redirect()->route('user.pemakaian.index')
+            ->with('error', 'Tidak dapat mengedit transaksi yang sudah diproses. Silakan ajukan request baru jika diperlukan.');
     }
 
     /**
      * Update the specified pemakaian in storage.
+     * DISABLED: User tidak boleh edit transaksi yang sudah diapprove admin
      */
     public function update(Request $request, $id)
     {
+        return redirect()->route('user.pemakaian.index')
+            ->with('error', 'Tidak dapat mengedit transaksi yang sudah diproses. Silakan ajukan request baru jika diperlukan.');
+        
+        /* COMMENTED OUT - User should not modify approved transactions
         $request->validate([
             'qty' => 'required|integer|min:1',
             'penerima' => 'required|string|max:255',
@@ -195,13 +235,20 @@ class PemakaianController extends Controller
             DB::rollBack();
             return back()->with('error', 'Gagal mengupdate pemakaian: ' . $e->getMessage());
         }
+        */
     }
 
     /**
      * Remove the specified pemakaian from storage.
+     * DISABLED: User tidak boleh hapus transaksi yang sudah diapprove admin
+     * Hanya bisa batalkan RequestBarang yang masih pending
      */
     public function destroy($id)
     {
+        return redirect()->route('user.pemakaian.index')
+            ->with('error', 'Tidak dapat menghapus transaksi yang sudah diproses. Hanya admin yang dapat membatalkan transaksi.');
+        
+        /* COMMENTED OUT - User should not delete approved transactions
         DB::beginTransaction();
         try {
             $pemakaian = OutgoingTransaction::where('penginput', Auth::user()->email)
@@ -238,6 +285,7 @@ class PemakaianController extends Controller
             DB::rollBack();
             return back()->with('error', 'Gagal menghapus pemakaian: ' . $e->getMessage());
         }
+        */
     }
 
     /**

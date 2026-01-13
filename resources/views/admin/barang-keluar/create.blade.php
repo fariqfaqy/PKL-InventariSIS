@@ -147,7 +147,39 @@
                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                 @enderror
             </div>
+            <!-- Rental Dates (Only shown for barang_sewa) -->
+            <div id="rentalDatesSection" class="hidden space-y-4 p-4 bg-blue-50 rounded-lg">
+                <p class="text-sm font-medium text-blue-800 mb-2">📅 Periode Sewa Barang</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Tanggal Mulai Sewa -->
+                    <div>
+                        <label for="tanggal_mulai_sewa" class="block text-sm font-medium text-gray-700 mb-2">
+                            Tanggal Mulai Sewa <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" name="tanggal_mulai_sewa" id="tanggal_mulai_sewa"
+                            value="{{ old('tanggal_mulai_sewa') }}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('tanggal_mulai_sewa') border-red-500 @enderror">
+                        @error('tanggal_mulai_sewa')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
 
+                    <!-- Tanggal Akhir Sewa -->
+                    <div>
+                        <label for="tanggal_akhir_sewa" class="block text-sm font-medium text-gray-700 mb-2">
+                            Tanggal Akhir Sewa <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" name="tanggal_akhir_sewa" id="tanggal_akhir_sewa"
+                            value="{{ old('tanggal_akhir_sewa') }}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('tanggal_akhir_sewa') border-red-500 @enderror">
+                        @error('tanggal_akhir_sewa')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+                <p class="text-xs text-blue-600 mt-2">* Tanggal sewa ini akan dicatat untuk periode peminjaman barang</p>
+            </div>
             <!-- Info Tanggal Expire untuk Barang Sewa -->
             <div id="expire-info" class="hidden bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
                 <h3 class="font-semibold text-purple-900 mb-2 flex items-center gap-2">
@@ -268,6 +300,23 @@ filters.tipe.addEventListener('change', function() {
                 document.getElementById('durasi_sewa').value = '';
             }
             
+            // Show/hide rental dates section based on kategori
+            const rentalSection = document.getElementById('rentalDatesSection');
+            const tanggalMulai = document.getElementById('tanggal_mulai_sewa');
+            const tanggalAkhir = document.getElementById('tanggal_akhir_sewa');
+            
+            if (selectedStock.kategori === 'barang_sewa') {
+                rentalSection.classList.remove('hidden');
+                tanggalMulai.required = true;
+                tanggalAkhir.required = true;
+            } else {
+                rentalSection.classList.add('hidden');
+                tanggalMulai.required = false;
+                tanggalAkhir.required = false;
+                tanggalMulai.value = '';
+                tanggalAkhir.value = '';
+            }
+            
             document.getElementById('selected-item-info').classList.remove('hidden');
             
             // Set max qty
@@ -281,6 +330,10 @@ filters.tipe.addEventListener('change', function() {
         document.getElementById('selected-item-info').classList.add('hidden');
         document.getElementById('idbarang').value = '';
         document.getElementById('durasi_sewa').value = '';
+        
+        // Hide rental section
+        const rentalSection = document.getElementById('rentalDatesSection');
+        rentalSection.classList.add('hidden');
     }
 });
 

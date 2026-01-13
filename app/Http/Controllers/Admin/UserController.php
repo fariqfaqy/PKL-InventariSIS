@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class UserController extends Controller
 {
@@ -106,5 +107,20 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User berhasil dihapus!');
+    }
+
+    /**
+     * Export users data to PDF.
+     */
+    public function exportPdf()
+    {
+        $users = User::orderBy('name', 'asc')->get();
+        
+        $pdf = Pdf::loadView('admin.pdf.users', compact('users'))
+            ->setPaper('a4', 'portrait');
+        
+        $filename = 'Laporan_Data_User_' . now()->format('Y-m-d_His') . '.pdf';
+        
+        return $pdf->stream($filename);
     }
 }

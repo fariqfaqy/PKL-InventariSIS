@@ -13,7 +13,7 @@
             </h3>
             <p class="text-white/90 flex items-center gap-2">
                 <x-heroicon-o-building-office class="w-5 h-5" />
-                Sistem Informasi Inventaris PT PLN (Persero)
+                Sistem Informasi Inventaris PLN Indonesia Power
             </p>
         </div>
         <div class="hidden lg:block">

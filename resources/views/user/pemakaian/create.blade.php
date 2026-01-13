@@ -29,6 +29,22 @@
     </div>
     @endif
 
+    @if($errors->any())
+    <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+        <div class="flex items-start gap-3">
+            <x-heroicon-o-exclamation-triangle class="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <div class="flex-1">
+                <h4 class="font-semibold mb-2">Terdapat kesalahan dalam form:</h4>
+                <ul class="list-disc list-inside space-y-1 text-sm">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Form Card -->
     <div class="bg-white rounded-xl shadow-md p-6">
         <form action="{{ route('user.pemakaian.store') }}" method="POST" class="space-y-6">
@@ -37,10 +53,10 @@
             <!-- Pilih Tipe Request -->
             <div>
                 <label for="tipe_request" class="block text-sm font-medium text-gray-700 mb-2">Tipe Request *</label>
-                <select name="tipe_request" id="tipe_request" required onchange="toggleTipeRequest()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
+                <select name="tipe_request" id="tipe_request" required onchange="toggleTipeRequest()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('tipe_request') border-red-500 @enderror">
                     <option value="">-- Pilih Tipe Request --</option>
-                    <option value="permintaan">Permintaan (Barang Habis Pakai)</option>
-                    <option value="peminjaman">Peminjaman (Barang Sewa)</option>
+                    <option value="permintaan" {{ old('tipe_request') == 'permintaan' ? 'selected' : '' }}>Permintaan (Barang Habis Pakai)</option>
+                    <option value="peminjaman" {{ old('tipe_request') == 'peminjaman' ? 'selected' : '' }}>Peminjaman (Barang Sewa)</option>
                 </select>
                 @error('tipe_request')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -50,8 +66,22 @@
             <!-- Pilih Barang -->
             <div>
                 <label for="idbarang" class="block text-sm font-medium text-gray-700 mb-2">Pilih Barang *</label>
-                <select name="idbarang" id="idbarang" required onchange="updateStockInfo()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
+                <select name="idbarang" id="idbarang" required onchange="updateStockInfo()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('idbarang') border-red-500 @enderror">
                     <option value="">-- Pilih tipe request terlebih dahulu --</option>
+                    @if(old('idbarang'))
+                        @foreach($barangs as $barang)
+                            @if($barang->idbarang == old('idbarang'))
+                                <option value="{{ $barang->idbarang }}" selected
+                                        data-stock="{{ $barang->stock }}"
+                                        data-nama="{{ $barang->namabarang }}"
+                                        data-kode="{{ $barang->kodebarang }}"
+                                        data-kategori="{{ $barang->kategori }}"
+                                        data-durasi="{{ $barang->durasi_sewa }}">
+                                    {{ $barang->kodebarang }} - {{ $barang->namabarang }} (Stok: {{ $barang->stock }})
+                                </option>
+                            @endif
+                        @endforeach
+                    @endif
                 </select>
                 @error('idbarang')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -126,19 +156,30 @@
                 <input type="number" name="qty" id="qty" min="1" required 
                        placeholder="Masukkan jumlah barang" value="{{ old('qty') }}"
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
+                <p class="mt-1 text-xs text-gray-500">Jumlah tidak boleh melebihi stok yang tersedia</p>
                 @error('qty')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
 
-            <!-- Penerima -->
+            <!-- Keperluan -->
             <div>
-                <label for="penerima" class="block text-sm font-medium text-gray-700 mb-2">Penerima / Keterangan *</label>
-                <input type="text" name="penerima" id="penerima" required 
-                       placeholder="Nama penerima atau keterangan penggunaan" 
-                       value="{{ old('penerima') }}"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
-                @error('penerima')
+                <label for="keperluan" class="block text-sm font-medium text-gray-700 mb-2">Keperluan *</label>
+                <textarea name="keperluan" id="keperluan" rows="3" required 
+                       placeholder="Jelaskan untuk apa barang ini dibutuhkan" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">{{ old('keperluan') }}</textarea>
+                @error('keperluan')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Catatan User (Optional) -->
+            <div>
+                <label for="catatan_user" class="block text-sm font-medium text-gray-700 mb-2">Catatan Tambahan (Opsional)</label>
+                <textarea name="catatan_user" id="catatan_user" rows="2" 
+                       placeholder="Catatan tambahan jika ada" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">{{ old('catatan_user') }}</textarea>
+                @error('catatan_user')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
@@ -265,6 +306,7 @@ function updateStockInfo() {
     const stockInfo = document.getElementById('stockInfo');
     const stockValue = document.getElementById('stockValue');
     const kategoriValue = document.getElementById('kategoriValue');
+    const qtyInput = document.getElementById('qty');
     
     if (option.value) {
         const stock = option.getAttribute('data-stock');
@@ -282,10 +324,63 @@ function updateStockInfo() {
         }
         
         // Set max qty
-        document.getElementById('qty').setAttribute('max', stock);
+        qtyInput.setAttribute('max', stock);
+        
+        // Validate current value
+        if (qtyInput.value && parseInt(qtyInput.value) > parseInt(stock)) {
+            qtyInput.value = stock;
+        }
     } else {
         stockInfo.classList.add('hidden');
+        qtyInput.removeAttribute('max');
     }
 }
+
+// Validasi qty saat user mengetik
+document.addEventListener('DOMContentLoaded', function() {
+    const qtyInput = document.getElementById('qty');
+    const form = document.querySelector('form');
+    
+    // Restore state jika ada old values (after validation error)
+    const oldTipeRequest = '{{ old("tipe_request") }}';
+    const oldIdBarang = '{{ old("idbarang") }}';
+    
+    if (oldTipeRequest) {
+        console.log('Restoring old state:', oldTipeRequest, oldIdBarang);
+        // Trigger toggle to populate barang options
+        setTimeout(function() {
+            toggleTipeRequest();
+            
+            // Select the old barang if exists
+            if (oldIdBarang) {
+                setTimeout(function() {
+                    const barangSelect = document.getElementById('idbarang');
+                    barangSelect.value = oldIdBarang;
+                    updateStockInfo();
+                }, 100);
+            }
+        }, 100);
+    }
+    
+    qtyInput.addEventListener('input', function() {
+        const max = this.getAttribute('max');
+        if (max && parseInt(this.value) > parseInt(max)) {
+            this.value = max;
+            alert('Jumlah tidak boleh melebihi stok yang tersedia (' + max + ' unit)');
+        }
+    });
+    
+    form.addEventListener('submit', function(e) {
+        const max = qtyInput.getAttribute('max');
+        const value = qtyInput.value;
+        
+        if (max && parseInt(value) > parseInt(max)) {
+            e.preventDefault();
+            alert('Jumlah tidak boleh melebihi stok yang tersedia (' + max + ' unit)');
+            qtyInput.focus();
+            return false;
+        }
+    });
+});
 </script>
 @endsection

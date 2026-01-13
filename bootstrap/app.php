@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
         ]);
+        
+        // Global middleware untuk logging aktivitas
+        $middleware->append(\App\Http\Middleware\LogActivity::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

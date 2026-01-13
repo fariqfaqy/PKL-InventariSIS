@@ -7,6 +7,7 @@ use App\Models\OutgoingTransaction;
 use App\Models\Stock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class BarangKeluarController extends Controller
 {
@@ -27,7 +28,9 @@ class BarangKeluarController extends Controller
      */
     public function create()
     {
+        // Exclude aset_tetap from available stocks
         $stocks = Stock::where('stock', '>', 0)
+            ->whereIn('kategori', ['barang_sewa', 'habis_pakai'])
             ->orderBy('kategori')
             ->orderBy('jenis')
             ->orderBy('merek')
@@ -46,18 +49,34 @@ class BarangKeluarController extends Controller
             'tanggal' => 'required|date',
             'penerima' => 'required|string',
             'qty' => 'required|integer|min:1',
+            'tanggal_mulai_sewa' => 'nullable|date',
+            'tanggal_akhir_sewa' => 'nullable|date|after:tanggal_mulai_sewa',
         ]);
 
         // Get stock data
         $stock = Stock::findOrFail($validated['idbarang']);
+        
+        // Prevent aset_tetap from being borrowed
+        if ($stock->kategori === 'aset_tetap') {
+            return back()->withErrors(['idbarang' => 'Aset Tetap tidak dapat dipinjam/dikeluarkan!'])
+                ->withInput();
+        }
 
         // Check if stock is sufficient
         if ($stock->stock < $validated['qty']) {
             return back()->withErrors(['qty' => 'Stok tidak mencukupi! Stok tersedia: ' . $stock->stock])
                 ->withInput();
         }
+        
+        // Validate rental dates for barang_sewa
+        if ($stock->kategori === 'barang_sewa') {
+            if (empty($validated['tanggal_mulai_sewa']) || empty($validated['tanggal_akhir_sewa'])) {
+                return back()->withErrors(['tanggal_mulai_sewa' => 'Tanggal sewa harus diisi untuk barang sewa!'])
+                    ->withInput();
+            }
+        }
 
-        // Create outgoing transaction
+        // Create outgoing transaction with rental dates
         OutgoingTransaction::create([
             'idbarang' => $validated['idbarang'],
             'tanggal' => $validated['tanggal'],
@@ -68,6 +87,8 @@ class BarangKeluarController extends Controller
             'penginput' => Auth::user()->name,
             'kategori' => $stock->kategori,
             'durasi_sewa' => $stock->kategori === 'barang_sewa' ? $stock->durasi_sewa : null,
+            'tanggal_mulai_sewa' => $validated['tanggal_mulai_sewa'] ?? null,
+            'tanggal_akhir_sewa' => $validated['tanggal_akhir_sewa'] ?? null,
         ]);
 
         // Update stock quantity
@@ -157,5 +178,22 @@ class BarangKeluarController extends Controller
 
         return redirect()->route('admin.barang-keluar.index')
             ->with('success', 'Barang keluar berhasil dihapus!');
+    }
+
+    /**
+     * Export outgoing transactions to PDF.
+     */
+    public function exportPdf()
+    {
+        $transactions = OutgoingTransaction::with('stock')
+            ->orderBy('tanggal', 'desc')
+            ->get();
+        
+        $pdf = Pdf::loadView('admin.pdf.barang-keluar', compact('transactions'))
+            ->setPaper('a4', 'landscape');
+        
+        $filename = 'Laporan_Barang_Keluar_' . now()->format('Y-m-d_His') . '.pdf';
+        
+        return $pdf->stream($filename);
     }
 }

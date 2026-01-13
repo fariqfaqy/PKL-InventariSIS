@@ -10,10 +10,16 @@
             <h2 class="text-2xl font-bold text-gray-800">Kelola User</h2>
             <p class="text-sm text-gray-500 mt-1">Manajemen pengguna sistem</p>
         </div>
-        <a href="{{ route('admin.users.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-300">
-            <x-heroicon-o-plus class="w-5 h-5" />
-            <span class="font-medium">Tambah User</span>
-        </a>
+        <div class="flex items-center gap-3">
+            <a href="{{ route('admin.users.export-pdf') }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-md hover:shadow-lg">
+                <x-heroicon-o-document-arrow-down class="w-5 h-5" />
+                <span class="font-medium">Export PDF</span>
+            </a>
+            <a href="{{ route('admin.users.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-300">
+                <x-heroicon-o-plus class="w-5 h-5" />
+                <span class="font-medium">Tambah User</span>
+            </a>
+        </div>
     </div>
 
     @if(session('success'))

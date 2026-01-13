@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - InventariSIS</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/pln-logo.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/pln-logo.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/pln-logo.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/pln-logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         @keyframes slideUp {
@@ -56,8 +58,8 @@
         <div class="flex-1 bg-gradient-to-b from-[#14a2ba] to-[#0d7a8f] dark:from-[#0d7a8f] dark:to-slate-900 p-10 md:p-15 flex flex-col justify-center items-center text-white relative overflow-hidden">
             <div class="absolute inset-0 login-left"></div>
             
-            <div class="relative z-10 bg-white p-9 rounded-2xl mb-9 shadow-2xl transition-transform duration-300 hover:scale-105 hover:rotate-2">
-                <img src="{{ asset('images/pln-logo.png') }}" alt="PLN Logo" class="w-30 h-30 object-contain">
+            <div class="relative z-10 bg-white p-6 rounded-2xl mb-9 shadow-2xl transition-transform duration-300 hover:scale-105">
+                <img src="{{ asset('images/pln-logo.png') }}" alt="PLN Logo" class="w-24 h-24 object-contain">
             </div>
             
             <div class="relative z-10 flex items-center gap-3 mb-2">

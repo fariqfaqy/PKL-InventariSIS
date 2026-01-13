@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Stock;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class StokBarangController extends Controller
 {
@@ -16,7 +17,7 @@ class StokBarangController extends Controller
         $query = Stock::query();
         
         // Filter by kategori if provided
-        if ($request->has('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai'])) {
+        if ($request->has('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
             $query->where('kategori', $request->kategori);
         }
         
@@ -121,5 +122,28 @@ class StokBarangController extends Controller
 
         return redirect()->route('admin.stok-barang.index')
             ->with('success', 'Stok barang berhasil dihapus!');
+    }
+
+    /**
+     * Export stock data to PDF.
+     */
+    public function exportPdf(Request $request)
+    {
+        $query = Stock::query();
+        
+        // Filter by kategori if provided
+        $kategori = $request->get('kategori');
+        if ($kategori && in_array($kategori, ['barang_sewa', 'habis_pakai'])) {
+            $query->where('kategori', $kategori);
+        }
+        
+        $stocks = $query->orderBy('namabarang')->get();
+        
+        $pdf = Pdf::loadView('admin.pdf.stok-barang', compact('stocks', 'kategori'))
+            ->setPaper('a4', 'landscape');
+        
+        $filename = 'Laporan_Stok_Barang_' . now()->format('Y-m-d_His') . '.pdf';
+        
+        return $pdf->stream($filename);
     }
 }

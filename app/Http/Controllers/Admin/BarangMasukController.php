@@ -7,6 +7,7 @@ use App\Models\IncomingTransaction;
 use App\Models\Stock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class BarangMasukController extends Controller
 {
@@ -39,15 +40,23 @@ class BarangMasukController extends Controller
         $validated = $request->validate([
             'kodebarang' => 'required|string|max:255',
             'namabarang' => 'required|string|max:255',
-            'tanggal' => 'required|date',
-            'keterangan' => 'required|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'kategori' => 'required|in:barang_sewa,habis_pakai,aset_tetap',
             'qty' => 'required|integer|min:1',
             'rack' => 'required|in:1a,1b,1c,2a,2b,2c',
-            'kategori' => 'required|in:barang_sewa,habis_pakai',
-            'jenis' => 'required|string|max:100',
-            'merek' => 'required|string|max:100',
-            'tipe' => 'required|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'tanggal' => 'required|date',
+            'keterangan' => 'required|string',
         ]);
+
+        // Handle image upload
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imageName = time() . '_' . $validated['kodebarang'] . '.' . $image->getClientOriginalExtension();
+            $image->move(public_path('images/barang'), $imageName);
+            $imagePath = 'images/barang/' . $imageName;
+        }
 
         // Check if stock exists by kodebarang
         $stock = Stock::where('kodebarang', $validated['kodebarang'])->first();
@@ -55,6 +64,17 @@ class BarangMasukController extends Controller
         if ($stock) {
             // If stock exists, update the quantity
             $stock->increment('stock', $validated['qty']);
+            
+            // Update image if new one uploaded
+            if ($imagePath) {
+                // Delete old image if exists
+                if ($stock->image && file_exists(public_path($stock->image))) {
+                    unlink(public_path($stock->image));
+                }
+                $stock->image = $imagePath;
+            }
+            
+            $stock->save();
             $idbarang = $stock->idbarang;
         } else {
             // If stock doesn't exist, create new stock
@@ -62,12 +82,10 @@ class BarangMasukController extends Controller
                 'kodebarang' => $validated['kodebarang'],
                 'namabarang' => $validated['namabarang'],
                 'stock' => $validated['qty'],
-                'deskripsi' => 'Barang baru',
+                'deskripsi' => $validated['deskripsi'] ?? 'Barang baru',
+                'image' => $imagePath,
                 'rack' => $validated['rack'],
                 'kategori' => $validated['kategori'],
-                'jenis' => $validated['jenis'],
-                'merek' => $validated['merek'],
-                'tipe' => $validated['tipe'],
                 'penginput' => auth()->user()->name,
             ]);
             $idbarang = $stock->idbarang;
@@ -162,5 +180,56 @@ class BarangMasukController extends Controller
 
         return redirect()->route('admin.barang-masuk.index')
             ->with('success', 'Barang masuk berhasil dihapus!');
+    }
+
+    /**
+     * Check if stock exists by kodebarang (AJAX)
+     */
+    public function checkStock(Request $request)
+    {
+        $kodebarang = $request->input('kodebarang');
+        
+        if (!$kodebarang) {
+            return response()->json(['exists' => false]);
+        }
+
+        $stock = Stock::where('kodebarang', $kodebarang)->first();
+        
+        if ($stock) {
+            return response()->json([
+                'exists' => true,
+                'data' => [
+                    'kodebarang' => $stock->kodebarang,
+                    'namabarang' => $stock->namabarang,
+                    'kategori' => $stock->kategori,
+                    'rack' => $stock->rack,
+                    'deskripsi' => $stock->deskripsi,
+                    'current_stock' => $stock->stock,
+                    'jenis' => $stock->jenis,
+                    'merek' => $stock->merek,
+                    'tipe' => $stock->tipe,
+                    'image' => $stock->image,
+                ]
+            ]);
+        }
+        
+        return response()->json(['exists' => false]);
+    }
+
+    /**
+     * Export incoming transactions to PDF.
+     */
+    public function exportPdf()
+    {
+        $transactions = IncomingTransaction::with('stock')
+            ->orderBy('tanggal', 'desc')
+            ->get();
+        
+        $pdf = Pdf::loadView('admin.pdf.barang-masuk', compact('transactions'))
+            ->setPaper('a4', 'landscape');
+        
+        $filename = 'Laporan_Barang_Masuk_' . now()->format('Y-m-d_His') . '.pdf';
+        
+        return $pdf->stream($filename);
     }
 }

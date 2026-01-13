@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Admin Dashboard') - InventariSIS</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/pln-logo.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/pln-logo.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/pln-logo.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/pln-logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50 transition-colors duration-300">
@@ -13,10 +15,8 @@
         <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-300 ease-in-out">
             <!-- Logo -->
             <div class="flex items-center justify-center h-20 border-b border-gray-200 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f]">
-                <div class="flex items-center gap-3">
-                    <div class="bg-white p-2 rounded-lg">
-                        <img src="{{ asset('images/pln-logo.png') }}" alt="PLN Logo" class="w-10 h-10">
-                    </div>
+                <div class="flex items-center gap-3 px-4">
+                    <img src="{{ asset('images/pln-logo.png') }}" alt="PLN Logo" class="w-14 h-14 object-contain bg-white rounded-md p-1">
                     <div class="text-white">
                         <h1 class="text-xl font-bold">InventariSIS</h1>
                         <p class="text-xs opacity-90">Admin Panel</p>
@@ -55,6 +55,12 @@
                             <x-heroicon-o-shopping-bag class="w-4 h-4" />
                             <span class="text-sm font-medium">Barang Habis Pakai</span>
                         </a>
+                        
+                        <!-- Aset Tetap -->
+                        <a href="{{ route('admin.stok-barang.index', ['kategori' => 'aset_tetap']) }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('admin.stok-barang.*') && request('kategori') == 'aset_tetap' ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
+                            <x-heroicon-o-building-office class="w-4 h-4" />
+                            <span class="text-sm font-medium">Aset Tetap</span>
+                        </a>
                     </div>
                 </div>
 
@@ -84,24 +90,32 @@
                     </div>
                 </div>
 
+                <!-- Kelola Permintaan -->
+                <a href="{{ route('admin.permintaan.index') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('admin.permintaan.*') ? 'text-white bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f]' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group relative">
+                    <x-heroicon-o-clipboard-document-list class="w-5 h-5 {{ request()->routeIs('admin.permintaan.*') ? '' : 'group-hover:text-[#14a2ba]' }}" />
+                    <span class="font-medium">Kelola Permintaan</span>
+                    @php
+                        $pendingCount = \App\Models\RequestBarang::where('status', 'pending')->count();
+                    @endphp
+                    @if($pendingCount > 0)
+                        <span class="absolute -top-1 -right-1 px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full">
+                            {{ $pendingCount }}
+                        </span>
+                    @endif
+                </a>
+
                 <!-- Kelola User -->
                 <a href="{{ route('admin.users.index') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('admin.users.*') ? 'text-white bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f]' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
                     <x-heroicon-o-users class="w-5 h-5 {{ request()->routeIs('admin.users.*') ? '' : 'group-hover:text-[#14a2ba]' }}" />
                     <span class="font-medium">Kelola User</span>
                 </a>
 
-                <!-- Laporan -->
-                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200 group">
-                    <x-heroicon-o-chart-bar class="w-5 h-5 group-hover:text-[#14a2ba]" />
-                    <span class="font-medium">Laporan</span>
-                </a>
-
                 <div class="border-t border-gray-200 my-4"></div>
 
-                <!-- Pengaturan -->
-                <a href="#" class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-200 group">
-                    <x-heroicon-o-cog-6-tooth class="w-5 h-5 group-hover:text-[#14a2ba]" />
-                    <span class="font-medium">Pengaturan</span>
+                <!-- Activity Log -->
+                <a href="{{ route('admin.activity-log.index') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('admin.activity-log.*') ? 'text-white bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f]' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
+                    <x-heroicon-o-document-text class="w-5 h-5 {{ request()->routeIs('admin.activity-log.*') ? 'text-white' : 'group-hover:text-[#14a2ba]' }}" />
+                    <span class="font-medium">Activity Log</span>
                 </a>
 
                 <!-- Logout -->
@@ -126,7 +140,7 @@
                     </button>
                     <div>
                         <h2 class="text-xl font-bold text-gray-800">@yield('title', 'Dashboard')</h2>
-                        <p class="text-sm text-gray-500">@yield('subtitle', 'Selamat datang kembali!')</p>
+                        <p class="text-sm text-gray-500">@yield('subtitle', 'SIS')</p>
                     </div>
                 </div>
 
@@ -155,7 +169,7 @@
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
                     <p class="text-sm text-gray-600 flex items-center gap-2">
                         <x-heroicon-o-heart class="w-4 h-4 text-red-500" />
-                        &copy; 2026 InventariSIS - PT PLN (Persero)
+                        &copy; 2026 InventariSIS - PLN Indonesia Power 
                     </p>
                     <p class="text-xs text-gray-500">Version 1.0.0</p>
                 </div>
@@ -190,5 +204,7 @@
             icon.classList.toggle('rotate-180');
         }
     </script>
+
+    @stack('scripts')
 </body>
 </html>

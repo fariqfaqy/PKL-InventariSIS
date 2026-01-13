@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'User Dashboard') - InventariSIS</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/pln-logo.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/pln-logo.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/pln-logo.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/pln-logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50 transition-colors duration-300">
@@ -13,10 +15,8 @@
         <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-300 ease-in-out">
             <!-- Logo -->
             <div class="flex items-center justify-center h-20 border-b border-gray-200 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f]">
-                <div class="flex items-center gap-3">
-                    <div class="bg-white p-2 rounded-lg">
-                        <img src="{{ asset('images/pln-logo.png') }}" alt="PLN Logo" class="w-10 h-10">
-                    </div>
+                <div class="flex items-center gap-3 px-4">
+                    <img src="{{ asset('images/pln-logo.png') }}" alt="PLN Logo" class="w-14 h-14 object-contain bg-white rounded-md p-1">
                     <div class="text-white">
                         <h1 class="text-xl font-bold">InventariSIS</h1>
                         <p class="text-xs opacity-90">User Panel</p>
@@ -139,6 +139,14 @@
                     <span class="font-medium">Profil Saya</span>
                 </a>
 
+                <div class="border-t border-gray-200 my-4"></div>
+
+                <!-- Activity Log -->
+                <a href="{{ route('user.activity-log.index') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('user.activity-log.*') ? 'text-white bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f]' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
+                    <x-heroicon-o-document-text class="w-5 h-5 {{ request()->routeIs('user.activity-log.*') ? 'text-white' : 'group-hover:text-[#14a2ba]' }}" />
+                    <span class="font-medium">Activity Log</span>
+                </a>
+
                 <!-- Pengaturan -->
                 <a href="{{ route('user.settings') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('user.settings') ? 'text-white bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f]' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
                     <x-heroicon-o-cog-6-tooth class="w-5 h-5" />
@@ -196,7 +204,7 @@
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
                     <p class="text-sm text-gray-600 flex items-center gap-2">
                         <x-heroicon-o-heart class="w-4 h-4 text-red-500" />
-                        &copy; 2026 InventariSIS - PT PLN (Persero)
+                        &copy; 2026 InventariSIS - PLN Indonesia Power
                     </p>
                     <p class="text-xs text-gray-500">Version 1.0.0</p>
                 </div>

@@ -11,6 +11,8 @@
                 @if(isset($kategori))
                     @if($kategori == 'barang_sewa')
                         Stok Barang Sewa
+                    @elseif($kategori == 'aset_tetap')
+                        Stok Aset Tetap
                     @else
                         Stok Barang Habis Pakai
                     @endif
@@ -18,15 +20,22 @@
                     Stok Barang - Semua Kategori
                 @endif
             </h2>
-            <p class="text-sm text-gray-500 mt-1">Daftar stok barang - Gunakan "Barang Masuk" untuk menambah stok baru</p>
+            <p class="text-sm text-gray-500 mt-1">Daftar stok barang</p>
         </div>
         
-        @if(isset($kategori))
-        <a href="{{ route('admin.stok-barang.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-            <x-heroicon-o-arrows-right-left class="w-5 h-5" />
-            <span class="font-medium">Lihat Semua</span>
-        </a>
-        @endif
+        <div class="flex items-center gap-3">
+            <a href="{{ route('admin.stok-barang.export-pdf', ['kategori' => request('kategori')]) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-md hover:shadow-lg">
+                <x-heroicon-o-document-arrow-down class="w-5 h-5" />
+                <span class="font-medium">Export PDF</span>
+            </a>
+            
+            @if(isset($kategori))
+            <a href="{{ route('admin.stok-barang.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                <x-heroicon-o-arrows-right-left class="w-5 h-5" />
+                <span class="font-medium">Lihat Semua</span>
+            </a>
+            @endif
+        </div>
     </div>
 
     @if(session('success'))
@@ -120,7 +129,7 @@
                             <div class="flex flex-col items-center justify-center text-gray-500">
                                 <x-heroicon-o-inbox class="w-16 h-16 mb-4 opacity-30" />
                                 <p class="text-lg font-medium">Belum ada data stok barang</p>
-                                <p class="text-sm mt-1">Klik tombol "Tambah Stok Barang" untuk menambahkan data</p>
+                                <p class="text-sm mt-1">Gunakan "Barang Masuk" untuk menambah stok baru</p>
                             </div>
                         </td>
                     </tr>
