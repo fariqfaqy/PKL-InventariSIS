@@ -18,11 +18,28 @@
 
     <!-- Main Info Card -->
     <div class="bg-white rounded-xl shadow-md p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <x-heroicon-o-information-circle class="w-5 h-5 text-[#14a2ba]" />
-            Informasi Barang
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- QR Code Section -->
+            <div class="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border-2 border-dashed border-blue-300">
+                <div class="mb-4 text-center">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-1">QR Code Produk</h4>
+                    <p class="text-xs text-gray-500">Scan untuk lihat detail</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-md">
+                    {!! QrCode::size(200)->generate(route('user.stok-barang.show', $stock->idbarang)) !!}
+                </div>
+                <div class="mt-4 text-center">
+                    <p class="text-xs text-gray-600 font-mono bg-white px-3 py-1 rounded shadow-sm">{{ $stock->kodebarang }}</p>
+                </div>
+            </div>
+
+            <!-- Info Section -->
+            <div class="lg:col-span-2">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <x-heroicon-o-information-circle class="w-5 h-5 text-[#14a2ba]" />
+                    Informasi Barang
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Kode Barang</label>
                 <p class="text-gray-800 font-semibold">{{ $stock->kodebarang }}</p>
@@ -68,6 +85,8 @@
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Terakhir Diupdate</label>
                 <p class="text-gray-800">{{ $stock->updated_at ? $stock->updated_at->format('d M Y H:i') : '-' }}</p>
+            </div>
+                </div>
             </div>
         </div>
     </div>

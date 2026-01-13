@@ -124,16 +124,8 @@
                                             <x-heroicon-o-trash class="w-5 h-5" />
                                         </button>
                                     </form>
-                                @elseif($item->status_approval == 'approved')
-                                    <!-- View detail -->
-                                    <a href="{{ route('user.pemakaian.show', $item->idkeluar) }}" class="text-blue-600 hover:text-blue-700 transition-colors" title="Lihat Detail">
-                                        <x-heroicon-o-eye class="w-5 h-5" />
-                                    </a>
                                 @else
-                                    <!-- Rejected - View Detail -->
-                                    <a href="{{ route('user.pemakaian.show', $item->idkeluar) }}" class="text-gray-600 hover:text-gray-700 transition-colors" title="Lihat Detail">
-                                        <x-heroicon-o-eye class="w-5 h-5" />
-                                    </a>
+                                    <span class="text-gray-400">-</span>
                                 @endif
                             </div>
                         </td>

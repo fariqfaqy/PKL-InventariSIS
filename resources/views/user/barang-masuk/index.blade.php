@@ -20,13 +20,6 @@
                     Read Only
                 </span>
             </div>
-            <p class="text-sm text-gray-500 mt-1">
-                @if(isset($kategori))
-                    Riwayat barang masuk {{ $kategori == 'barang_sewa' ? 'sewa' : 'habis pakai' }} (Hanya lihat, admin yang mengelola)
-                @else
-                    Riwayat semua barang yang masuk ke divisi (Hanya lihat, admin yang mengelola)
-                @endif
-            </p>
         </div>
     </div>
 
@@ -76,7 +69,6 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keterangan</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penginput</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -118,16 +110,10 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ $item->penginput }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                            <a href="{{ route('user.barang-masuk.show', $item->idmasuk) }}" class="inline-flex items-center gap-1 text-[#14a2ba] hover:text-[#0d7a8f] transition-colors" title="Detail">
-                                <x-heroicon-o-eye class="w-5 h-5" />
-                                <span class="text-xs">Detail</span>
-                            </a>
-                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="px-6 py-12 text-center">
+                        <td colspan="8" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center justify-center text-gray-500">
                                 <x-heroicon-o-inbox class="w-16 h-16 mb-4 opacity-30" />
                                 <p class="text-lg font-medium">Belum ada data barang masuk</p>

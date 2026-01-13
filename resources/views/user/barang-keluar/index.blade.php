@@ -20,17 +20,6 @@
                     Read Only
                 </span>
             </div>
-            <p class="text-sm text-gray-500 mt-1">
-                @if(isset($tipe))
-                    @if($tipe == 'peminjaman')
-                        Riwayat peminjaman barang sewa (Hanya lihat, admin yang mengelola)
-                    @else
-                        Riwayat permintaan barang habis pakai (Hanya lihat, admin yang mengelola)
-                    @endif
-                @else
-                    Riwayat semua barang keluar divisi (Hanya lihat, admin yang mengelola)
-                @endif
-            </p>
         </div>
     </div>
 
@@ -82,7 +71,6 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penerima</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penginput</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -158,12 +146,6 @@
                                     Sedang Dipakai
                                 </span>
                             @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                            <a href="{{ route('user.barang-keluar.show', $item->idkeluar) }}" class="inline-flex items-center gap-1 text-[#14a2ba] hover:text-[#0d7a8f] transition-colors" title="Detail">
-                                <x-heroicon-o-eye class="w-5 h-5" />
-                                <span class="text-xs">Detail</span>
-                            </a>
                         </td>
                     </tr>
                     @empty

@@ -92,9 +92,15 @@
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-center text-sm font-medium">
                             <div class="flex items-center justify-center gap-2">
-                                <a href="{{ route('admin.stok-barang.show', $stock->idbarang) }}" class="text-[#14a2ba] hover:text-[#0d7a8f] transition-colors" title="Detail">
-                                    <x-heroicon-o-eye class="w-5 h-5" />
-                                </a>
+                                <button onclick="openQRModal('qr-{{ $stock->idbarang }}', '{{ $stock->kodebarang }}')" class="text-[#14a2ba] hover:text-[#0d7a8f] transition-colors cursor-pointer" title="QR Code">
+                                    <div class="inline-block p-1 bg-white border-2 border-gray-300 rounded hover:border-[#14a2ba] transition-colors">
+                                        {!! QrCode::size(30)->generate(route('admin.stok-barang.show', $stock->idbarang)) !!}
+                                    </div>
+                                </button>
+                                <!-- Hidden large QR code -->
+                                <div id="qr-{{ $stock->idbarang }}" class="hidden">
+                                    {!! QrCode::size(250)->generate(route('admin.stok-barang.show', $stock->idbarang)) !!}
+                                </div>
                                 <a href="{{ route('admin.stok-barang.edit', $stock->idbarang) }}" class="text-yellow-600 hover:text-yellow-700 transition-colors" title="Edit">
                                     <x-heroicon-o-pencil class="w-5 h-5" />
                                 </a>
@@ -130,4 +136,43 @@
         @endif
     </div>
 </div>
+
+<!-- QR Code Modal -->
+<div id="qrModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" onclick="closeQRModal()">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl" onclick="event.stopPropagation()">
+        <div class="text-center">
+            <h3 class="text-xl font-bold text-gray-800 mb-2">QR Code Produk</h3>
+            <p class="text-sm text-gray-500 mb-6">Scan untuk lihat detail produk</p>
+            <div id="qrCodeContainer" class="bg-gray-50 p-6 rounded-xl inline-block">
+                <!-- QR Code will be inserted here -->
+            </div>
+            <p id="qrCodeText" class="text-xs text-gray-600 font-mono mt-4 bg-gray-100 px-4 py-2 rounded"></p>
+            <button onclick="closeQRModal()" class="mt-6 px-6 py-2 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-300">
+                Tutup
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function openQRModal(qrId, kode) {
+    const qrElement = document.getElementById(qrId);
+    if (qrElement) {
+        document.getElementById('qrModal').classList.remove('hidden');
+        document.getElementById('qrCodeText').textContent = kode;
+        document.getElementById('qrCodeContainer').innerHTML = qrElement.innerHTML;
+    }
+}
+
+function closeQRModal() {
+    document.getElementById('qrModal').classList.add('hidden');
+}
+
+// Close modal dengan ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeQRModal();
+    }
+});
+</script>
 @endsection

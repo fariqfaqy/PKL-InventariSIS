@@ -83,14 +83,14 @@
                                     {{ strtoupper($assignment->rack) }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-sm font-mono text-gray-700">{{ $assignment->stock->kodebarang }}</td>
-                            <td class="px-6 py-4 text-sm font-medium text-gray-800">{{ $assignment->stock->namabarang }}</td>
+                            <td class="px-6 py-4 text-sm font-mono text-gray-700">{{ $assignment->kodebarang }}</td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-800">{{ $assignment->namabarang }}</td>
                             <td class="px-6 py-4">
                                 <span class="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-sm font-semibold rounded-lg">
-                                    {{ $assignment->qty }}
+                                    {{ $assignment->stock }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-600">{{ $assignment->keterangan ?? '-' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ $assignment->deskripsi ?? '-' }}</td>
                             <td class="px-6 py-4 text-sm text-gray-600">{{ $assignment->created_at->format('d M Y') }}</td>
                         </tr>
                     @empty

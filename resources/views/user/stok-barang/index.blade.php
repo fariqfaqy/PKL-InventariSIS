@@ -8,8 +8,13 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h2 class="text-2xl font-bold text-gray-800">Stok Barang</h2>
-            <p class="text-sm text-gray-500 mt-1">Data stok barang yang tersedia di inventaris</p>
+            <div class="flex items-center gap-3">
+                <h2 class="text-2xl font-bold text-gray-800">Stok Barang</h2>
+                <span class="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full border border-gray-300">
+                    <x-heroicon-o-eye class="w-3 h-3" />
+                    Read Only
+                </span>
+            </div>
         </div>
     </div>
 
@@ -105,10 +110,16 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                            <a href="{{ route('user.stok-barang.show', $stock->idbarang) }}" class="inline-flex items-center gap-1 text-[#14a2ba] hover:text-[#0d7a8f] transition-colors" title="Detail">
-                                <x-heroicon-o-eye class="w-5 h-5" />
-                                <span class="text-xs">Detail</span>
-                            </a>
+                            <button onclick="openQRModal('qr-{{ $stock->idbarang }}', '{{ $stock->kodebarang }}')" class="inline-flex flex-col items-center gap-1 text-[#14a2ba] hover:text-[#0d7a8f] transition-colors cursor-pointer" title="QR Code">
+                                <div class="inline-block p-1 bg-white border-2 border-gray-300 rounded hover:border-[#14a2ba] transition-colors">
+                                    {!! QrCode::size(30)->generate(route('user.stok-barang.show', $stock->idbarang)) !!}
+                                </div>
+                                <span class="text-xs">Scan</span>
+                            </button>
+                            <!-- Hidden large QR code -->
+                            <div id="qr-{{ $stock->idbarang }}" class="hidden">
+                                {!! QrCode::size(250)->generate(route('user.stok-barang.show', $stock->idbarang)) !!}
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -134,4 +145,43 @@
         @endif
     </div>
 </div>
+
+<!-- QR Code Modal -->
+<div id="qrModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" onclick="closeQRModal()">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl" onclick="event.stopPropagation()">
+        <div class="text-center">
+            <h3 class="text-xl font-bold text-gray-800 mb-2">QR Code Produk</h3>
+            <p class="text-sm text-gray-500 mb-6">Scan untuk lihat detail produk</p>
+            <div id="qrCodeContainer" class="bg-gradient-to-br from-blue-50 to-cyan-50 p-6 rounded-xl inline-block border-2 border-dashed border-blue-300">
+                <!-- QR Code will be inserted here -->
+            </div>
+            <p id="qrCodeText" class="text-xs text-gray-600 font-mono mt-4 bg-gray-100 px-4 py-2 rounded"></p>
+            <button onclick="closeQRModal()" class="mt-6 px-6 py-2 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-300">
+                Tutup
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function openQRModal(qrId, kode) {
+    const qrElement = document.getElementById(qrId);
+    if (qrElement) {
+        document.getElementById('qrModal').classList.remove('hidden');
+        document.getElementById('qrCodeText').textContent = kode;
+        document.getElementById('qrCodeContainer').innerHTML = qrElement.innerHTML;
+    }
+}
+
+function closeQRModal() {
+    document.getElementById('qrModal').classList.add('hidden');
+}
+
+// Close modal dengan ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeQRModal();
+    }
+});
+</script>
 @endsection

@@ -12,8 +12,8 @@ class BarangRakController extends Controller
 {
     public function index(Request $request)
     {
-        $query = RackAssignment::with('stock')
-            ->where('user_id', Auth::id());
+        // Ambil barang yang sudah ada di rak (dari kolom rack di stock)
+        $query = Stock::whereNotNull('rack');
 
         // Filter by rack
         if ($request->has('rack') && $request->rack != '') {
@@ -23,13 +23,13 @@ class BarangRakController extends Controller
         // Filter by search
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
-            $query->whereHas('stock', function($q) use ($search) {
+            $query->where(function($q) use ($search) {
                 $q->where('kodebarang', 'like', "%{$search}%")
                   ->orWhere('namabarang', 'like', "%{$search}%");
             });
         }
 
-        $assignments = $query->orderBy('created_at', 'desc')->paginate(15);
+        $assignments = $query->orderBy('rack')->orderBy('namabarang')->paginate(15);
         $racks = ['1a', '1b', '1c', '2a', '2b', '2c'];
 
         return view('user.barang-rak.index', compact('assignments', 'racks'));
