@@ -15,16 +15,19 @@
                 <p class="text-sm text-gray-500 mt-1">Informasi lengkap stok barang</p>
             </div>
         </div>
-        <div class="flex gap-2">
-            <a href="{{ route('admin.stok-barang.edit', $stock->idbarang) }}" 
-                class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
-                <x-heroicon-o-pencil class="w-5 h-5 inline" /> Edit
-            </a>
-        </div>
     </div>
 
     <!-- Main Info Card -->
     <div class="bg-white rounded-xl shadow-md p-6">
+        <!-- Gambar Barang (Full Width) -->
+        @if($stock->image)
+        <div class="mb-6 flex justify-center">
+            <img src="{{ asset('images/barang/' . $stock->image) }}" 
+                 alt="{{ $stock->namabarang }}" 
+                 class="w-full max-w-md h-64 object-cover rounded-xl border-2 border-gray-200 shadow-lg">
+        </div>
+        @endif
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- QR Code Section -->
             <div class="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-300">

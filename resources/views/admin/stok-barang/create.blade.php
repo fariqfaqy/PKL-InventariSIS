@@ -17,7 +17,7 @@
 
     <!-- Form Card -->
     <div class="bg-white rounded-xl shadow-md p-6">
-        <form action="{{ route('admin.stok-barang.store') }}" method="POST" class="space-y-6">
+        <form action="{{ route('admin.stok-barang.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
             @csrf
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -141,6 +141,27 @@
                 </div>
             </div>
 
+            <!-- Upload Gambar -->
+            <div>
+                <label for="image" class="block text-sm font-medium text-gray-700 mb-2">
+                    Gambar Barang
+                </label>
+                <div class="flex items-start gap-4">
+                    <div class="flex-1">
+                        <input type="file" name="image" id="image" accept="image/*"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('image') border-red-500 @enderror"
+                            onchange="previewImage(event)">
+                        <p class="mt-1 text-xs text-gray-500">Format: JPG, PNG, JPEG (Max: 2MB)</p>
+                        @error('image')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div id="imagePreview" class="hidden w-32 h-32 border-2 border-gray-300 rounded-lg overflow-hidden">
+                        <img id="preview" src="" alt="Preview" class="w-full h-full object-cover">
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Stok Awal -->
                 <div>
@@ -193,6 +214,23 @@
 </div>
 
 <script>
+function previewImage(event) {
+    const preview = document.getElementById('preview');
+    const previewContainer = document.getElementById('imagePreview');
+    const file = event.target.files[0];
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            previewContainer.classList.remove('hidden');
+        }
+        reader.readAsDataURL(file);
+    } else {
+        previewContainer.classList.add('hidden');
+    }
+}
+
 function updateKodeBarang() {
     const prefix = document.getElementById('rack_prefix').value;
     const suffix = document.getElementById('kode_suffix').value;

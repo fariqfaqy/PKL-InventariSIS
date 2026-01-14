@@ -50,7 +50,17 @@ class StokBarangController extends Controller
             'jenis' => 'required|string|max:100',
             'merek' => 'required|string|max:100',
             'tipe' => 'required|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
+
+        // Handle image upload
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imageName = time() . '_' . $validated['kodebarang'] . '.' . $image->getClientOriginalExtension();
+            $image->move(public_path('images/barang'), $imageName);
+            $imagePath = $imageName;
+        }
 
         Stock::create([
             'kodebarang' => $validated['kodebarang'],
@@ -62,6 +72,7 @@ class StokBarangController extends Controller
             'jenis' => $validated['jenis'],
             'merek' => $validated['merek'],
             'tipe' => $validated['tipe'],
+            'image' => $imagePath,
             'penginput' => auth()->user()->name,
         ]);
 

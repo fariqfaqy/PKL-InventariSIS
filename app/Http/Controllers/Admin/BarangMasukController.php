@@ -55,7 +55,7 @@ class BarangMasukController extends Controller
             $image = $request->file('image');
             $imageName = time() . '_' . $validated['kodebarang'] . '.' . $image->getClientOriginalExtension();
             $image->move(public_path('images/barang'), $imageName);
-            $imagePath = 'images/barang/' . $imageName;
+            $imagePath = $imageName; // Simpan hanya nama file
         }
 
         // Check if stock exists by kodebarang
@@ -68,8 +68,8 @@ class BarangMasukController extends Controller
             // Update image if new one uploaded
             if ($imagePath) {
                 // Delete old image if exists
-                if ($stock->image && file_exists(public_path($stock->image))) {
-                    unlink(public_path($stock->image));
+                if ($stock->image && file_exists(public_path('images/barang/' . $stock->image))) {
+                    unlink(public_path('images/barang/' . $stock->image));
                 }
                 $stock->image = $imagePath;
             }

@@ -52,6 +52,7 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">No</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Gambar</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Kode Barang</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Barang</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Kategori</th>
@@ -66,6 +67,15 @@
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                             {{ $stocks->firstItem() + $index }}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            @if($stock->image)
+                                <img src="{{ asset('images/barang/' . $stock->image) }}" alt="{{ $stock->namabarang }}" class="w-16 h-16 object-cover rounded-lg border border-gray-200">
+                            @else
+                                <div class="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
+                                    <x-heroicon-o-photo class="w-8 h-8 text-gray-400" />
+                                </div>
+                            @endif
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ $stock->kodebarang }}
@@ -101,6 +111,9 @@
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-center text-sm font-medium">
                             <div class="flex items-center justify-center gap-2">
+                                <a href="{{ route('admin.stok-barang.show', $stock->idbarang) }}" class="text-blue-600 hover:text-blue-700 transition-colors" title="Detail">
+                                    <x-heroicon-o-eye class="w-5 h-5" />
+                                </a>
                                 <button onclick="openQRModal('qr-{{ $stock->idbarang }}', '{{ $stock->kodebarang }}')" class="text-[#14a2ba] hover:text-[#0d7a8f] transition-colors cursor-pointer" title="QR Code">
                                     <div class="inline-block p-1 bg-white border-2 border-gray-300 rounded hover:border-[#14a2ba] transition-colors">
                                         {!! QrCode::size(30)->generate(route('admin.stok-barang.show', $stock->idbarang)) !!}
@@ -110,9 +123,6 @@
                                 <div id="qr-{{ $stock->idbarang }}" class="hidden">
                                     {!! QrCode::size(250)->generate(route('admin.stok-barang.show', $stock->idbarang)) !!}
                                 </div>
-                                <a href="{{ route('admin.stok-barang.edit', $stock->idbarang) }}" class="text-yellow-600 hover:text-yellow-700 transition-colors" title="Edit">
-                                    <x-heroicon-o-pencil class="w-5 h-5" />
-                                </a>
                                 <form action="{{ route('admin.stok-barang.destroy', $stock->idbarang) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus stok barang ini?')">
                                     @csrf
                                     @method('DELETE')
@@ -125,7 +135,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="px-6 py-12 text-center">
+                        <td colspan="9" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center justify-center text-gray-500">
                                 <x-heroicon-o-inbox class="w-16 h-16 mb-4 opacity-30" />
                                 <p class="text-lg font-medium">Belum ada data stok barang</p>

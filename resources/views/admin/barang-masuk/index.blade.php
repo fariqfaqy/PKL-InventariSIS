@@ -76,9 +76,6 @@
                                 <a href="{{ route('admin.barang-masuk.show', $item->idmasuk) }}" class="text-[#14a2ba] hover:text-[#0d7a8f] transition-colors" title="Detail">
                                     <x-heroicon-o-eye class="w-5 h-5" />
                                 </a>
-                                <a href="{{ route('admin.barang-masuk.edit', $item->idmasuk) }}" class="text-yellow-600 hover:text-yellow-700 transition-colors" title="Edit">
-                                    <x-heroicon-o-pencil class="w-5 h-5" />
-                                </a>
                                 <form action="{{ route('admin.barang-masuk.destroy', $item->idmasuk) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus data ini?')">
                                     @csrf
                                     @method('DELETE')
