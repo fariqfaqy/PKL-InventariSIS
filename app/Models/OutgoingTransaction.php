@@ -13,6 +13,7 @@ class OutgoingTransaction extends Model
     protected $primaryKey = 'idkeluar';
 
     protected $fillable = [
+        'id_request',
         'idbarang',
         'tanggal',
         'penerima',

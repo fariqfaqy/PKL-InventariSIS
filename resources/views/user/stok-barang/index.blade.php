@@ -120,7 +120,7 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                            <button onclick="openQRModal('qr-{{ $stock->idbarang }}', '{{ $stock->kodebarang }}')" class="inline-flex flex-col items-center gap-1 text-[#14a2ba] hover:text-[#0d7a8f] transition-colors cursor-pointer" title="QR Code">
+                            <button onclick="openQRModal('qr-{{ $stock->idbarang }}', '{{ route('user.stok-barang.show', $stock->idbarang) }}')" class="inline-flex flex-col items-center gap-1 text-[#14a2ba] hover:text-[#0d7a8f] transition-colors cursor-pointer" title="QR Code">
                                 <div class="inline-block p-1 bg-white border-2 border-gray-300 rounded hover:border-[#14a2ba] transition-colors">
                                     {!! QrCode::size(30)->generate(route('user.stok-barang.show', $stock->idbarang)) !!}
                                 </div>

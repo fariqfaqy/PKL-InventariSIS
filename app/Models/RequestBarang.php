@@ -26,6 +26,7 @@ class RequestBarang extends Model
         'diproses_oleh',
         'tanggal_request',
         'tanggal_diproses',
+        'parent_request_id',
     ];
 
     protected $casts = [
@@ -62,6 +63,7 @@ class RequestBarang extends Model
             'processing' => 'purple',
             'rejected' => 'red',
             'completed' => 'green',
+            'cancelled' => 'gray',
             default => 'gray'
         };
     }
@@ -77,8 +79,25 @@ class RequestBarang extends Model
             'processing' => 'Diproses',
             'rejected' => 'Ditolak',
             'completed' => 'Selesai',
+            'cancelled' => 'Dibatalkan',
             default => $this->status
         };
+    }
+
+    /**
+     * Get parent request relationship
+     */
+    public function parentRequest()
+    {
+        return $this->belongsTo(RequestBarang::class, 'parent_request_id', 'id_request');
+    }
+
+    /**
+     * Get outgoing transaction relationship
+     */
+    public function outgoingTransaction()
+    {
+        return $this->hasOne(OutgoingTransaction::class, 'id_request', 'id_request');
     }
 
     /**

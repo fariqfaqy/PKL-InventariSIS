@@ -18,19 +18,39 @@ class PemakaianController extends Controller
      */
     public function index()
     {
-        // Ambil semua request user dari RequestBarang
+        // Ambil request biasa (bukan request perubahan, bukan completed, bukan cancelled)
         $requests = RequestBarang::with('stock')
             ->where('user_id', Auth::id())
+            ->whereNull('parent_request_id')
+            ->whereNotIn('status', ['completed', 'cancelled'])
             ->orderBy('tanggal_request', 'desc')
             ->paginate(20);
 
-        // Ambil barang keluar yang sudah disetujui (untuk history)
+        // Ambil request perubahan (yang punya parent_request_id)
+        // Exclude yang parent-nya sudah completed/cancelled
+        $changeRequests = RequestBarang::with(['stock', 'parentRequest'])
+            ->where('user_id', Auth::id())
+            ->whereNotNull('parent_request_id')
+            ->whereHas('parentRequest', function($query) {
+                $query->whereNotIn('status', ['completed', 'cancelled']);
+            })
+            ->orderBy('tanggal_request', 'desc')
+            ->get();
+
+        // Ambil barang keluar yang sudah disetujui dan request yang completed (untuk history)
         $pemakaian = OutgoingTransaction::with('stock')
             ->where('penginput', Auth::user()->name)
             ->orderBy('tanggal', 'desc')
             ->paginate(20);
+        
+        // Ambil request completed dan cancelled untuk ditampilkan di history
+        $completedRequests = RequestBarang::with('stock')
+            ->where('user_id', Auth::id())
+            ->whereIn('status', ['completed', 'cancelled'])
+            ->orderBy('tanggal_request', 'desc')
+            ->get();
 
-        return view('user.pemakaian.index', compact('requests', 'pemakaian'));
+        return view('user.pemakaian.index', compact('requests', 'changeRequests', 'pemakaian', 'completedRequests'));
     }
 
     /**
