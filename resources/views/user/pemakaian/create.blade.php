@@ -162,6 +162,17 @@
                 @enderror
             </div>
 
+            <!-- Penerima -->
+            <div>
+                <label for="catatan_user" class="block text-sm font-medium text-gray-700 mb-2">Penerima *</label>
+                <input type="text" name="catatan_user" id="catatan_user" required
+                       placeholder="Nama penerima barang" value="{{ old('catatan_user') }}"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
+                @error('catatan_user')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
             <!-- Keperluan -->
             <div>
                 <label for="keperluan" class="block text-sm font-medium text-gray-700 mb-2">Keperluan *</label>
@@ -169,17 +180,6 @@
                        placeholder="Jelaskan untuk apa barang ini dibutuhkan" 
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">{{ old('keperluan') }}</textarea>
                 @error('keperluan')
-                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Catatan User (Optional) -->
-            <div>
-                <label for="catatan_user" class="block text-sm font-medium text-gray-700 mb-2">Catatan Tambahan (Opsional)</label>
-                <textarea name="catatan_user" id="catatan_user" rows="2" 
-                       placeholder="Catatan tambahan jika ada" 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">{{ old('catatan_user') }}</textarea>
-                @error('catatan_user')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>

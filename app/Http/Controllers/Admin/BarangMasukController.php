@@ -62,8 +62,15 @@ class BarangMasukController extends Controller
         $stock = Stock::where('kodebarang', $validated['kodebarang'])->first();
 
         if ($stock) {
-            // If stock exists, update the quantity
+            // If stock exists, update the quantity and other fields
             $stock->increment('stock', $validated['qty']);
+            
+            // Update kategori, namabarang, deskripsi if provided
+            $stock->kategori = $validated['kategori'];
+            $stock->namabarang = $validated['namabarang'];
+            if (isset($validated['deskripsi'])) {
+                $stock->deskripsi = $validated['deskripsi'];
+            }
             
             // Update image if new one uploaded
             if ($imagePath) {

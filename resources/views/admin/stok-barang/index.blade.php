@@ -101,7 +101,7 @@
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-center text-sm font-medium">
                             <div class="flex items-center justify-center gap-2">
-                                <button onclick="openQRModal('qr-{{ $stock->idbarang }}', '{{ $stock->kodebarang }}')" class="text-[#14a2ba] hover:text-[#0d7a8f] transition-colors cursor-pointer" title="QR Code">
+                                <button onclick="openQRModal('qr-{{ $stock->idbarang }}', '{{ route('admin.stok-barang.show', $stock->idbarang) }}')" class="text-[#14a2ba] hover:text-[#0d7a8f] transition-colors cursor-pointer" title="QR Code">
                                     <div class="inline-block p-1 bg-white border-2 border-gray-300 rounded hover:border-[#14a2ba] transition-colors">
                                         {!! QrCode::size(30)->generate(route('admin.stok-barang.show', $stock->idbarang)) !!}
                                     </div>

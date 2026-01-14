@@ -96,6 +96,39 @@
                             {{ $permintaan->tipe_request_label }}
                         </span>
                     </div>
+                    @if($permintaan->parent_request_id)
+                    <div class="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                        <div class="flex items-center gap-2 mb-2">
+                            <x-heroicon-o-arrow-path class="w-4 h-4 text-orange-600" />
+                            <span class="font-medium text-orange-800">Request Perubahan</span>
+                        </div>
+                        <div class="text-sm space-y-1">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Request Asli:</span>
+                                <a href="{{ route('admin.permintaan.show', $permintaan->parent_request_id) }}" class="text-blue-600 hover:underline font-medium">#{{ $permintaan->parent_request_id }}</a>
+                            </div>
+                            @if($permintaan->parentRequest)
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Qty Asli:</span>
+                                <span class="font-medium">{{ $permintaan->parentRequest->qty }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Qty Baru:</span>
+                                <span class="font-medium">{{ $permintaan->qty }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Perubahan:</span>
+                                @php
+                                    $diff = $permintaan->qty - $permintaan->parentRequest->qty;
+                                @endphp
+                                <span class="font-medium {{ $diff > 0 ? 'text-red-600' : 'text-green-600' }}">
+                                    {{ $diff > 0 ? '+' : '' }}{{ $diff }} ({{ $diff > 0 ? 'tambahan keluar' : 'dikembalikan' }})
+                                </span>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
 
@@ -148,41 +181,6 @@
 
         <!-- Actions Sidebar -->
         <div class="lg:col-span-1 space-y-4">
-            <!-- Manual Status Change -->
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Ubah Status</h2>
-                <form action="{{ route('admin.permintaan.update-status', $permintaan->id_request) }}" method="POST">
-                    @csrf
-                    <div class="space-y-3">
-                        <div>
-                            <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
-                                Status<span class="text-red-500">*</span>
-                            </label>
-                            <select id="status" name="status" required
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                <option value="pending" {{ $permintaan->status === 'pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="approved" {{ $permintaan->status === 'approved' ? 'selected' : '' }}>Disetujui</option>
-                                <option value="processing" {{ $permintaan->status === 'processing' ? 'selected' : '' }}>Diproses</option>
-                                <option value="rejected" {{ $permintaan->status === 'rejected' ? 'selected' : '' }}>Ditolak</option>
-                                <option value="completed" {{ $permintaan->status === 'completed' ? 'selected' : '' }}>Selesai</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="catatan_status" class="block text-sm font-medium text-gray-700 mb-2">
-                                Catatan (Opsional)
-                            </label>
-                            <textarea id="catatan_status" name="catatan_admin" rows="3"
-                                      class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                                      placeholder="Tambahkan catatan jika diperlukan...">{{ $permintaan->catatan_admin }}</textarea>
-                        </div>
-                        <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                                onclick="return confirm('Ubah status permintaan ini?')">
-                            Simpan Perubahan
-                        </button>
-                    </div>
-                </form>
-            </div>
-
             <!-- Quick Actions -->
             <div class="bg-white rounded-lg shadow p-6">
                 <h2 class="text-xl font-bold text-gray-800 mb-4">Aksi Cepat</h2>
@@ -191,8 +189,28 @@
                     <!-- Approve Button -->
                     <form action="{{ route('admin.permintaan.approve', $permintaan->id_request) }}" method="POST" class="mb-3">
                         @csrf
+                        @php
+                            // Tentukan pesan konfirmasi berdasarkan tipe request
+                            if ($permintaan->parent_request_id && $permintaan->parentRequest) {
+                                $diff = $permintaan->qty - $permintaan->parentRequest->qty;
+                                if ($diff > 0) {
+                                    $confirmMsg = "Request perubahan: User meminta TAMBAHAN {$diff} unit. Stok akan berkurang {$diff} unit. Setujui?";
+                                } elseif ($diff < 0) {
+                                    $returnQty = abs($diff);
+                                    $confirmMsg = "Request perubahan: User akan MENGEMBALIKAN {$returnQty} unit. Stok akan bertambah {$returnQty} unit. Setujui?";
+                                } else {
+                                    $confirmMsg = "Request perubahan tanpa perubahan qty. Setujui?";
+                                }
+                            } elseif ($permintaan->parent_request_id) {
+                                // Request pembatalan
+                                $confirmMsg = "Request PEMBATALAN: User akan mengembalikan {$permintaan->qty} unit. Stok akan bertambah. Setujui?";
+                            } else {
+                                // Request biasa
+                                $confirmMsg = "Setujui permintaan ini dan berikan barang ke user? Stok akan berkurang {$permintaan->qty} unit.";
+                            }
+                        @endphp
                         <button type="submit" class="w-full px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
-                                onclick="return confirm('Setujui permintaan ini?')">
+                                onclick="return confirm('{{ $confirmMsg }}')">
                             <x-heroicon-o-check-circle class="h-5 w-5 mr-2" />
                             Setujui
                         </button>
@@ -204,42 +222,10 @@
                         <x-heroicon-o-x-circle class="h-5 w-5 mr-2" />
                         Tolak
                     </button>
-                @endif
-
-                @if($permintaan->status === 'approved')
-                    <!-- Process Button -->
-                    <form action="{{ route('admin.permintaan.process', $permintaan->id_request) }}" method="POST" class="mb-3">
-                        @csrf
-                        <button type="submit" class="w-full px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"
-                                onclick="return confirm('Proses permintaan ini dan kurangi stok?')">
-                            <x-heroicon-o-arrow-path class="h-5 w-5 mr-2" />
-                            Proses
-                        </button>
-                    </form>
-
-                    <!-- Reject Button with Modal -->
-                    <button type="button" onclick="document.getElementById('rejectModal').classList.remove('hidden')" 
-                            class="w-full px-4 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center">
-                        <x-heroicon-o-x-circle class="h-5 w-5 mr-2" />
-                        Tolak
-                    </button>
-                @endif
-
-                @if($permintaan->status === 'processing')
-                    <!-- Complete Button -->
-                    <form action="{{ route('admin.permintaan.complete', $permintaan->id_request) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="w-full px-4 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors flex items-center justify-center"
-                                onclick="return confirm('Selesaikan permintaan ini?')">
-                            <x-heroicon-o-shield-check class="h-5 w-5 mr-2" />
-                            Selesai
-                        </button>
-                    </form>
-                @endif
-
-                @if(in_array($permintaan->status, ['rejected', 'completed']))
-                    <div class="text-center text-gray-500">
-                        <p class="text-sm">Tidak ada aksi cepat yang tersedia</p>
+                @else
+                    <div class="text-center text-gray-500 py-4">
+                        <x-heroicon-o-information-circle class="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                        <p class="text-sm">Permintaan sudah diproses</p>
                     </div>
                 @endif
             </div>

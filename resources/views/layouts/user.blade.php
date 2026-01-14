@@ -55,6 +55,12 @@
                             <x-heroicon-o-shopping-bag class="w-4 h-4" />
                             <span class="text-sm font-medium">Barang Habis Pakai</span>
                         </a>
+                        
+                        <!-- Aset Tetap -->
+                        <a href="{{ route('user.stok-barang.index', ['kategori' => 'aset_tetap']) }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('user.stok-barang.*') && request('kategori') == 'aset_tetap' ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200">
+                            <x-heroicon-o-building-office class="w-4 h-4" />
+                            <span class="text-sm font-medium">Aset Tetap</span>
+                        </a>
                     </div>
                 </div>
 

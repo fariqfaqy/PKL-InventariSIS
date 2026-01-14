@@ -17,19 +17,29 @@ class PermintaanController extends Controller
      */
     public function index(Request $request)
     {
-        $query = RequestBarang::with(['user', 'stock']);
+        // Request biasa (bukan request perubahan dan bukan completed)
+        $normalRequests = RequestBarang::with(['user', 'stock'])
+            ->whereNull('parent_request_id')
+            ->where('status', '!=', 'completed')
+            ->orderBy('tanggal_request', 'desc')
+            ->get();
         
-        // Filter by status
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
+        // Request perubahan (yang punya parent_request_id)
+        $changeRequests = RequestBarang::with(['user', 'stock', 'parentRequest'])
+            ->whereNotNull('parent_request_id')
+            ->orderBy('tanggal_request', 'desc')
+            ->get();
         
-        // Filter by tipe request
-        if ($request->filled('tipe_request')) {
-            $query->where('tipe_request', $request->tipe_request);
-        }
+        // Request completed untuk history
+        $completedRequests = RequestBarang::with(['user', 'stock'])
+            ->where('status', 'completed')
+            ->orderBy('tanggal_request', 'desc')
+            ->get();
         
-        $permintaan = $query->orderBy('tanggal_request', 'desc')->paginate(15);
+        // Barang keluar (approved outgoing transactions) untuk history
+        $outgoingTransactions = OutgoingTransaction::with('stock')
+            ->orderBy('tanggal', 'desc')
+            ->get();
         
         // Count by status for stats
         $stats = [
@@ -39,7 +49,7 @@ class PermintaanController extends Controller
             'completed' => RequestBarang::where('status', 'completed')->count(),
         ];
         
-        return view('admin.permintaan.index', compact('permintaan', 'stats'));
+        return view('admin.permintaan.index', compact('normalRequests', 'changeRequests', 'completedRequests', 'outgoingTransactions', 'stats'));
     }
 
     /**
@@ -52,14 +62,130 @@ class PermintaanController extends Controller
     }
 
     /**
-     * Approve request
+     * Approve request - Berikan barang ke user (barang keluar)
      */
     public function approve($id)
     {
-        $permintaan = RequestBarang::findOrFail($id);
+        $permintaan = RequestBarang::with(['stock', 'parentRequest'])->findOrFail($id);
+        
+        if (!in_array($permintaan->status, ['pending', 'processing'])) {
+            return back()->with('error', 'Hanya permintaan dengan status pending atau processing yang bisa disetujui!');
+        }
+        
+        DB::beginTransaction();
+        try {
+            // Cek apakah ini request perubahan atau request biasa
+            if ($permintaan->parent_request_id && $permintaan->parentRequest) {
+                // INI REQUEST PERUBAHAN atau PEMBATALAN
+                
+                // Cek apakah ini request pembatalan (dari keperluan atau catatan)
+                $isPembatalan = stripos($permintaan->keperluan, 'PEMBATALAN') !== false;
+                
+                if ($isPembatalan) {
+                    // INI REQUEST PEMBATALAN - user mau return barang
+                    // Tambah stok sejumlah qty yang dikembalikan
+                    $permintaan->stock->increment('stock', $permintaan->qty);
+                    
+                    $message = "Request pembatalan disetujui! User mengembalikan {$permintaan->qty} unit. Stok bertambah {$permintaan->qty}.";
+                    
+                } else {
+                    // INI REQUEST PERUBAHAN QTY - hitung selisih
+                    $qtyLama = $permintaan->parentRequest->qty;
+                    $qtyBaru = $permintaan->qty;
+                    $selisih = $qtyBaru - $qtyLama;
+                    
+                    if ($selisih > 0) {
+                        // User minta TAMBAHAN barang (qty naik)
+                        // Cek stok cukup untuk tambahan
+                        if ($permintaan->stock->stock < $selisih) {
+                            throw new \Exception('Stok tidak mencukupi untuk tambahan! Stok tersedia: ' . $permintaan->stock->stock . ', dibutuhkan: ' . $selisih);
+                        }
+                        
+                        // Kurangi stok sejumlah tambahan
+                        $permintaan->stock->decrement('stock', $selisih);
+                        
+                        $message = "Request perubahan disetujui! Tambahan {$selisih} unit telah diberikan ke user. Stok berkurang {$selisih}.";
+                        
+                    } elseif ($selisih < 0) {
+                        // User MENGEMBALIKAN barang (qty turun)
+                        $jumlahKembali = abs($selisih);
+                        
+                        // Tambah stok sejumlah yang dikembalikan
+                        $permintaan->stock->increment('stock', $jumlahKembali);
+                        
+                        $message = "Request perubahan disetujui! User mengembalikan {$jumlahKembali} unit. Stok bertambah {$jumlahKembali}.";
+                        
+                    } else {
+                        // Qty sama, tidak ada perubahan stok
+                        $message = "Request perubahan disetujui! Tidak ada perubahan qty.";
+                    }
+                }
+                
+                // Update status request perubahan/pembatalan
+                $permintaan->update([
+                    'status' => 'approved',
+                    'diproses_oleh' => Auth::user()->name,
+                    'tanggal_diproses' => now(),
+                ]);
+                
+            } else {
+                // INI REQUEST BIASA - logic seperti biasa
+                
+                // Check stock availability
+                if ($permintaan->stock->stock < $permintaan->qty) {
+                    throw new \Exception('Stok tidak mencukupi! Stok tersedia: ' . $permintaan->stock->stock);
+                }
+                
+                // Convert tipe_request: pinjam_sewa -> peminjaman, pakai_habis_pakai -> permintaan
+                $tipeKeluar = $permintaan->tipe_request === 'pinjam_sewa' ? 'peminjaman' : 'permintaan';
+                
+                // Create outgoing transaction (barang keluar)
+                OutgoingTransaction::create([
+                    'idbarang' => $permintaan->idbarang,
+                    'tanggal' => now(),
+                    'penerima' => $permintaan->user->name,
+                    'qty' => $permintaan->qty,
+                    'namabarang_k' => $permintaan->stock->namabarang,
+                    'kodebarang_k' => $permintaan->stock->kodebarang,
+                    'penginput' => Auth::user()->name,
+                    'kategori' => $permintaan->stock->kategori,
+                    'tanggal_mulai_sewa' => $permintaan->tanggal_mulai_sewa,
+                    'tanggal_akhir_sewa' => $permintaan->tanggal_akhir_sewa,
+                    'tipe' => $tipeKeluar,
+                    'status_approval' => 'approved',
+                ]);
+                
+                // Update stock (kurangi stok)
+                $permintaan->stock->decrement('stock', $permintaan->qty);
+                
+                // Update request status
+                $permintaan->update([
+                    'status' => 'approved',
+                    'diproses_oleh' => Auth::user()->name,
+                    'tanggal_diproses' => now(),
+                ]);
+                
+                $message = 'Permintaan disetujui dan barang telah diberikan ke user!';
+            }
+            
+            DB::commit();
+            return back()->with('success', $message);
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menyetujui permintaan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Process request - Admin sedang mengecek/memverifikasi barang
+     */
+    public function process(Request $request, $id)
+    {
+        $permintaan = RequestBarang::with('stock')->findOrFail($id);
         
         if ($permintaan->status !== 'pending') {
-            return back()->with('error', 'Hanya permintaan dengan status pending yang bisa disetujui!');
+            return back()->with('error', 'Hanya permintaan dengan status pending yang bisa diproses!');
         }
         
         // Check stock availability
@@ -68,66 +194,14 @@ class PermintaanController extends Controller
             return back()->with('error', 'Stok tidak mencukupi! Stok tersedia: ' . $stock->stock);
         }
         
+        // Update status jadi processing (admin sedang ngecek barang)
         $permintaan->update([
-            'status' => 'approved',
+            'status' => 'processing',
             'diproses_oleh' => Auth::user()->name,
             'tanggal_diproses' => now(),
         ]);
         
-        return back()->with('success', 'Permintaan berhasil disetujui!');
-    }
-
-    /**
-     * Process request (create outgoing transaction)
-     */
-    public function process(Request $request, $id)
-    {
-        $permintaan = RequestBarang::with('stock')->findOrFail($id);
-        
-        if ($permintaan->status !== 'approved') {
-            return back()->with('error', 'Hanya permintaan yang sudah disetujui yang bisa diproses!');
-        }
-        
-        DB::beginTransaction();
-        try {
-            // Check stock availability again
-            if ($permintaan->stock->stock < $permintaan->qty) {
-                throw new \Exception('Stok tidak mencukupi!');
-            }
-            
-            // Create outgoing transaction
-            OutgoingTransaction::create([
-                'idbarang' => $permintaan->idbarang,
-                'tanggal' => now(),
-                'penerima' => $permintaan->user->name,
-                'qty' => $permintaan->qty,
-                'namabarang_k' => $permintaan->stock->namabarang,
-                'kodebarang_k' => $permintaan->stock->kodebarang,
-                'penginput' => Auth::user()->name,
-                'kategori' => $permintaan->stock->kategori,
-                'tanggal_mulai_sewa' => $permintaan->tanggal_mulai_sewa,
-                'tanggal_akhir_sewa' => $permintaan->tanggal_akhir_sewa,
-                'tipe_request' => $permintaan->tipe_request,
-                'status_approval' => 'approved', // Mark as approved since admin processed it
-            ]);
-            
-            // Update stock
-            $permintaan->stock->decrement('stock', $permintaan->qty);
-            
-            // Update request status
-            $permintaan->update([
-                'status' => 'processing',
-                'diproses_oleh' => Auth::user()->name,
-                'tanggal_diproses' => now(),
-            ]);
-            
-            DB::commit();
-            return redirect()->route('admin.permintaan.index')->with('success', 'Permintaan berhasil diproses dan barang keluar telah dicatat!');
-            
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Gagal memproses permintaan: ' . $e->getMessage());
-        }
+        return back()->with('success', 'Permintaan sedang diproses. Silakan setujui untuk memberikan barang ke user.');
     }
 
     /**
@@ -208,5 +282,24 @@ class PermintaanController extends Controller
         ]);
 
         return back()->with('success', "Status berhasil diubah dari {$oldStatus} ke {$newStatus}!");
+    }
+
+    /**
+     * Mark request as completed (admin can mark approved requests as completed)
+     */
+    public function markComplete($id)
+    {
+        $permintaan = RequestBarang::findOrFail($id);
+        
+        if ($permintaan->status !== 'approved') {
+            return back()->with('error', 'Hanya request yang sudah disetujui yang bisa ditandai selesai!');
+        }
+        
+        $permintaan->update([
+            'status' => 'completed',
+        ]);
+        
+        return redirect()->route('admin.permintaan.index')
+            ->with('success', 'Request berhasil ditandai selesai dan masuk ke history!');
     }
 }

@@ -61,6 +61,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('permintaan/{id}/reject', [\App\Http\Controllers\Admin\PermintaanController::class, 'reject'])->name('permintaan.reject');
     Route::post('permintaan/{id}/complete', [\App\Http\Controllers\Admin\PermintaanController::class, 'complete'])->name('permintaan.complete');
     Route::post('permintaan/{id}/update-status', [\App\Http\Controllers\Admin\PermintaanController::class, 'updateStatus'])->name('permintaan.update-status');
+    Route::patch('permintaan/{id}/mark-complete', [\App\Http\Controllers\Admin\PermintaanController::class, 'markComplete'])->name('permintaan.mark-complete');
     
     // Add more admin routes here
     // Route::resource('reports', ReportController::class);
@@ -93,12 +94,16 @@ Route::prefix('user')->name('user.')->middleware(['auth', 'role:user'])->group(f
     // Barang di Rak (Read Only - User hanya lihat, admin yang input via barang masuk)
     Route::get('/barang-rak', [\App\Http\Controllers\User\BarangRakController::class, 'index'])->name('barang-rak.index');
     
-    // Request Barang
-    Route::get('/request-barang', [\App\Http\Controllers\User\RequestBarangController::class, 'index'])->name('request-barang.index');
+    // Request Barang - Semua ada di Pemakaian Saya
+    Route::get('/request-barang', function() { return redirect()->route('user.pemakaian.index'); })->name('request-barang.index');
     Route::get('/request-barang/create', [\App\Http\Controllers\User\RequestBarangController::class, 'create'])->name('request-barang.create');
     Route::post('/request-barang', [\App\Http\Controllers\User\RequestBarangController::class, 'store'])->name('request-barang.store');
     Route::get('/request-barang/{id}', [\App\Http\Controllers\User\RequestBarangController::class, 'show'])->name('request-barang.show');
+    Route::get('/request-barang/{id}/edit', [\App\Http\Controllers\User\RequestBarangController::class, 'edit'])->name('request-barang.edit');
+    Route::put('/request-barang/{id}', [\App\Http\Controllers\User\RequestBarangController::class, 'update'])->name('request-barang.update');
     Route::delete('/request-barang/{id}', [\App\Http\Controllers\User\RequestBarangController::class, 'destroy'])->name('request-barang.destroy');
+    Route::post('/request-barang/{id}/request-cancel', [\App\Http\Controllers\User\RequestBarangController::class, 'requestCancel'])->name('request-barang.request-cancel');
+    Route::patch('/request-barang/{id}/complete', [\App\Http\Controllers\User\RequestBarangController::class, 'complete'])->name('request-barang.complete');
     
     // Activity Log (User hanya lihat log sendiri)
     Route::get('/activity-log', [UserActivityLogController::class, 'index'])->name('activity-log.index');

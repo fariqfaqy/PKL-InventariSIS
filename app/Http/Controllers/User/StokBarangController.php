@@ -18,7 +18,7 @@ class StokBarangController extends Controller
         $query = Stock::query();
 
         // Filter berdasarkan kategori
-        if ($request->has('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai'])) {
+        if ($request->has('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
             $query->where('kategori', $request->kategori);
         }
 

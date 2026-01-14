@@ -26,6 +26,7 @@ class RequestBarang extends Model
         'diproses_oleh',
         'tanggal_request',
         'tanggal_diproses',
+        'parent_request_id',
     ];
 
     protected $casts = [
@@ -79,6 +80,14 @@ class RequestBarang extends Model
             'completed' => 'Selesai',
             default => $this->status
         };
+    }
+
+    /**
+     * Get parent request relationship
+     */
+    public function parentRequest()
+    {
+        return $this->belongsTo(RequestBarang::class, 'parent_request_id', 'id_request');
     }
 
     /**
