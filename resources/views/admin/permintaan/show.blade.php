@@ -192,18 +192,24 @@
                         @php
                             // Tentukan pesan konfirmasi berdasarkan tipe request
                             if ($permintaan->parent_request_id && $permintaan->parentRequest) {
-                                $diff = $permintaan->qty - $permintaan->parentRequest->qty;
-                                if ($diff > 0) {
-                                    $confirmMsg = "Request perubahan: User meminta TAMBAHAN {$diff} unit. Stok akan berkurang {$diff} unit. Setujui?";
-                                } elseif ($diff < 0) {
-                                    $returnQty = abs($diff);
-                                    $confirmMsg = "Request perubahan: User akan MENGEMBALIKAN {$returnQty} unit. Stok akan bertambah {$returnQty} unit. Setujui?";
+                                // Cek apakah ini pembatalan atau perubahan
+                                $isPembatalan = stripos($permintaan->keperluan, 'PEMBATALAN') !== false;
+                                
+                                if ($isPembatalan) {
+                                    // Request pembatalan
+                                    $confirmMsg = "Request PEMBATALAN: User akan mengembalikan {$permintaan->qty} unit. Stok akan bertambah {$permintaan->qty} unit. Request asli akan dibatalkan. Setujui?";
                                 } else {
-                                    $confirmMsg = "Request perubahan tanpa perubahan qty. Setujui?";
+                                    // Request perubahan qty
+                                    $diff = $permintaan->qty - $permintaan->parentRequest->qty;
+                                    if ($diff > 0) {
+                                        $confirmMsg = "Request perubahan: User meminta TAMBAHAN {$diff} unit. Stok akan berkurang {$diff} unit. Setujui?";
+                                    } elseif ($diff < 0) {
+                                        $returnQty = abs($diff);
+                                        $confirmMsg = "Request perubahan: User akan MENGEMBALIKAN {$returnQty} unit. Stok akan bertambah {$returnQty} unit. Setujui?";
+                                    } else {
+                                        $confirmMsg = "Request perubahan tanpa perubahan qty (mungkin ubah tanggal). Setujui?";
+                                    }
                                 }
-                            } elseif ($permintaan->parent_request_id) {
-                                // Request pembatalan
-                                $confirmMsg = "Request PEMBATALAN: User akan mengembalikan {$permintaan->qty} unit. Stok akan bertambah. Setujui?";
                             } else {
                                 // Request biasa
                                 $confirmMsg = "Setujui permintaan ini dan berikan barang ke user? Stok akan berkurang {$permintaan->qty} unit.";

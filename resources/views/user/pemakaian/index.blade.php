@@ -54,74 +54,53 @@
 
     <!-- Request Tab Content -->
     <div id="content-requests" class="tab-content">
-        <div class="bg-white rounded-xl shadow-md overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @forelse($requests as $item)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                #{{ $item->id_request }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ $item->tanggal_request->format('d/m/Y H:i') }}
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-900">
-                                <div class="font-medium">{{ $item->stock->namabarang }}</div>
-                                <div class="text-gray-500 text-xs">{{ $item->stock->kodebarang }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $item->qty }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_sewa' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
-                                    {{ $item->tipe_request_label }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <div class="space-y-1">
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-{{ $item->status_color }}-100 text-{{ $item->status_color }}-800">
-                                        {{ $item->status_label }}
+        @php
+            $pendingRequests = $requests->where('status', 'pending');
+            $approvedRequests = $requests->where('status', 'approved');
+            $rejectedRequests = $requests->where('status', 'rejected');
+        @endphp
+
+        <!-- Pending Section -->
+        @if($pendingRequests->count() > 0)
+        <div class="mb-6">
+            <div class="flex items-center gap-2 mb-3">
+                <x-heroicon-o-clock class="h-6 w-6 text-yellow-600" />
+                <h3 class="text-lg font-semibold text-gray-800">Menunggu Approval</h3>
+                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ $pendingRequests->count() }}</span>
+            </div>
+            <div class="bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-yellow-500">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-yellow-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach($pendingRequests as $item)
+                            <tr class="hover:bg-yellow-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#{{ $item->id_request }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $item->tanggal_request->format('d/m/Y H:i') }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <div class="font-medium">{{ $item->stock->namabarang }}</div>
+                                    <div class="text-gray-500 text-xs">{{ $item->stock->kodebarang }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->qty }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_sewa' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                                        {{ $item->tipe_request_label }}
                                     </span>
-                                    @php
-                                        // Cek apakah request ini punya request perubahan
-                                        $hasChangeRequest = \App\Models\RequestBarang::where('parent_request_id', $item->id_request)->exists();
-                                        $changeRequest = $hasChangeRequest ? \App\Models\RequestBarang::where('parent_request_id', $item->id_request)->latest()->first() : null;
-                                    @endphp
-                                    @if($hasChangeRequest && $changeRequest)
-                                        <div class="text-xs">
-                                            @if($changeRequest->status == 'pending')
-                                                <span class="px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
-                                                    <x-heroicon-o-clock class="w-3 h-3 inline" /> Ada perubahan pending
-                                                </span>
-                                            @elseif($changeRequest->status == 'approved')
-                                                <span class="px-2 py-0.5 rounded-full bg-green-100 text-green-700">
-                                                    <x-heroicon-o-check class="w-3 h-3 inline" /> Diubah #{{ $changeRequest->id_request }}
-                                                </span>
-                                            @endif
-                                        </div>
-                                    @endif
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                <div class="flex items-center justify-center gap-2">
-                                    @if($item->status === 'pending')
-                                        <!-- Edit Button -->
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                    <div class="flex items-center justify-center gap-2">
                                         <a href="{{ route('user.request-barang.edit', $item->id_request) }}" class="text-blue-600 hover:text-blue-900" title="Edit Request">
                                             <x-heroicon-o-pencil class="h-5 w-5 inline" />
                                         </a>
-                                        <!-- Delete Button -->
                                         <form action="{{ route('user.request-barang.destroy', $item->id_request) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
@@ -129,8 +108,105 @@
                                                 <x-heroicon-o-trash class="h-5 w-5 inline" />
                                             </button>
                                         </form>
-                                    @elseif($item->status === 'approved')
-                                        <!-- Mark as Completed -->
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- Approved Section -->
+        @if($approvedRequests->count() > 0)
+        <div class="mb-6">
+            <div class="flex items-center gap-2 mb-3">
+                <x-heroicon-o-check-circle class="h-6 w-6 text-green-600" />
+                <h3 class="text-lg font-semibold text-gray-800">Disetujui - Sedang Digunakan</h3>
+                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">{{ $approvedRequests->count() }}</span>
+            </div>
+            <div class="bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-green-500">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-green-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach($approvedRequests as $item)
+                            <tr class="hover:bg-green-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#{{ $item->id_request }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $item->tanggal_request->format('d/m/Y H:i') }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <div class="font-medium">{{ $item->stock->namabarang }}</div>
+                                    <div class="text-gray-500 text-xs">{{ $item->stock->kodebarang }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->qty }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_sewa' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                                        {{ $item->tipe_request_label }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    @php
+                                        $hasPendingRequest = \App\Models\RequestBarang::where('parent_request_id', $item->id_request)
+                                            ->where('status', 'pending')
+                                            ->exists();
+                                        $pendingRequest = $hasPendingRequest ? \App\Models\RequestBarang::where('parent_request_id', $item->id_request)->where('status', 'pending')->latest()->first() : null;
+                                        
+                                        // Detect tipe request: pembatalan atau perubahan
+                                        $isCancellation = $pendingRequest && (
+                                            str_contains(strtoupper($pendingRequest->keperluan), 'PEMBATALAN') ||
+                                            str_contains(strtoupper($pendingRequest->catatan_user ?? ''), 'PEMBATALAN')
+                                        );
+                                    @endphp
+                                    @if($hasPendingRequest && $pendingRequest)
+                                        @if($isCancellation)
+                                            <span class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs">
+                                                <x-heroicon-o-exclamation-circle class="w-3 h-3 inline" /> Pembatalan pending
+                                            </span>
+                                        @else
+                                            <span class="px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 text-xs">
+                                                <x-heroicon-o-clock class="w-3 h-3 inline" /> Perubahan pending
+                                            </span>
+                                        @endif
+                                    @else
+                                        @php
+                                            $hasApprovedChange = \App\Models\RequestBarang::where('parent_request_id', $item->id_request)
+                                                ->where('status', 'approved')
+                                                ->exists();
+                                        @endphp
+                                        @if($hasApprovedChange)
+                                            <span class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs">
+                                                <x-heroicon-o-check class="w-3 h-3 inline" /> Diubah
+                                            </span>
+                                        @endif
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                    @php
+                                        // Re-check untuk action buttons
+                                        $hasPendingCancellation = \App\Models\RequestBarang::where('parent_request_id', $item->id_request)
+                                            ->where('status', 'pending')
+                                            ->where(function($q) {
+                                                $q->where('keperluan', 'like', '%PEMBATALAN%')
+                                                  ->orWhere('catatan_user', 'like', '%PEMBATALAN%');
+                                            })
+                                            ->exists();
+                                    @endphp
+                                    @if($hasPendingCancellation)
+                                        <div class="text-xs text-gray-500 italic">Menunggu approval pembatalan</div>
+                                    @else
+                                    <div class="flex items-center justify-center gap-2">
                                         <form action="{{ route('user.request-barang.complete', $item->id_request) }}" method="POST" class="inline">
                                             @csrf
                                             @method('PATCH')
@@ -138,41 +214,83 @@
                                                 <x-heroicon-o-check-circle class="h-5 w-5 inline" />
                                             </button>
                                         </form>
-                                        <!-- Edit Approved (akan create request perubahan) -->
                                         <a href="{{ route('user.request-barang.edit', $item->id_request) }}" class="text-orange-600 hover:text-orange-900" title="Request Perubahan">
                                             <x-heroicon-o-pencil-square class="h-5 w-5 inline" />
                                         </a>
-                                        <!-- Delete Approved (akan create request pembatalan) -->
                                         <form action="{{ route('user.request-barang.request-cancel', $item->id_request) }}" method="POST" class="inline">
                                             @csrf
                                             <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Request pembatalan? Admin harus approve untuk return barang.')" title="Request Pembatalan">
                                                 <x-heroicon-o-x-circle class="h-5 w-5 inline" />
                                             </button>
                                         </form>
-                                    @else
-                                        <span class="text-gray-400">-</span>
+                                    </div>
                                     @endif
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="7" class="px-6 py-8 text-center text-gray-500">
-                                <x-heroicon-o-inbox class="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                                <p>Belum ada request</p>
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
-
-            @if($requests->hasPages())
-            <div class="px-6 py-4 border-t border-gray-200">
-                {{ $requests->links() }}
-            </div>
-            @endif
         </div>
+        @endif
+
+        <!-- Rejected Section -->
+        @if($rejectedRequests->count() > 0)
+        <div class="mb-6">
+            <div class="flex items-center gap-2 mb-3">
+                <x-heroicon-o-x-circle class="h-6 w-6 text-red-600" />
+                <h3 class="text-lg font-semibold text-gray-800">Ditolak</h3>
+                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">{{ $rejectedRequests->count() }}</span>
+            </div>
+            <div class="bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-red-500">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-red-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alasan</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @foreach($rejectedRequests as $item)
+                            <tr class="hover:bg-red-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#{{ $item->id_request }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $item->tanggal_request->format('d/m/Y H:i') }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <div class="font-medium">{{ $item->stock->namabarang }}</div>
+                                    <div class="text-gray-500 text-xs">{{ $item->stock->kodebarang }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->qty }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_sewa' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                                        {{ $item->tipe_request_label }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-red-600">
+                                    {{ $item->catatan_admin ?? 'Tidak ada alasan' }}
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- Empty State -->
+        @if($requests->isEmpty())
+        <div class="bg-white rounded-xl shadow-md p-12 text-center">
+            <x-heroicon-o-inbox class="h-16 w-16 mx-auto mb-4 text-gray-400" />
+            <p class="text-lg font-medium text-gray-500">Belum ada request</p>
+            <p class="text-sm text-gray-400 mt-1">Request yang Anda buat akan muncul di sini</p>
+        </div>
+        @endif
     </div>
     <!-- Request Perubahan Tab Content -->
     <div id="content-changes" class="tab-content hidden">
@@ -185,6 +303,7 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Request</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request Asli</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -193,6 +312,10 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse($changeRequests as $item)
+                        @php
+                            $isPembatalan = stripos($item->keperluan, 'PEMBATALAN') !== false || 
+                                           stripos($item->catatan_user ?? '', 'PEMBATALAN') !== false;
+                        @endphp
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 #{{ $item->id_request }}
@@ -206,6 +329,19 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {{ $item->qty }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                @if($isPembatalan)
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <x-heroicon-o-x-circle class="w-3 h-3 mr-1" />
+                                        Pembatalan
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                        <x-heroicon-o-pencil-square class="w-3 h-3 mr-1" />
+                                        Perubahan
+                                    </span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 @if($item->tipe_request == 'pinjam_sewa')
@@ -271,7 +407,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="px-6 py-12 text-center">
+                            <td colspan="9" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center justify-center">
                                     <x-heroicon-o-document-text class="w-16 h-16 text-gray-300 mb-4" />
                                     <p class="text-gray-500 text-lg font-medium mb-1">Belum Ada Request Perubahan</p>
@@ -324,10 +460,21 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    <x-heroicon-o-check-circle class="w-3 h-3 mr-1" />
-                                    Selesai
-                                </span>
+                                @if($request->status == 'completed')
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <x-heroicon-o-check-circle class="w-3 h-3 mr-1" />
+                                        Selesai
+                                    </span>
+                                @elseif($request->status == 'cancelled')
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        <x-heroicon-o-x-circle class="w-3 h-3 mr-1" />
+                                        Dibatalkan
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        {{ $request->status_label }}
+                                    </span>
+                                @endif
                             </td>
                         </tr>
                         @empty

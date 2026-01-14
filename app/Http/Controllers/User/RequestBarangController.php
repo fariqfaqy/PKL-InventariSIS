@@ -129,13 +129,20 @@ class RequestBarangController extends Controller
                 ->with('error', 'Request ini tidak bisa diedit!');
         }
         
+        // Calculate available stock
+        // Jika approved: stok tersedia = stok current + qty yang sudah diambil
+        // Jika pending: stok tersedia = stok current
+        $availableStock = $requestBarang->status === 'approved' 
+            ? $requestBarang->stock->stock + $requestBarang->qty
+            : $requestBarang->stock->stock;
+        
         // Get available stocks
         $stocks = Stock::whereIn('kategori', ['barang_sewa', 'habis_pakai'])
             ->where('stock', '>', 0)
             ->orderBy('namabarang')
             ->get();
         
-        return view('user.request-barang.edit', compact('requestBarang', 'stocks'));
+        return view('user.request-barang.edit', compact('requestBarang', 'stocks', 'availableStock'));
     }
 
     /**
@@ -180,6 +187,14 @@ class RequestBarangController extends Controller
         
         // If approved, create new request for change (need admin approval)
         if ($requestBarang->status === 'approved') {
+            // Calculate available stock = current stock + qty yang sudah diambil
+            $availableStock = $stock->stock + $requestBarang->qty;
+            
+            // Validate qty terhadap available stock
+            if ($validated['qty'] > $availableStock) {
+                return back()->with('error', "Jumlah melebihi stok tersedia! Stok tersedia: {$availableStock} (stok saat ini: {$stock->stock} + qty request Anda: {$requestBarang->qty})")->withInput();
+            }
+            
             $tipeRequest = match($stock->kategori) {
                 'barang_sewa' => 'pinjam_sewa',
                 'habis_pakai' => 'pakai_habis_pakai',
@@ -265,6 +280,16 @@ class RequestBarangController extends Controller
             ->where('user_id', Auth::id())
             ->where('status', 'approved')
             ->firstOrFail();
+
+        // Auto-reject semua pending change requests untuk request ini
+        RequestBarang::where('parent_request_id', $id)
+            ->where('status', 'pending')
+            ->update([
+                'status' => 'rejected',
+                'catatan_admin' => 'Request ditolak otomatis karena request asli sudah selesai.',
+                'diproses_oleh' => 'System',
+                'tanggal_diproses' => now(),
+            ]);
 
         $request->update([
             'status' => 'completed',

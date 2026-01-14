@@ -17,22 +17,26 @@ class PermintaanController extends Controller
      */
     public function index(Request $request)
     {
-        // Request biasa (bukan request perubahan dan bukan completed)
+        // Request biasa (bukan request perubahan, bukan completed, bukan cancelled)
         $normalRequests = RequestBarang::with(['user', 'stock'])
             ->whereNull('parent_request_id')
-            ->where('status', '!=', 'completed')
+            ->whereNotIn('status', ['completed', 'cancelled'])
             ->orderBy('tanggal_request', 'desc')
             ->get();
         
         // Request perubahan (yang punya parent_request_id)
+        // Exclude yang parent-nya sudah completed/cancelled
         $changeRequests = RequestBarang::with(['user', 'stock', 'parentRequest'])
             ->whereNotNull('parent_request_id')
+            ->whereHas('parentRequest', function($query) {
+                $query->whereNotIn('status', ['completed', 'cancelled']);
+            })
             ->orderBy('tanggal_request', 'desc')
             ->get();
         
-        // Request completed untuk history
+        // Request completed dan cancelled untuk history
         $completedRequests = RequestBarang::with(['user', 'stock'])
-            ->where('status', 'completed')
+            ->whereIn('status', ['completed', 'cancelled'])
             ->orderBy('tanggal_request', 'desc')
             ->get();
         
@@ -86,7 +90,18 @@ class PermintaanController extends Controller
                     // Tambah stok sejumlah qty yang dikembalikan
                     $permintaan->stock->increment('stock', $permintaan->qty);
                     
-                    $message = "Request pembatalan disetujui! User mengembalikan {$permintaan->qty} unit. Stok bertambah {$permintaan->qty}.";
+                    // Hapus entry barang keluar dari parent request
+                    $parentKeluarEntry = OutgoingTransaction::where('id_request', $permintaan->parent_request_id)->first();
+                    if ($parentKeluarEntry) {
+                        $parentKeluarEntry->delete();
+                    }
+                    
+                    // **IMPORTANT: Set parent request status ke 'cancelled'**
+                    $permintaan->parentRequest->update([
+                        'status' => 'cancelled',
+                    ]);
+                    
+                    $message = "Request pembatalan disetujui! User mengembalikan {$permintaan->qty} unit. Stok bertambah {$permintaan->qty}. Entry barang keluar dihapus. Request asli dibatalkan.";
                     
                 } else {
                     // INI REQUEST PERUBAHAN QTY - hitung selisih
@@ -119,6 +134,23 @@ class PermintaanController extends Controller
                         // Qty sama, tidak ada perubahan stok
                         $message = "Request perubahan disetujui! Tidak ada perubahan qty.";
                     }
+                    
+                    // Update entry barang keluar dari parent request dengan qty baru
+                    $parentKeluarEntry = OutgoingTransaction::where('id_request', $permintaan->parent_request_id)->first();
+                    if ($parentKeluarEntry) {
+                        $parentKeluarEntry->update([
+                            'qty' => $qtyBaru,
+                            'tanggal_mulai_sewa' => $permintaan->tanggal_mulai_sewa,
+                            'tanggal_akhir_sewa' => $permintaan->tanggal_akhir_sewa,
+                        ]);
+                    }
+                    
+                    // Update parent request dengan data baru
+                    $permintaan->parentRequest->update([
+                        'qty' => $qtyBaru,
+                        'tanggal_mulai_sewa' => $permintaan->tanggal_mulai_sewa,
+                        'tanggal_akhir_sewa' => $permintaan->tanggal_akhir_sewa,
+                    ]);
                 }
                 
                 // Update status request perubahan/pembatalan
@@ -139,8 +171,9 @@ class PermintaanController extends Controller
                 // Convert tipe_request: pinjam_sewa -> peminjaman, pakai_habis_pakai -> permintaan
                 $tipeKeluar = $permintaan->tipe_request === 'pinjam_sewa' ? 'peminjaman' : 'permintaan';
                 
-                // Create outgoing transaction (barang keluar)
+                // Create outgoing transaction (barang keluar) dengan link ke request
                 OutgoingTransaction::create([
+                    'id_request' => $permintaan->id_request,
                     'idbarang' => $permintaan->idbarang,
                     'tanggal' => now(),
                     'penerima' => $permintaan->user->name,
@@ -151,7 +184,7 @@ class PermintaanController extends Controller
                     'kategori' => $permintaan->stock->kategori,
                     'tanggal_mulai_sewa' => $permintaan->tanggal_mulai_sewa,
                     'tanggal_akhir_sewa' => $permintaan->tanggal_akhir_sewa,
-                    'tipe' => $tipeKeluar,
+                    'tipe_request' => $tipeKeluar,
                     'status_approval' => 'approved',
                 ]);
                 
@@ -294,6 +327,16 @@ class PermintaanController extends Controller
         if ($permintaan->status !== 'approved') {
             return back()->with('error', 'Hanya request yang sudah disetujui yang bisa ditandai selesai!');
         }
+        
+        // Auto-reject semua pending change requests untuk request ini
+        RequestBarang::where('parent_request_id', $id)
+            ->where('status', 'pending')
+            ->update([
+                'status' => 'rejected',
+                'catatan_admin' => 'Request ditolak otomatis karena request asli sudah selesai.',
+                'diproses_oleh' => 'System',
+                'tanggal_diproses' => now(),
+            ]);
         
         $permintaan->update([
             'status' => 'completed',

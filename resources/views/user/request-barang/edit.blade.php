@@ -74,9 +74,14 @@
                     </div>
                     <div>
                         <span class="text-gray-600">Stok Tersedia:</span>
-                        <span id="infoStok" class="font-medium ml-2 text-green-600">{{ $requestBarang->stock->stock }}</span>
+                        <span id="infoStok" class="font-medium ml-2 text-green-600">{{ $availableStock }}</span>
                     </div>
                 </div>
+                @if($requestBarang->status === 'approved')
+                <div class="mt-3 text-xs text-blue-700 bg-blue-100 p-2 rounded">
+                    <strong>Note:</strong> Stok tersedia = Stok saat ini ({{ $requestBarang->stock->stock }}) + Qty request Anda ({{ $requestBarang->qty }}) = {{ $availableStock }}
+                </div>
+                @endif
             </div>
         </div>
 
@@ -85,9 +90,9 @@
             <label for="qty" class="block text-sm font-medium text-gray-700 mb-2">
                 Jumlah<span class="text-red-500">*</span>
             </label>
-            <input type="number" id="qty" name="qty" min="1" required value="{{ old('qty', $requestBarang->qty) }}"
+            <input type="number" id="qty" name="qty" min="1" max="{{ $availableStock }}" required value="{{ old('qty', $requestBarang->qty) }}"
                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-            <p class="text-xs text-gray-500 mt-1">Maksimal sesuai stok yang tersedia</p>
+            <p class="text-xs text-gray-500 mt-1">Maksimal sesuai stok yang tersedia ({{ $availableStock }})</p>
         </div>
 
         <!-- Rental Dates Section (Hidden by default, shown for barang_sewa) -->
@@ -166,8 +171,11 @@ function updateBarangInfo() {
         document.getElementById('infoKategori').textContent = selectedOption.dataset.kategori.replace('_', ' ');
         document.getElementById('infoStok').textContent = selectedOption.dataset.stock;
         
-        // Set max qty
-        qtyInput.max = selectedOption.dataset.stock;
+        // Set max qty - HANYA jika belum ada max attribute (untuk pending request)
+        // Untuk approved request, max sudah di-set di server side dengan available stock
+        if (!qtyInput.hasAttribute('max') || qtyInput.getAttribute('max') === '') {
+            qtyInput.max = selectedOption.dataset.stock;
+        }
         
         // Show/hide rental section based on kategori
         if (selectedOption.dataset.kategori === 'barang_sewa') {
