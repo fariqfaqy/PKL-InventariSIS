@@ -29,11 +29,11 @@
     <table>
         <thead>
             <tr>
-                <th style="width: 5%;">No</th>
+                <th style="width: 5%; text-align: center;">No</th>
                 <th style="width: 12%;">Tanggal</th>
                 <th style="width: 15%;">Kode Barang</th>
                 <th style="width: 25%;">Nama Barang</th>
-                <th style="width: 8%;">Qty</th>
+                <th style="width: 8%; text-align: center;">Qty</th>
                 <th style="width: 20%;">Keterangan</th>
                 <th style="width: 15%;">Penginput</th>
             </tr>
@@ -41,13 +41,13 @@
         <tbody>
             @foreach($transactions as $index => $item)
             <tr>
-                <td>{{ $index + 1 }}</td>
-                <td>{{ $item->created_at->format('d/m/Y H:i') }}</td>
-                <td>{{ $item->stock->kodebarang ?? '-' }}</td>
-                <td>{{ $item->stock->namabarang ?? '-' }}</td>
-                <td style="text-align: center; font-weight: bold;">{{ $item->qty }}</td>
-                <td>{{ $item->keterangan ?? '-' }}</td>
-                <td>{{ $item->penginput }}</td>
+                <td style="text-align: center;">{{ $index + 1 }}</td>
+                <td style="font-size: 10px;">{{ $item->created_at->format('d/m/Y H:i') }}</td>
+                <td style="font-size: 10px; font-weight: bold;">{{ $item->stock->kodebarang ?? '-' }}</td>
+                <td style="font-size: 10px;">{{ $item->stock->namabarang ?? '-' }}</td>
+                <td style="text-align: center; font-weight: bold; font-size: 11px;">{{ $item->qty }}</td>
+                <td style="font-size: 9px;">{{ $item->keterangan ?? '-' }}</td>
+                <td style="font-size: 9px;">{{ $item->penginput }}</td>
             </tr>
             @endforeach
         </tbody>

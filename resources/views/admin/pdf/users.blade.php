@@ -41,17 +41,17 @@
         <tbody>
             @foreach($users as $index => $user)
             <tr>
-                <td>{{ $index + 1 }}</td>
-                <td>{{ $user->name }}</td>
-                <td>{{ $user->email }}</td>
-                <td>
+                <td style="text-align: center;">{{ $index + 1 }}</td>
+                <td style="font-size: 10px; font-weight: bold;">{{ $user->name }}</td>
+                <td style="font-size: 10px;">{{ $user->email }}</td>
+                <td style="text-align: center;">
                     @if($user->role == 'admin')
                         <span class="badge badge-admin">Administrator</span>
                     @else
                         <span class="badge badge-user">User</span>
                     @endif
                 </td>
-                <td>{{ $user->created_at->format('d/m/Y H:i') }}</td>
+                <td style="font-size: 10px; text-align: center;">{{ $user->created_at->format('d/m/Y H:i') }}</td>
             </tr>
             @endforeach
         </tbody>

@@ -45,10 +45,10 @@
         <tbody>
             @foreach($logs as $index => $log)
             <tr>
-                <td>{{ $index + 1 }}</td>
-                <td>{{ \Carbon\Carbon::parse($log->date)->format('d/m/Y H:i') }}</td>
-                <td>{{ $log->usr }}</td>
-                <td>
+                <td style="text-align: center;">{{ $index + 1 }}</td>
+                <td style="font-size: 9px;">{{ \Carbon\Carbon::parse($log->date)->format('d/m/Y H:i') }}</td>
+                <td style="font-size: 9px; font-weight: bold;">{{ $log->usr }}</td>
+                <td style="text-align: center;">
                     @php
                         $methodClass = 'badge-get';
                         if($log->method == 'POST') $methodClass = 'badge-post';
@@ -57,9 +57,9 @@
                     @endphp
                     <span class="badge {{ $methodClass }}">{{ $log->method }}</span>
                 </td>
-                <td style="font-size: 9px;">{{ $log->endpoint }}</td>
-                <td>{{ $log->ipaddr }}</td>
-                <td style="font-size: 8px;">{{ Str::limit($log->useragent, 25) }}</td>
+                <td style="font-size: 8px;">{{ $log->endpoint }}</td>
+                <td style="font-size: 9px; text-align: center;">{{ $log->ipaddr }}</td>
+                <td style="font-size: 7px;">{{ Str::limit($log->useragent, 25) }}</td>
             </tr>
             @endforeach
         </tbody>

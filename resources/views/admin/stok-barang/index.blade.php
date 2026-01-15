@@ -52,8 +52,8 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">No</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Gambar</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Kode Barang</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Gambar</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Barang</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Kategori</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Stok</th>
@@ -68,6 +68,9 @@
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                             {{ $stocks->firstItem() + $index }}
                         </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {{ $stock->kodebarang }}
+                        </td>
                         <td class="px-4 py-3 whitespace-nowrap">
                             @if($stock->image)
                                 <img src="{{ asset('images/barang/' . $stock->image) }}" alt="{{ $stock->namabarang }}" class="w-16 h-16 object-cover rounded-lg border border-gray-200">
@@ -76,9 +79,6 @@
                                     <x-heroicon-o-photo class="w-8 h-8 text-gray-400" />
                                 </div>
                             @endif
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {{ $stock->kodebarang }}
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-900">
                             {{ $stock->namabarang }}

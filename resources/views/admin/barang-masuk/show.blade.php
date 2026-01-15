@@ -19,6 +19,15 @@
 
     <!-- Main Info Card -->
     <div class="bg-white rounded-xl shadow-md p-6">
+        <!-- Gambar Barang -->
+        @if($barangMasuk->stock && $barangMasuk->stock->image)
+        <div class="mb-6 flex justify-center">
+            <img src="{{ asset('images/barang/' . $barangMasuk->stock->image) }}" 
+                 alt="{{ $barangMasuk->namabarang_m }}" 
+                 class="w-full max-w-md h-64 object-cover rounded-xl border-2 border-gray-200 shadow-lg">
+        </div>
+        @endif
+
         <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <x-heroicon-o-arrow-down-tray class="w-6 h-6 text-[#14a2ba]" />
             Informasi Transaksi
@@ -67,30 +76,67 @@
                 <label class="block text-sm font-medium text-gray-500 mb-1">Nama Barang</label>
                 <p class="text-gray-800 font-semibold">{{ $barangMasuk->stock->namabarang }}</p>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-500 mb-1">Stok Saat Ini</label>
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $barangMasuk->stock->stock > 10 ? 'bg-green-100 text-green-800' : ($barangMasuk->stock->stock > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
-                    {{ $barangMasuk->stock->stock }}
-                </span>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-500 mb-1">Rak</label>
-                <span class="inline-flex items-center px-3 py-1 rounded text-sm font-medium bg-blue-100 text-blue-800">
-                    {{ strtoupper($barangMasuk->stock->rack) }}
-                </span>
-            </div>
+            
             @if($barangMasuk->stock->kategori)
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Kategori</label>
                 @if($barangMasuk->stock->kategori === 'barang_sewa')
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                        <x-heroicon-o-computer-desktop class="w-4 h-4 mr-1" />
                         Barang Sewa
+                    </span>
+                @elseif($barangMasuk->stock->kategori === 'aset_tetap')
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                        <x-heroicon-o-building-office class="w-4 h-4 mr-1" />
+                        Aset Tetap
                     </span>
                 @else
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                        <x-heroicon-o-shopping-bag class="w-4 h-4 mr-1" />
                         Habis Pakai
                     </span>
                 @endif
+            </div>
+            @endif
+
+            @if($barangMasuk->stock->jenis)
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Jenis</label>
+                <p class="text-gray-800">{{ $barangMasuk->stock->jenis }}</p>
+            </div>
+            @endif
+
+            @if($barangMasuk->stock->merek)
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Merek</label>
+                <p class="text-gray-800">{{ $barangMasuk->stock->merek }}</p>
+            </div>
+            @endif
+
+            @if($barangMasuk->stock->tipe)
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Tipe</label>
+                <p class="text-gray-800">{{ $barangMasuk->stock->tipe }}</p>
+            </div>
+            @endif
+
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Stok Saat Ini</label>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $barangMasuk->stock->stock > 10 ? 'bg-green-100 text-green-800' : ($barangMasuk->stock->stock > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                    {{ $barangMasuk->stock->stock }} unit
+                </span>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Rak</label>
+                <span class="inline-flex items-center px-3 py-1 rounded text-sm font-medium bg-blue-100 text-blue-800">
+                    Rak {{ strtoupper($barangMasuk->stock->rack) }}
+                </span>
+            </div>
+
+            @if($barangMasuk->stock->deskripsi)
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-500 mb-1">Deskripsi</label>
+                <p class="text-gray-800 bg-gray-50 p-3 rounded-lg">{{ $barangMasuk->stock->deskripsi }}</p>
             </div>
             @endif
         </div>
