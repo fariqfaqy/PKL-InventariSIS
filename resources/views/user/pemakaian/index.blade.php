@@ -258,10 +258,6 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse($changeRequests as $item)
-                        @php
-                            $isPembatalan = stripos($item->keperluan, 'PEMBATALAN') !== false || 
-                                           stripos($item->catatan_user ?? '', 'PEMBATALAN') !== false;
-                        @endphp
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 #{{ $item->id_request }}
@@ -277,7 +273,7 @@
                                 {{ $item->qty }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                @if($isPembatalan)
+                                @if($item->isCancellationRequest())
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                         <x-heroicon-o-x-circle class="w-3 h-3 mr-1" />
                                         Pembatalan

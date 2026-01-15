@@ -53,11 +53,26 @@ class StokBarangController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        // Handle image upload
+        // Handle image upload with security
         $imagePath = null;
         if ($request->hasFile('image')) {
             $image = $request->file('image');
-            $imageName = time() . '_' . $validated['kodebarang'] . '.' . $image->getClientOriginalExtension();
+            
+            // Security: Validate MIME type from actual file content (not extension)
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg'];
+            if (!in_array($image->getMimeType(), $allowedMimes)) {
+                return back()->with('error', 'File harus berupa gambar (JPEG, PNG, JPG)!')->withInput();
+            }
+            
+            // Security: Use hash untuk nama file (prevent filename manipulation)
+            $extension = $image->getClientOriginalExtension();
+            $imageName = hash('sha256', $validated['kodebarang'] . time() . uniqid()) . '.' . $extension;
+            
+            // Security: Validate final filename doesn't contain directory traversal
+            if (preg_match('/\.\.|\/|\\\\/', $imageName)) {
+                return back()->with('error', 'Nama file tidak valid!')->withInput();
+            }
+            
             $image->move(public_path('images/barang'), $imageName);
             $imagePath = $imageName;
         }
@@ -115,7 +130,36 @@ class StokBarangController extends Controller
             'jenis' => 'required|string|max:100',
             'merek' => 'required|string|max:100',
             'tipe' => 'required|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
+
+        // Handle image upload if present with security
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            
+            // Security: Validate MIME type from actual file content
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg'];
+            if (!in_array($image->getMimeType(), $allowedMimes)) {
+                return back()->with('error', 'File harus berupa gambar (JPEG, PNG, JPG)!')->withInput();
+            }
+            
+            // Delete old image if exists
+            if ($stock->image && file_exists(public_path('images/barang/' . $stock->image))) {
+                unlink(public_path('images/barang/' . $stock->image));
+            }
+            
+            // Security: Use hash untuk nama file
+            $extension = $image->getClientOriginalExtension();
+            $imageName = hash('sha256', $validated['kodebarang'] . time() . uniqid()) . '.' . $extension;
+            
+            // Security: Validate filename doesn't contain directory traversal
+            if (preg_match('/\.\.|\/|\\\\/', $imageName)) {
+                return back()->with('error', 'Nama file tidak valid!')->withInput();
+            }
+            
+            $image->move(public_path('images/barang'), $imageName);
+            $validated['image'] = $imageName;
+        }
 
         $stock->update($validated);
 

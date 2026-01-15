@@ -7,6 +7,7 @@ use App\Models\RequestBarang;
 use App\Models\Stock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class RequestBarangController extends Controller
 {
@@ -124,20 +125,30 @@ class RequestBarangController extends Controller
             ->findOrFail($id);
         
         // Only pending and approved can be edited
-        if (!in_array($requestBarang->status, ['pending', 'approved'])) {
+        if (!$requestBarang->canBeEdited()) {
             return redirect()->route('user.pemakaian.index')
                 ->with('error', 'Request ini tidak bisa diedit!');
         }
         
-        // Untuk approved request: cek apakah sudah ada pending change request
+        // Untuk approved request: cek apakah sudah ada pending change request dengan locking
         if ($requestBarang->status === 'approved') {
-            $hasPendingChange = RequestBarang::where('parent_request_id', $id)
-                ->where('status', 'pending')
-                ->exists();
-            
-            if ($hasPendingChange) {
+            DB::beginTransaction();
+            try {
+                $hasPendingChange = RequestBarang::where('parent_request_id', $id)
+                    ->where('status', 'pending')
+                    ->lockForUpdate() // Prevent race condition
+                    ->exists();
+                
+                DB::commit();
+                
+                if ($hasPendingChange) {
+                    return redirect()->route('user.pemakaian.index')
+                        ->with('error', 'Masih ada request perubahan yang pending! Tunggu admin proses dulu.');
+                }
+            } catch (\Exception $e) {
+                DB::rollBack();
                 return redirect()->route('user.pemakaian.index')
-                    ->with('error', 'Masih ada request perubahan yang pending! Tunggu admin proses dulu.');
+                    ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
             }
         }
         
@@ -199,15 +210,19 @@ class RequestBarangController extends Controller
         
         // If approved, create new request for change (need admin approval)
         if ($requestBarang->status === 'approved') {
-            // Double-check: pastikan tidak ada pending change request lain
-            $hasPendingChange = RequestBarang::where('parent_request_id', $id)
-                ->where('status', 'pending')
-                ->exists();
-            
-            if ($hasPendingChange) {
-                return redirect()->route('user.pemakaian.index')
-                    ->with('error', 'Masih ada request perubahan yang pending! Tunggu admin proses dulu.');
-            }
+            // Double-check dengan locking untuk prevent race condition
+            DB::beginTransaction();
+            try {
+                $hasPendingChange = RequestBarang::where('parent_request_id', $id)
+                    ->where('status', 'pending')
+                    ->lockForUpdate() // Lock untuk prevent double submit
+                    ->exists();
+                
+                if ($hasPendingChange) {
+                    DB::rollBack();
+                    return redirect()->route('user.pemakaian.index')
+                        ->with('error', 'Masih ada request perubahan yang pending! Tunggu admin proses dulu.');
+                }
             
             // Calculate available stock = current stock + qty yang sudah diambil
             $availableStock = $stock->stock + $requestBarang->qty;
@@ -237,6 +252,13 @@ class RequestBarangController extends Controller
                 'parent_request_id' => $requestBarang->id_request, // Link to parent request
             ]);
             
+                DB::commit(); // Commit transaction
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return redirect()->route('user.pemakaian.index')
+                    ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            }
+            
             return redirect()->route('user.pemakaian.index')
                 ->with('success', 'Request perubahan berhasil dibuat dan menunggu persetujuan admin!');
         }
@@ -253,7 +275,7 @@ class RequestBarangController extends Controller
             ->where('user_id', Auth::id())
             ->findOrFail($id);
         
-        if ($requestBarang->status !== 'approved') {
+        if (!$requestBarang->canBeCancelled()) {
             return back()->with('error', 'Hanya request yang sudah approved yang bisa dibatalkan!');
         }
         
@@ -284,7 +306,7 @@ class RequestBarangController extends Controller
         $request = RequestBarang::where('user_id', Auth::id())
             ->findOrFail($id);
         
-        if ($request->status !== 'pending') {
+        if (!$request->canBeDeleted()) {
             return back()->with('error', 'Hanya permintaan dengan status pending yang bisa dihapus!');
         }
         

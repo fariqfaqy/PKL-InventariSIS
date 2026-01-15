@@ -131,6 +131,17 @@
             </div>
         </div>
 
+        <!-- Aset Tetap -->
+        <div class="bg-white rounded-xl shadow-lg p-5 border-t-4 border-teal-500 hover:shadow-xl transition-shadow duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-xs font-medium uppercase mb-1">Aset Tetap</p>
+                    <p class="text-2xl font-bold text-teal-600">{{ $categoryStats['aset_tetap'] }}</p>
+                </div>
+                <x-heroicon-o-building-office class="w-10 h-10 text-teal-500 opacity-50" />
+            </div>
+        </div>
+
         <!-- Low Stock Alert -->
         <div class="bg-white rounded-xl shadow-lg p-5 border-t-4 border-yellow-500 hover:shadow-xl transition-shadow duration-300">
             <div class="flex items-center justify-between">
@@ -139,17 +150,6 @@
                     <p class="text-2xl font-bold text-yellow-600">{{ $stats['lowStock'] }}</p>
                 </div>
                 <x-heroicon-o-exclamation-triangle class="w-10 h-10 text-yellow-500 opacity-50" />
-            </div>
-        </div>
-
-        <!-- Out of Stock -->
-        <div class="bg-white rounded-xl shadow-lg p-5 border-t-4 border-red-500 hover:shadow-xl transition-shadow duration-300">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-xs font-medium uppercase mb-1">Habis Stok</p>
-                    <p class="text-2xl font-bold text-red-600">{{ $stats['outOfStock'] }}</p>
-                </div>
-                <x-heroicon-o-x-circle class="w-10 h-10 text-red-500 opacity-50" />
             </div>
         </div>
     </div>
@@ -243,6 +243,13 @@
                             <span class="text-gray-700">Habis Pakai</span>
                         </div>
                         <span class="font-semibold text-gray-900">{{ $categoryStats['habis_pakai'] }}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 bg-teal-500 rounded-full"></div>
+                            <span class="text-gray-700">Aset Tetap</span>
+                        </div>
+                        <span class="font-semibold text-gray-900">{{ $categoryStats['aset_tetap'] }}</span>
                     </div>
                 </div>
             </div>
@@ -596,8 +603,8 @@
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-3 text-sm text-gray-900">{{ $item->namabarang }}</td>
                             <td class="px-4 py-3 text-sm">
-                                <span class="px-2 py-1 {{ $item->kategori == 'barang_sewa' ? 'bg-purple-100 text-purple-800' : 'bg-pink-100 text-pink-800' }} rounded-full text-xs font-semibold">
-                                    {{ $item->kategori == 'barang_sewa' ? 'Sewa' : 'Habis Pakai' }}
+                                <span class="px-2 py-1 {{ $item->kategori == 'barang_sewa' ? 'bg-purple-100 text-purple-800' : ($item->kategori == 'aset_tetap' ? 'bg-teal-100 text-teal-800' : 'bg-pink-100 text-pink-800') }} rounded-full text-xs font-semibold">
+                                    {{ $item->kategori == 'barang_sewa' ? 'Sewa' : ($item->kategori == 'aset_tetap' ? 'Aset Tetap' : 'Habis Pakai') }}
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-sm">
@@ -684,19 +691,22 @@
     new Chart(ctxCategory, {
         type: 'doughnut',
         data: {
-            labels: ['Barang Sewa', 'Habis Pakai'],
+            labels: ['Barang Sewa', 'Habis Pakai', 'Aset Tetap'],
             datasets: [{
                 data: [
                     {{ $categoryStats['barang_sewa'] }},
-                    {{ $categoryStats['habis_pakai'] }}
+                    {{ $categoryStats['habis_pakai'] }},
+                    {{ $categoryStats['aset_tetap'] }}
                 ],
                 backgroundColor: [
                     'rgba(168, 85, 247, 0.8)',
-                    'rgba(236, 72, 153, 0.8)'
+                    'rgba(236, 72, 153, 0.8)',
+                    'rgba(20, 184, 166, 0.8)'
                 ],
                 borderColor: [
                     'rgb(168, 85, 247)',
-                    'rgb(236, 72, 153)'
+                    'rgb(236, 72, 153)',
+                    'rgb(20, 184, 166)'
                 ],
                 borderWidth: 2,
                 hoverOffset: 10

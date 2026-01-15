@@ -119,4 +119,63 @@ class RequestBarang extends Model
             default => $this->tipe_request
         };
     }
+
+    /**
+     * Check if request can be approved
+     */
+    public function canBeApproved(): bool
+    {
+        return in_array($this->status, ['pending', 'processing']);
+    }
+
+    /**
+     * Check if request can be rejected
+     */
+    public function canBeRejected(): bool
+    {
+        return in_array($this->status, ['pending', 'approved']);
+    }
+
+    /**
+     * Check if request can be edited
+     */
+    public function canBeEdited(): bool
+    {
+        return in_array($this->status, ['pending', 'approved']);
+    }
+
+    /**
+     * Check if request can be cancelled (for approved requests)
+     */
+    public function canBeCancelled(): bool
+    {
+        return $this->status === 'approved';
+    }
+
+    /**
+     * Check if request can be deleted (only pending)
+     */
+    public function canBeDeleted(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    /**
+     * Check if request is a change request
+     */
+    public function isChangeRequest(): bool
+    {
+        return !is_null($this->parent_request_id);
+    }
+
+    /**
+     * Check if request is a cancellation request
+     */
+    public function isCancellationRequest(): bool
+    {
+        return $this->isChangeRequest() && (
+            stripos($this->keperluan, 'PEMBATALAN') !== false ||
+            stripos($this->catatan_user ?? '', 'PEMBATALAN') !== false
+        );
+    }
 }

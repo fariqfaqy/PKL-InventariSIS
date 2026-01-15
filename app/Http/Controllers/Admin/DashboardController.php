@@ -54,6 +54,7 @@ class DashboardController extends Controller
         $categoryStats = [
             'barang_sewa' => Stock::where('kategori', 'barang_sewa')->sum('stock'),
             'habis_pakai' => Stock::where('kategori', 'habis_pakai')->sum('stock'),
+            'aset_tetap' => Stock::where('kategori', 'aset_tetap')->sum('stock'),
         ];
         
         // Stock status distribution

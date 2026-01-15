@@ -25,7 +25,7 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div class="bg-yellow-100 rounded-lg shadow p-4">
             <div class="flex items-center">
-                <div class="flex-shrink-0">
+                <div class="shrink-0">
                     <x-heroicon-o-clock class="h-8 w-8 text-yellow-600" />
                 </div>
                 <div class="ml-4">
@@ -37,7 +37,7 @@
 
         <div class="bg-blue-100 rounded-lg shadow p-4">
             <div class="flex items-center">
-                <div class="flex-shrink-0">
+                <div class="shrink-0">
                     <x-heroicon-o-check-circle class="h-8 w-8 text-blue-600" />
                 </div>
                 <div class="ml-4">
@@ -49,7 +49,7 @@
 
         <div class="bg-green-100 rounded-lg shadow p-4">
             <div class="flex items-center">
-                <div class="flex-shrink-0">
+                <div class="shrink-0">
                     <x-heroicon-o-shield-check class="h-8 w-8 text-green-600" />
                 </div>
                 <div class="ml-4">
@@ -61,7 +61,7 @@
 
         <div class="bg-red-100 rounded-lg shadow p-4">
             <div class="flex items-center">
-                <div class="flex-shrink-0">
+                <div class="shrink-0">
                     <x-heroicon-o-x-circle class="h-8 w-8 text-red-600" />
                 </div>
                 <div class="ml-4">
@@ -195,18 +195,11 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     @php
-                                        $hasPendingRequest = \App\Models\RequestBarang::where('parent_request_id', $item->id_request)
-                                            ->where('status', 'pending')
-                                            ->exists();
-                                        $pendingRequest = $hasPendingRequest ? \App\Models\RequestBarang::where('parent_request_id', $item->id_request)->where('status', 'pending')->latest()->first() : null;
-                                        
-                                        // Detect tipe request: pembatalan atau perubahan
-                                        $isCancellation = $pendingRequest && (
-                                            str_contains(strtoupper($pendingRequest->keperluan), 'PEMBATALAN') ||
-                                            str_contains(strtoupper($pendingRequest->catatan_user ?? ''), 'PEMBATALAN')
-                                        );
+                                        // Use eager loaded change requests
+                                        $pendingChangeRequest = $item->changeRequests->first();
+                                        $isCancellation = $pendingChangeRequest && $pendingChangeRequest->isCancellationRequest();
                                     @endphp
-                                    @if($hasPendingRequest && $pendingRequest)
+                                    @if($pendingChangeRequest)
                                         @if($isCancellation)
                                             <span class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs">
                                                 <x-heroicon-o-exclamation-circle class="w-3 h-3 inline" /> Pembatalan pending
@@ -216,29 +209,12 @@
                                                 <x-heroicon-o-clock class="w-3 h-3 inline" /> Perubahan pending
                                             </span>
                                         @endif
-                                    @else
-                                        @php
-                                            $hasApprovedChange = \App\Models\RequestBarang::where('parent_request_id', $item->id_request)
-                                                ->where('status', 'approved')
-                                                ->exists();
-                                        @endphp
-                                        @if($hasApprovedChange)
-                                            <span class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs">
-                                                <x-heroicon-o-check class="w-3 h-3 inline" /> Sudah diubah
-                                            </span>
-                                        @endif
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     @php
-                                        // Re-check untuk action buttons
-                                        $hasPendingCancellation = \App\Models\RequestBarang::where('parent_request_id', $item->id_request)
-                                            ->where('status', 'pending')
-                                            ->where(function($q) {
-                                                $q->where('keperluan', 'like', '%PEMBATALAN%')
-                                                  ->orWhere('catatan_user', 'like', '%PEMBATALAN%');
-                                            })
-                                            ->exists();
+                                        // Check cancellation request from eager loaded data
+                                        $hasPendingCancellation = $pendingChangeRequest && $pendingChangeRequest->isCancellationRequest();
                                     @endphp
                                     <div class="flex items-center gap-2">
                                         @if(!$hasPendingCancellation)
@@ -347,10 +323,6 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse($changeRequests as $item)
-                        @php
-                            $isPembatalan = stripos($item->keperluan, 'PEMBATALAN') !== false || 
-                                           stripos($item->catatan_user ?? '', 'PEMBATALAN') !== false;
-                        @endphp
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 #{{ $item->id_request }}
@@ -369,7 +341,7 @@
                                 {{ $item->qty }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                @if($isPembatalan)
+                                @if($item->isCancellationRequest())
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                         <x-heroicon-o-x-circle class="w-3 h-3 mr-1" />
                                         Pembatalan

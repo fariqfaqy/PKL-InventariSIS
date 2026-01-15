@@ -17,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
         
         // Global middleware untuk logging aktivitas
         $middleware->append(\App\Http\Middleware\LogActivity::class);
+        
+        // Global middleware untuk security headers
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

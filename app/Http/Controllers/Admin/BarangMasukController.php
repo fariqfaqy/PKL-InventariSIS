@@ -47,13 +47,29 @@ class BarangMasukController extends Controller
             'deskripsi' => 'nullable|string',
             'tanggal' => 'required|date',
             'keterangan' => 'required|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        // Handle image upload
+        // Handle image upload with security
         $imagePath = null;
         if ($request->hasFile('image')) {
             $image = $request->file('image');
-            $imageName = time() . '_' . $validated['kodebarang'] . '.' . $image->getClientOriginalExtension();
+            
+            // Security: Validate MIME type from actual file content
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg'];
+            if (!in_array($image->getMimeType(), $allowedMimes)) {
+                return back()->with('error', 'File harus berupa gambar (JPEG, PNG, JPG)!')->withInput();
+            }
+            
+            // Security: Use hash untuk nama file (prevent filename manipulation)
+            $extension = $image->getClientOriginalExtension();
+            $imageName = hash('sha256', $validated['kodebarang'] . time() . uniqid()) . '.' . $extension;
+            
+            // Security: Validate filename doesn't contain directory traversal
+            if (preg_match('/\.\.|\/|\\\\/', $imageName)) {
+                return back()->with('error', 'Nama file tidak valid!')->withInput();
+            }
+            
             $image->move(public_path('images/barang'), $imageName);
             $imagePath = $imageName; // Simpan hanya nama file
         }

@@ -18,7 +18,14 @@ class PermintaanController extends Controller
     public function index(Request $request)
     {
         // Request biasa (bukan request perubahan, bukan completed, bukan cancelled)
-        $normalRequests = RequestBarang::with(['user', 'stock'])
+        // Eager load changeRequests untuk prevent N+1 query
+        $normalRequests = RequestBarang::with([
+                'user', 
+                'stock',
+                'changeRequests' => function($query) {
+                    $query->where('status', 'pending')->latest();
+                }
+            ])
             ->whereNull('parent_request_id')
             ->whereNotIn('status', ['completed', 'cancelled'])
             ->orderBy('tanggal_request', 'desc')
@@ -83,7 +90,7 @@ class PermintaanController extends Controller
     {
         $permintaan = RequestBarang::with(['stock', 'parentRequest'])->findOrFail($id);
         
-        if (!in_array($permintaan->status, ['pending', 'processing'])) {
+        if (!$permintaan->canBeApproved()) {
             return back()->with('error', 'Hanya permintaan dengan status pending atau processing yang bisa disetujui!');
         }
         
@@ -93,10 +100,8 @@ class PermintaanController extends Controller
             if ($permintaan->parent_request_id && $permintaan->parentRequest) {
                 // INI REQUEST PERUBAHAN atau PEMBATALAN
                 
-                // Cek apakah ini request pembatalan (dari keperluan atau catatan)
-                $isPembatalan = stripos($permintaan->keperluan, 'PEMBATALAN') !== false;
-                
-                if ($isPembatalan) {
+                // Cek apakah ini request pembatalan menggunakan helper method
+                if ($permintaan->isCancellationRequest()) {
                     // INI REQUEST PEMBATALAN - user mau return barang
                     // Tambah stok sejumlah qty yang dikembalikan
                     $permintaan->stock->increment('stock', $permintaan->qty);
@@ -270,7 +275,7 @@ class PermintaanController extends Controller
         
         $permintaan = RequestBarang::findOrFail($id);
         
-        if (!in_array($permintaan->status, ['pending', 'approved'])) {
+        if (!$permintaan->canBeRejected()) {
             return back()->with('error', 'Permintaan ini tidak bisa ditolak!');
         }
         
