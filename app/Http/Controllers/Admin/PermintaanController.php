@@ -103,8 +103,9 @@ class PermintaanController extends Controller
                 // Cek apakah ini request pembatalan menggunakan helper method
                 if ($permintaan->isCancellationRequest()) {
                     // INI REQUEST PEMBATALAN - user mau return barang
-                    // Tambah stok sejumlah qty yang dikembalikan
-                    $permintaan->stock->increment('stock', $permintaan->qty);
+                    // Tambah stok sejumlah qty yang dikembalikan (direct query untuk atomic operation)
+                    Stock::where('idbarang', $permintaan->idbarang)
+                        ->increment('stock', $permintaan->qty);
                     
                     // Hapus entry barang keluar dari parent request
                     $parentKeluarEntry = OutgoingTransaction::where('id_request', $permintaan->parent_request_id)->first();
@@ -128,12 +129,14 @@ class PermintaanController extends Controller
                     if ($selisih > 0) {
                         // User minta TAMBAHAN barang (qty naik)
                         // Cek stok cukup untuk tambahan
-                        if ($permintaan->stock->stock < $selisih) {
-                            throw new \Exception('Stok tidak mencukupi untuk tambahan! Stok tersedia: ' . $permintaan->stock->stock . ', dibutuhkan: ' . $selisih);
+                        $currentStock = Stock::where('idbarang', $permintaan->idbarang)->value('stock');
+                        if ($currentStock < $selisih) {
+                            throw new \Exception('Stok tidak mencukupi untuk tambahan! Stok tersedia: ' . $currentStock . ', dibutuhkan: ' . $selisih);
                         }
                         
-                        // Kurangi stok sejumlah tambahan
-                        $permintaan->stock->decrement('stock', $selisih);
+                        // Kurangi stok sejumlah tambahan (direct query untuk atomic operation)
+                        Stock::where('idbarang', $permintaan->idbarang)
+                            ->decrement('stock', $selisih);
                         
                         $message = "Request perubahan disetujui! Tambahan {$selisih} unit telah diberikan ke user. Stok berkurang {$selisih}.";
                         
@@ -141,8 +144,9 @@ class PermintaanController extends Controller
                         // User MENGEMBALIKAN barang (qty turun)
                         $jumlahKembali = abs($selisih);
                         
-                        // Tambah stok sejumlah yang dikembalikan
-                        $permintaan->stock->increment('stock', $jumlahKembali);
+                        // Tambah stok sejumlah yang dikembalikan (direct query untuk atomic operation)
+                        Stock::where('idbarang', $permintaan->idbarang)
+                            ->increment('stock', $jumlahKembali);
                         
                         $message = "Request perubahan disetujui! User mengembalikan {$jumlahKembali} unit. Stok bertambah {$jumlahKembali}.";
                         
@@ -191,6 +195,11 @@ class PermintaanController extends Controller
                 $status = ($tipeKeluar === 'peminjaman') ? 'sedang_dipakai' : 'selesai';
                 $tanggalSelesai = ($tipeKeluar === 'permintaan') ? now() : null;
                 
+                // Update stock (kurangi stok) - HARUS DILAKUKAN SEBELUM create OutgoingTransaction
+                // untuk memastikan stok berkurang dulu sebelum transaksi dicatat
+                Stock::where('idbarang', $permintaan->idbarang)
+                    ->decrement('stock', $permintaan->qty);
+                
                 // Create outgoing transaction (barang keluar) dengan link ke request
                 OutgoingTransaction::create([
                     'id_request' => $permintaan->id_request,
@@ -211,8 +220,6 @@ class PermintaanController extends Controller
                     'status_approval' => 'approved',
                 ]);
                 
-                // Update stock (kurangi stok)
-                $permintaan->stock->decrement('stock', $permintaan->qty);
                 
                 // Update request status:
                 // - Barang SEWA: tetap 'approved' karena user perlu tandai selesai nanti
@@ -321,15 +328,13 @@ class PermintaanController extends Controller
         $oldStatus = $permintaan->status;
         $newStatus = $validated['status'];
 
-        // Validasi: Jika status diubah ke 'approved', cek stok
+        // ❌ PREVENT MANUAL APPROVAL - Harus pakai tombol approve untuk memastikan stok berkurang
         if ($newStatus === 'approved' && $oldStatus !== 'approved') {
-            if ($permintaan->stock->stock < $permintaan->qty) {
-                return back()->with('error', 'Tidak dapat menyetujui! Stok tidak mencukupi. Stok tersedia: ' . $permintaan->stock->stock);
-            }
+            return back()->with('error', 'Tidak bisa manual ubah ke "Approved"! Gunakan tombol APPROVE untuk memastikan stok dikurangi dengan benar.');
         }
 
         // Validasi: Jangan ubah status jika sudah processing/completed (stok sudah berkurang)
-        if (in_array($oldStatus, ['processing', 'completed']) && $newStatus !== $oldStatus) {
+        if (in_array($oldStatus, ['processing', 'completed', 'approved']) && $newStatus !== $oldStatus) {
             return back()->with('error', 'Tidak dapat mengubah status permintaan yang sudah diproses karena stok sudah berkurang. Hubungi developer jika perlu rollback.');
         }
 
