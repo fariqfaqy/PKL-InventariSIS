@@ -17,6 +17,7 @@ class RequestBarang extends Model
         'idbarang',
         'qty',
         'tipe_request',
+        'request_type',
         'tanggal_mulai_sewa',
         'tanggal_akhir_sewa',
         'keperluan',
@@ -169,10 +170,17 @@ class RequestBarang extends Model
     }
 
     /**
-     * Check if request is a cancellation request
+     * Check if request is a cancellation request (using explicit column)
      */
     public function isCancellationRequest(): bool
     {
+        // Use explicit request_type column for reliable detection
+        // Fallback to magic string if column not set (backward compatibility)
+        if ($this->request_type) {
+            return $this->request_type === 'cancellation';
+        }
+        
+        // Legacy fallback
         return $this->isChangeRequest() && (
             stripos($this->keperluan, 'PEMBATALAN') !== false ||
             stripos($this->catatan_user ?? '', 'PEMBATALAN') !== false

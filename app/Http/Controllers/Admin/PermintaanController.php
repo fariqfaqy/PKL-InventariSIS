@@ -365,6 +365,13 @@ class PermintaanController extends Controller
                 'tanggal_diproses' => now(),
             ]);
         
+        // Update OutgoingTransaction status ke 'selesai' dan set tanggal_selesai
+        OutgoingTransaction::where('id_request', $id)
+            ->update([
+                'status' => 'selesai',
+                'tanggal_selesai' => now(),
+            ]);
+        
         $permintaan->update([
             'status' => 'completed',
         ]);

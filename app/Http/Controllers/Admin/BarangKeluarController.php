@@ -14,11 +14,33 @@ class BarangKeluarController extends Controller
     /**
      * Display a listing of outgoing items.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $barangKeluar = OutgoingTransaction::with('stock')
-            ->orderBy('tanggal', 'desc')
-            ->paginate(10);
+        $query = OutgoingTransaction::with('stock');
+        
+        // Filter by tipe_request if provided
+        if ($request->filled('tipe') && in_array($request->tipe, ['pinjam_sewa', 'pakai_habis_pakai'])) {
+            $query->where('tipe_request', $request->tipe);
+        }
+        
+        // Search by kode, nama barang, or penerima
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('kodebarang_k', 'like', '%' . $search . '%')
+                  ->orWhere('namabarang_k', 'like', '%' . $search . '%')
+                  ->orWhere('penerima', 'like', '%' . $search . '%');
+            });
+        }
+        
+        // Filter by tanggal
+        if ($request->filled('tanggal')) {
+            $query->whereDate('tanggal', $request->tanggal);
+        }
+        
+        $barangKeluar = $query->orderBy('tanggal', 'desc')
+            ->paginate(10)
+            ->withQueryString();
         
         return view('admin.barang-keluar.index', compact('barangKeluar'));
     }

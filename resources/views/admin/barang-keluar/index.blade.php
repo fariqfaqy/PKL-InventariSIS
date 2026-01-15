@@ -11,7 +11,7 @@
             <p class="text-sm text-gray-500 mt-1">Kelola data barang keluar</p>
         </div>
         <div class="flex items-center gap-3">
-            <a href="{{ route('admin.barang-keluar.export-pdf') }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-md hover:shadow-lg">
+            <a href="{{ route('admin.barang-keluar.export-pdf', ['tipe' => request('tipe'), 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-md hover:shadow-lg">
                 <x-heroicon-o-document-arrow-down class="w-5 h-5" />
                 <span class="font-medium">Export PDF</span>
             </a>
@@ -28,6 +28,77 @@
         <span>{{ session('success') }}</span>
     </div>
     @endif
+
+    <!-- Tipe Request Tabs -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="flex border-b border-gray-200">
+            <a href="{{ route('admin.barang-keluar.index', ['search' => request('search'), 'tanggal' => request('tanggal')]) }}" 
+               class="flex-1 px-6 py-4 text-center font-medium transition-all {{ !request('tipe') ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50' }}">
+                Semua
+            </a>
+            <a href="{{ route('admin.barang-keluar.index', ['tipe' => 'pinjam_sewa', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" 
+               class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 {{ request('tipe') == 'pinjam_sewa' ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50' }}">
+                <x-heroicon-o-computer-desktop class="w-5 h-5" />
+                Peminjaman (Sewa)
+            </a>
+            <a href="{{ route('admin.barang-keluar.index', ['tipe' => 'pakai_habis_pakai', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" 
+               class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 {{ request('tipe') == 'pakai_habis_pakai' ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50' }}">
+                <x-heroicon-o-shopping-bag class="w-5 h-5" />
+                Permintaan (Habis Pakai)
+            </a>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="p-6 bg-gray-50 border-b border-gray-200">
+            <form action="{{ route('admin.barang-keluar.index') }}" method="GET">
+                <input type="hidden" name="tipe" value="{{ request('tipe') }}">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <!-- Cari Barang / Penerima -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Cari Barang / Penerima</label>
+                        <input 
+                            type="text" 
+                            name="search" 
+                            value="{{ request('search') }}"
+                            placeholder="Kode, nama barang, atau penerima..."
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+                        >
+                    </div>
+
+                    <!-- Tanggal -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal</label>
+                        <input 
+                            type="date" 
+                            name="tanggal" 
+                            value="{{ request('tanggal') }}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+                        >
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-3">
+                    <button 
+                        type="submit" 
+                        class="inline-flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-cyan-600 to-cyan-700 text-white rounded-lg hover:from-cyan-700 hover:to-cyan-800 transition-all duration-300 shadow-md hover:shadow-lg"
+                    >
+                        <x-heroicon-o-magnifying-glass class="w-5 h-5" />
+                        <span class="font-medium">Filter</span>
+                    </button>
+                    
+                    <a 
+                        href="{{ route('admin.barang-keluar.index', ['tipe' => request('tipe')]) }}" 
+                        class="inline-flex items-center gap-2 px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                        <x-heroicon-o-x-mark class="w-5 h-5" />
+                        <span class="font-medium">Reset</span>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Table Card -->
     <div class="bg-white rounded-xl shadow-md overflow-hidden">

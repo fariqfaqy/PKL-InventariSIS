@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\RequestBarang;
 use App\Models\Stock;
+use App\Models\OutgoingTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -92,6 +93,7 @@ class RequestBarangController extends Controller
             'idbarang' => $validated['idbarang'],
             'qty' => $validated['qty'],
             'tipe_request' => $tipeRequest,
+            'request_type' => 'normal',
             'keperluan' => $validated['keperluan'],
             'catatan_user' => $validated['catatan_user'] ?? null,
             'tanggal_mulai_sewa' => $validated['tanggal_mulai_sewa'] ?? null,
@@ -243,6 +245,7 @@ class RequestBarangController extends Controller
                 'idbarang' => $validated['idbarang'],
                 'qty' => $validated['qty'],
                 'tipe_request' => $tipeRequest,
+                'request_type' => 'change',
                 'keperluan' => $validated['keperluan'],
                 'catatan_user' => 'PERUBAHAN REQUEST #' . $requestBarang->id_request . ': ' . ($validated['catatan_user'] ?? ''),
                 'tanggal_mulai_sewa' => $validated['tanggal_mulai_sewa'] ?? null,
@@ -285,6 +288,7 @@ class RequestBarangController extends Controller
             'idbarang' => $requestBarang->idbarang,
             'qty' => $requestBarang->qty,
             'tipe_request' => $requestBarang->tipe_request,
+            'request_type' => 'cancellation',
             'keperluan' => 'PEMBATALAN REQUEST #' . $requestBarang->id_request,
             'catatan_user' => 'User meminta pembatalan peminjaman/permintaan. Admin mohon return barang dan stok.',
             'tanggal_mulai_sewa' => $requestBarang->tanggal_mulai_sewa,
@@ -333,6 +337,13 @@ class RequestBarangController extends Controller
                 'catatan_admin' => 'Request ditolak otomatis karena request asli sudah selesai.',
                 'diproses_oleh' => 'System',
                 'tanggal_diproses' => now(),
+            ]);
+
+        // Update OutgoingTransaction status ke 'selesai' dan set tanggal_selesai
+        OutgoingTransaction::where('id_request', $id)
+            ->update([
+                'status' => 'selesai',
+                'tanggal_selesai' => now(),
             ]);
 
         $request->update([

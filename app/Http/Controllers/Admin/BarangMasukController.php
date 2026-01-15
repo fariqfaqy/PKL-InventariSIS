@@ -14,11 +14,34 @@ class BarangMasukController extends Controller
     /**
      * Display a listing of incoming items.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $barangMasuk = IncomingTransaction::with('stock')
-            ->orderBy('tanggal', 'desc')
-            ->paginate(10);
+        $query = IncomingTransaction::with('stock')
+            ->join('stock', 'masuk.idbarang', '=', 'stock.idbarang')
+            ->select('masuk.*', 'stock.kategori');
+        
+        // Filter by kategori if provided
+        if ($request->filled('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
+            $query->where('stock.kategori', $request->kategori);
+        }
+        
+        // Search by kode or nama barang
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('masuk.kodebarang_m', 'like', '%' . $search . '%')
+                  ->orWhere('masuk.namabarang_m', 'like', '%' . $search . '%');
+            });
+        }
+        
+        // Filter by tanggal
+        if ($request->filled('tanggal')) {
+            $query->whereDate('masuk.tanggal', $request->tanggal);
+        }
+        
+        $barangMasuk = $query->orderBy('masuk.tanggal', 'desc')
+            ->paginate(10)
+            ->withQueryString();
         
         return view('admin.barang-masuk.index', compact('barangMasuk'));
     }

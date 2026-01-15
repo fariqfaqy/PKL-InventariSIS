@@ -21,10 +21,46 @@ class StokBarangController extends Controller
             $query->where('kategori', $request->kategori);
         }
         
-        $stocks = $query->orderBy('namabarang')->paginate(10);
+        // Search by kode or nama barang
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('kodebarang', 'like', '%' . $search . '%')
+                  ->orWhere('namabarang', 'like', '%' . $search . '%');
+            });
+        }
+        
+        // Filter by rack
+        if ($request->filled('rack')) {
+            $query->where('rack', $request->rack);
+        }
+        
+        // Filter by stock status
+        if ($request->filled('status')) {
+            switch ($request->status) {
+                case 'aman':
+                    $query->where('stock', '>=', 10);
+                    break;
+                case 'menengah':
+                    $query->whereBetween('stock', [5, 9]);
+                    break;
+                case 'kritis':
+                    $query->where('stock', '<=', 4);
+                    break;
+            }
+        }
+        
+        $stocks = $query->orderBy('namabarang')->paginate(10)->withQueryString();
         $kategori = $request->get('kategori');
         
-        return view('admin.stok-barang.index', compact('stocks', 'kategori'));
+        // Get distinct racks for filter dropdown
+        $availableRacks = Stock::whereNotNull('rack')
+            ->where('rack', '!=', '')
+            ->distinct()
+            ->orderBy('rack')
+            ->pluck('rack');
+        
+        return view('admin.stok-barang.index', compact('stocks', 'kategori', 'availableRacks'));
     }
 
     /**

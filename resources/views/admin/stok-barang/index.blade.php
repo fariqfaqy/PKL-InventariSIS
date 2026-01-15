@@ -45,6 +45,76 @@
     </div>
     @endif
 
+    <!-- Filter Section -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <form action="{{ route('admin.stok-barang.index') }}" method="GET">
+            <input type="hidden" name="kategori" value="{{ request('kategori') }}">
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <!-- Cari Barang -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Cari Barang</label>
+                    <input 
+                        type="text" 
+                        name="search" 
+                        value="{{ request('search') }}"
+                        placeholder="Kode atau nama barang..."
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+                    >
+                </div>
+
+                <!-- Filter Rak -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Filter Rak</label>
+                    <select 
+                        name="rack" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+                    >
+                        <option value="">Semua Rak</option>
+                        @foreach($availableRacks as $rak)
+                            <option value="{{ $rak }}" {{ request('rack') == $rak ? 'selected' : '' }}>
+                                Rak {{ strtoupper($rak) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Status Stok -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Status Stok</label>
+                    <select 
+                        name="status" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+                    >
+                        <option value="">Semua Status</option>
+                        <option value="aman" {{ request('status') == 'aman' ? 'selected' : '' }}>Aman (≥10)</option>
+                        <option value="menengah" {{ request('status') == 'menengah' ? 'selected' : '' }}>Menengah (5-9)</option>
+                        <option value="kritis" {{ request('status') == 'kritis' ? 'selected' : '' }}>Kritis (≤4)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-3">
+                <button 
+                    type="submit" 
+                    class="inline-flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-cyan-600 to-cyan-700 text-white rounded-lg hover:from-cyan-700 hover:to-cyan-800 transition-all duration-300 shadow-md hover:shadow-lg"
+                >
+                    <x-heroicon-o-magnifying-glass class="w-5 h-5" />
+                    <span class="font-medium">Filter</span>
+                </button>
+                
+                <a 
+                    href="{{ route('admin.stok-barang.index', ['kategori' => request('kategori')]) }}" 
+                    class="inline-flex items-center gap-2 px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                    <x-heroicon-o-x-mark class="w-5 h-5" />
+                    <span class="font-medium">Reset</span>
+                </a>
+            </div>
+        </form>
+    </div>
+
     <!-- Table Card -->
     <div class="bg-white rounded-xl shadow-md overflow-hidden">
         <div class="overflow-x-auto">
