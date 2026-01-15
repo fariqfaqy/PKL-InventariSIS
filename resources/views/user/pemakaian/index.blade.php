@@ -57,7 +57,6 @@
         @php
             $pendingRequests = $requests->where('status', 'pending');
             $approvedRequests = $requests->where('status', 'approved');
-            $rejectedRequests = $requests->where('status', 'rejected');
         @endphp
 
         <!-- Pending Section -->
@@ -77,6 +76,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                             </tr>
@@ -91,6 +91,12 @@
                                     <div class="text-gray-500 text-xs">{{ $item->stock->kodebarang }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->qty }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <x-heroicon-o-document-plus class="w-3 h-3 mr-1" />
+                                        Request Asli
+                                    </span>
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_sewa' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
                                         {{ $item->tipe_request_label }}
@@ -158,10 +164,8 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     @php
-                                        $hasPendingRequest = \App\Models\RequestBarang::where('parent_request_id', $item->id_request)
-                                            ->where('status', 'pending')
-                                            ->exists();
-                                        $pendingRequest = $hasPendingRequest ? \App\Models\RequestBarang::where('parent_request_id', $item->id_request)->where('status', 'pending')->latest()->first() : null;
+                                        // Gunakan eager loaded data untuk prevent N+1 query
+                                        $pendingRequest = $item->changeRequests->first(); // sudah di-eager load
                                         
                                         // Detect tipe request: pembatalan atau perubahan
                                         $isCancellation = $pendingRequest && (
@@ -169,7 +173,7 @@
                                             str_contains(strtoupper($pendingRequest->catatan_user ?? ''), 'PEMBATALAN')
                                         );
                                     @endphp
-                                    @if($hasPendingRequest && $pendingRequest)
+                                    @if($item->pending_changes_count > 0 && $pendingRequest)
                                         @if($isCancellation)
                                             <span class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs">
                                                 <x-heroicon-o-exclamation-circle class="w-3 h-3 inline" /> Pembatalan pending
@@ -179,29 +183,19 @@
                                                 <x-heroicon-o-clock class="w-3 h-3 inline" /> Perubahan pending
                                             </span>
                                         @endif
-                                    @else
-                                        @php
-                                            $hasApprovedChange = \App\Models\RequestBarang::where('parent_request_id', $item->id_request)
-                                                ->where('status', 'approved')
-                                                ->exists();
-                                        @endphp
-                                        @if($hasApprovedChange)
-                                            <span class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs">
-                                                <x-heroicon-o-check class="w-3 h-3 inline" /> Diubah
-                                            </span>
-                                        @endif
+                                    @elseif($item->approved_changes_count > 0)
+                                        <span class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs">
+                                            <x-heroicon-o-check class="w-3 h-3 inline" /> Diubah
+                                        </span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
                                     @php
-                                        // Re-check untuk action buttons
-                                        $hasPendingCancellation = \App\Models\RequestBarang::where('parent_request_id', $item->id_request)
-                                            ->where('status', 'pending')
-                                            ->where(function($q) {
-                                                $q->where('keperluan', 'like', '%PEMBATALAN%')
-                                                  ->orWhere('catatan_user', 'like', '%PEMBATALAN%');
-                                            })
-                                            ->exists();
+                                        // Check cancellation dari eager loaded data
+                                        $hasPendingCancellation = $pendingRequest && (
+                                            str_contains(strtoupper($pendingRequest->keperluan), 'PEMBATALAN') ||
+                                            str_contains(strtoupper($pendingRequest->catatan_user ?? ''), 'PEMBATALAN')
+                                        );
                                     @endphp
                                     @if($hasPendingCancellation)
                                         <div class="text-xs text-gray-500 italic">Menunggu approval pembatalan</div>
@@ -235,56 +229,8 @@
         </div>
         @endif
 
-        <!-- Rejected Section -->
-        @if($rejectedRequests->count() > 0)
-        <div class="mb-6">
-            <div class="flex items-center gap-2 mb-3">
-                <x-heroicon-o-x-circle class="h-6 w-6 text-red-600" />
-                <h3 class="text-lg font-semibold text-gray-800">Ditolak</h3>
-                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">{{ $rejectedRequests->count() }}</span>
-            </div>
-            <div class="bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-red-500">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-red-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alasan</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($rejectedRequests as $item)
-                            <tr class="hover:bg-red-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#{{ $item->id_request }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $item->tanggal_request->format('d/m/Y H:i') }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-900">
-                                    <div class="font-medium">{{ $item->stock->namabarang }}</div>
-                                    <div class="text-gray-500 text-xs">{{ $item->stock->kodebarang }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->qty }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_sewa' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
-                                        {{ $item->tipe_request_label }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-sm text-red-600">
-                                    {{ $item->catatan_admin ?? 'Tidak ada alasan' }}
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        @endif
-
         <!-- Empty State -->
-        @if($requests->isEmpty())
+        @if($pendingRequests->isEmpty() && $approvedRequests->isEmpty())
         <div class="bg-white rounded-xl shadow-md p-12 text-center">
             <x-heroicon-o-inbox class="h-16 w-16 mx-auto mb-4 text-gray-400" />
             <p class="text-lg font-medium text-gray-500">Belum ada request</p>
@@ -421,113 +367,250 @@
             </div>
         </div>
     </div>
+    
     <!-- History Tab Content -->
-    <div id="content-history" class="tab-content hidden"
-        <div class="bg-white rounded-xl shadow-md overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @php $historyIndex = 1; @endphp
-                        
-                        @forelse($completedRequests as $request)
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $historyIndex++ }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                #{{ $request->id_request }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $request->tanggal_request->format('d/m/Y H:i') }}
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-900">
-                                <div class="font-medium">{{ $request->stock->namabarang }}</div>
-                                <div class="text-xs text-gray-500">{{ $request->stock->kodebarang }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                    {{ $request->qty }} unit
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                @if($request->status == 'completed')
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <x-heroicon-o-check-circle class="w-3 h-3 mr-1" />
-                                        Selesai
-                                    </span>
-                                @elseif($request->status == 'cancelled')
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                        <x-heroicon-o-x-circle class="w-3 h-3 mr-1" />
-                                        Dibatalkan
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        {{ $request->status_label }}
-                                    </span>
-                                @endif
-                            </td>
-                        </tr>
-                        @empty
-                        @endforelse
-                        
-                        @forelse($pemakaian as $index => $item)
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $historyIndex++ }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            #{{ $item->idkeluar }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $item->tanggal->format('d/m/Y H:i') }}
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-900">
-                            <div class="font-medium">{{ $item->namabarang_k }}</div>
-                            <div class="text-xs text-gray-500">{{ $item->kodebarang_k }}</div>
-                            @if($item->tipe_request == 'peminjaman')
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mt-1">
-                                    <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
-                                    Peminjaman
-                                </span>
+    <div id="content-history" class="tab-content hidden">
+        <!-- Sub-tabs untuk History -->
+        <div class="mb-4">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-6" aria-label="Sub tabs">
+                    <button onclick="switchHistoryTab('sedang-dipakai')" id="subtab-sedang-dipakai" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm subtab-button active-subtab">
+                        <span class="flex items-center gap-2">
+                            <x-heroicon-o-arrow-path class="w-4 h-4" />
+                            Sedang Dipakai
+                            @if($sedangDipakai->count() > 0)
+                                <span class="bg-blue-500 text-white rounded-full px-2 py-0.5 text-xs">{{ $sedangDipakai->count() }}</span>
                             @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                {{ $item->qty }} unit
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                <x-heroicon-o-check-circle class="w-3 h-3 mr-1" />
-                                Disetujui
-                            </span>
-                        </td>
-                    </tr>
-                    @empty
-                    @if($completedRequests->isEmpty())
-                    <tr>
-                        <td colspan="6" class="px-6 py-12 text-center">
-                            <div class="flex flex-col items-center justify-center text-gray-500">
-                                <x-heroicon-o-clipboard-document-list class="w-16 h-16 mb-4 opacity-30" />
-                                <p class="text-lg font-medium">Belum ada history pemakaian</p>
-                                <p class="text-sm mt-1">Request yang sudah selesai akan muncul di sini</p>
-                            </div>
-                        </td>
-                    </tr>
-                    @endif
-                    @endforelse
-                </tbody>
-            </table>
+                        </span>
+                    </button>
+                    <button onclick="switchHistoryTab('selesai')" id="subtab-selesai" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm subtab-button">
+                        <span class="flex items-center gap-2">
+                            <x-heroicon-o-check-circle class="w-4 h-4" />
+                            Selesai
+                            @if($selesai->count() > 0)
+                                <span class="bg-green-500 text-white rounded-full px-2 py-0.5 text-xs">{{ $selesai->count() }}</span>
+                            @endif
+                        </span>
+                    </button>
+                    <button onclick="switchHistoryTab('dibatalkan')" id="subtab-dibatalkan" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm subtab-button">
+                        <span class="flex items-center gap-2">
+                            <x-heroicon-o-x-circle class="w-4 h-4" />
+                            Ditolak/Dibatalkan
+                            @if($ditolakDibatalkan->count() > 0)
+                                <span class="bg-red-500 text-white rounded-full px-2 py-0.5 text-xs">{{ $ditolakDibatalkan->count() }}</span>
+                            @endif
+                        </span>
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Sedang Dipakai Content -->
+        <div id="content-sedang-dipakai" class="subtab-content">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-blue-500">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-blue-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penerima</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($sedangDipakai as $item)
+                            <tr class="hover:bg-blue-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    #{{ $item->idkeluar }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ $item->tanggal->format('d/m/Y H:i') }}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <div class="font-medium">{{ $item->namabarang_k }}</div>
+                                    <div class="text-xs text-gray-500">{{ $item->kodebarang_k }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        {{ $item->qty }} unit
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ $item->penerima }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    @if($item->tipe_request == 'peminjaman')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                            <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
+                                            Peminjaman
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <x-heroicon-o-shopping-cart class="w-3 h-3 mr-1" />
+                                            Permintaan
+                                        </span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="6" class="px-6 py-12 text-center">
+                                    <div class="flex flex-col items-center justify-center text-gray-500">
+                                        <x-heroicon-o-arrow-path class="w-16 h-16 mb-4 opacity-30" />
+                                        <p class="text-lg font-medium">Tidak ada pemakaian yang sedang berjalan</p>
+                                        <p class="text-sm mt-1">Pemakaian yang disetujui akan muncul di sini</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selesai Content -->
+        <div id="content-selesai" class="subtab-content hidden">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-green-500">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-green-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Pakai</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Selesai</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penerima</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($selesai as $item)
+                            <tr class="hover:bg-green-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    #{{ $item->idkeluar }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ $item->tanggal->format('d/m/Y') }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ $item->tanggal_selesai ? $item->tanggal_selesai->format('d/m/Y') : '-' }}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <div class="font-medium">{{ $item->namabarang_k }}</div>
+                                    <div class="text-xs text-gray-500">{{ $item->kodebarang_k }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        {{ $item->qty }} unit
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ $item->penerima }}
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="6" class="px-6 py-12 text-center">
+                                    <div class="flex flex-col items-center justify-center text-gray-500">
+                                        <x-heroicon-o-check-circle class="w-16 h-16 mb-4 opacity-30" />
+                                        <p class="text-lg font-medium">Belum ada pemakaian yang selesai</p>
+                                        <p class="text-sm mt-1">Pemakaian yang sudah dikembalikan akan muncul di sini</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ditolak/Dibatalkan Content -->
+        <div id="content-dibatalkan" class="subtab-content hidden">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-red-500">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-red-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Request</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Request</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alasan</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($ditolakDibatalkan as $item)
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    #{{ $item->id_request }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ $item->tanggal_request->format('d/m/Y H:i') }}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <div class="font-medium">{{ $item->stock->namabarang }}</div>
+                                    <div class="text-xs text-gray-500">{{ $item->stock->kodebarang }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        {{ $item->qty }} unit
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    @if($item->parent_request_id)
+                                        <div class="flex flex-col gap-1">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
+                                                Perubahan
+                                            </span>
+                                            <span class="text-xs text-gray-500">dari #{{ $item->parent_request_id }}</span>
+                                        </div>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <x-heroicon-o-document-plus class="w-3 h-3 mr-1" />
+                                            Request Baru
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    @if($item->status == 'rejected')
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            <x-heroicon-o-x-circle class="w-3 h-3 mr-1" />
+                                            Ditolak Admin
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            <x-heroicon-o-x-mark class="w-3 h-3 mr-1" />
+                                            Dibatalkan
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    {{ $item->catatan_admin ?? ($item->status == 'rejected' ? 'Ditolak oleh admin' : 'Dibatalkan oleh user') }}
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="7" class="px-6 py-12 text-center">
+                                    <div class="flex flex-col items-center justify-center text-gray-500">
+                                        <x-heroicon-o-x-circle class="w-16 h-16 mb-4 opacity-30" />
+                                        <p class="text-lg font-medium">Tidak ada request yang ditolak atau dibatalkan</p>
+                                        <p class="text-sm mt-1">Request yang ditolak/dibatalkan akan muncul di sini</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -552,6 +635,27 @@ function switchTab(tab) {
     const activeTab = document.getElementById('tab-' + tab);
     activeTab.classList.add('active', 'border-[#14a2ba]', 'text-[#14a2ba]');
     activeTab.classList.remove('border-transparent', 'text-gray-500');
+}
+
+function switchHistoryTab(subtab) {
+    // Hide all subtab contents
+    document.querySelectorAll('.subtab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    // Remove active class from all subtabs
+    document.querySelectorAll('.subtab-button').forEach(button => {
+        button.classList.remove('active-subtab', 'border-[#14a2ba]', 'text-[#14a2ba]');
+        button.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    // Show selected subtab content
+    document.getElementById('content-' + subtab).classList.remove('hidden');
+    
+    // Add active class to selected subtab
+    const activeSubtab = document.getElementById('subtab-' + subtab);
+    activeSubtab.classList.add('active-subtab', 'border-[#14a2ba]', 'text-[#14a2ba]');
+    activeSubtab.classList.remove('border-transparent', 'text-gray-500');
 }
 </script>
 

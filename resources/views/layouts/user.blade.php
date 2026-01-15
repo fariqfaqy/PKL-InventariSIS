@@ -76,49 +76,17 @@
                     
                     <!-- Submenu -->
                     <div id="riwayat-barang-submenu" class="{{ request()->routeIs('user.barang-masuk.*') || request()->routeIs('user.barang-keluar.*') ? '' : 'hidden' }} ml-4 space-y-1">
-                        <!-- Barang Masuk (Parent dengan sub) -->
-                        <div class="space-y-1">
-                            <button onclick="toggleSubmenu('barang-masuk')" class="w-full flex items-center justify-between px-4 py-2 {{ request()->routeIs('user.barang-masuk.*') ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
-                                <div class="flex items-center gap-3">
-                                    <x-heroicon-o-arrow-down-tray class="w-4 h-4" />
-                                    <span class="text-sm font-medium">Barang Masuk</span>
-                                </div>
-                                <x-heroicon-o-chevron-down id="barang-masuk-icon" class="w-3 h-3 transition-transform duration-200 {{ request()->routeIs('user.barang-masuk.*') ? 'rotate-180' : '' }}" />
-                            </button>
-                            
-                            <div id="barang-masuk-submenu" class="{{ request()->routeIs('user.barang-masuk.*') ? '' : 'hidden' }} ml-6 space-y-1">
-                                <a href="{{ route('user.barang-masuk.index', ['kategori' => 'barang_sewa']) }}" class="flex items-center gap-2 px-3 py-1.5 {{ request()->routeIs('user.barang-masuk.*') && request('kategori') == 'barang_sewa' ? 'text-[#14a2ba] bg-[#14a2ba]/10 font-medium' : 'text-gray-500 hover:bg-gray-50' }} rounded text-xs transition-all duration-200">
-                                    <span class="w-1 h-1 rounded-full bg-current"></span>
-                                    Barang Sewa
-                                </a>
-                                <a href="{{ route('user.barang-masuk.index', ['kategori' => 'habis_pakai']) }}" class="flex items-center gap-2 px-3 py-1.5 {{ request()->routeIs('user.barang-masuk.*') && request('kategori') == 'habis_pakai' ? 'text-[#14a2ba] bg-[#14a2ba]/10 font-medium' : 'text-gray-500 hover:bg-gray-50' }} rounded text-xs transition-all duration-200">
-                                    <span class="w-1 h-1 rounded-full bg-current"></span>
-                                    Barang Habis Pakai
-                                </a>
-                            </div>
-                        </div>
+                        <!-- Barang Masuk -->
+                        <a href="{{ route('user.barang-masuk.index') }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('user.barang-masuk.*') ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200">
+                            <x-heroicon-o-arrow-down-tray class="w-4 h-4" />
+                            <span class="text-sm font-medium">Barang Masuk</span>
+                        </a>
 
-                        <!-- Barang Keluar (Parent dengan sub) -->
-                        <div class="space-y-1">
-                            <button onclick="toggleSubmenu('barang-keluar')" class="w-full flex items-center justify-between px-4 py-2 {{ request()->routeIs('user.barang-keluar.*') ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
-                                <div class="flex items-center gap-3">
-                                    <x-heroicon-o-arrow-up-tray class="w-4 h-4" />
-                                    <span class="text-sm font-medium">Barang Keluar</span>
-                                </div>
-                                <x-heroicon-o-chevron-down id="barang-keluar-icon" class="w-3 h-3 transition-transform duration-200 {{ request()->routeIs('user.barang-keluar.*') ? 'rotate-180' : '' }}" />
-                            </button>
-                            
-                            <div id="barang-keluar-submenu" class="{{ request()->routeIs('user.barang-keluar.*') ? '' : 'hidden' }} ml-6 space-y-1">
-                                <a href="{{ route('user.barang-keluar.index', ['tipe' => 'peminjaman']) }}" class="flex items-center gap-2 px-3 py-1.5 {{ request()->routeIs('user.barang-keluar.*') && request('tipe') == 'peminjaman' ? 'text-[#14a2ba] bg-[#14a2ba]/10 font-medium' : 'text-gray-500 hover:bg-gray-50' }} rounded text-xs transition-all duration-200">
-                                    <span class="w-1 h-1 rounded-full bg-current"></span>
-                                    Peminjaman (Sewa)
-                                </a>
-                                <a href="{{ route('user.barang-keluar.index', ['tipe' => 'permintaan']) }}" class="flex items-center gap-2 px-3 py-1.5 {{ request()->routeIs('user.barang-keluar.*') && request('tipe') == 'permintaan' ? 'text-[#14a2ba] bg-[#14a2ba]/10 font-medium' : 'text-gray-500 hover:bg-gray-50' }} rounded text-xs transition-all duration-200">
-                                    <span class="w-1 h-1 rounded-full bg-current"></span>
-                                    Permintaan (Habis Pakai)
-                                </a>
-                            </div>
-                        </div>
+                        <!-- Barang Keluar -->
+                        <a href="{{ route('user.barang-keluar.index') }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('user.barang-keluar.*') ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200">
+                            <x-heroicon-o-arrow-up-tray class="w-4 h-4" />
+                            <span class="text-sm font-medium">Barang Keluar</span>
+                        </a>
                     </div>
                 </div>
 

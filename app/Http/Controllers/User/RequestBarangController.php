@@ -129,6 +129,18 @@ class RequestBarangController extends Controller
                 ->with('error', 'Request ini tidak bisa diedit!');
         }
         
+        // Untuk approved request: cek apakah sudah ada pending change request
+        if ($requestBarang->status === 'approved') {
+            $hasPendingChange = RequestBarang::where('parent_request_id', $id)
+                ->where('status', 'pending')
+                ->exists();
+            
+            if ($hasPendingChange) {
+                return redirect()->route('user.pemakaian.index')
+                    ->with('error', 'Masih ada request perubahan yang pending! Tunggu admin proses dulu.');
+            }
+        }
+        
         // Calculate available stock
         // Jika approved: stok tersedia = stok current + qty yang sudah diambil
         // Jika pending: stok tersedia = stok current
@@ -187,6 +199,16 @@ class RequestBarangController extends Controller
         
         // If approved, create new request for change (need admin approval)
         if ($requestBarang->status === 'approved') {
+            // Double-check: pastikan tidak ada pending change request lain
+            $hasPendingChange = RequestBarang::where('parent_request_id', $id)
+                ->where('status', 'pending')
+                ->exists();
+            
+            if ($hasPendingChange) {
+                return redirect()->route('user.pemakaian.index')
+                    ->with('error', 'Masih ada request perubahan yang pending! Tunggu admin proses dulu.');
+            }
+            
             // Calculate available stock = current stock + qty yang sudah diambil
             $availableStock = $stock->stock + $requestBarang->qty;
             

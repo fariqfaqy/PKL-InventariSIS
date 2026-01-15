@@ -54,4 +54,21 @@ class OutgoingTransaction extends Model
     {
         return $this->belongsTo(Stock::class, 'idbarang', 'idbarang');
     }
+
+    /**
+     * Relationship: Belongs to User (penginput = user yang request)
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'penginput', 'name');
+    }
+
+    /**
+     * Relationship: Belongs to RequestBarang
+     * Link ke request yang di-approve admin
+     */
+    public function request()
+    {
+        return $this->belongsTo(RequestBarang::class, 'id_request', 'id_request');
+    }
 }

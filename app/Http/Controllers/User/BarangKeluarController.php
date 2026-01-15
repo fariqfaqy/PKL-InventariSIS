@@ -16,7 +16,8 @@ class BarangKeluarController extends Controller
         $query = OutgoingTransaction::with('stock');
 
         // Filter berdasarkan tipe (peminjaman=sewa, permintaan=habis_pakai)
-        if ($request->has('tipe') && in_array($request->tipe, ['peminjaman', 'permintaan'])) {
+        // Hanya filter jika ada tipe yang dipilih (bukan "semua")
+        if ($request->has('tipe') && $request->tipe && in_array($request->tipe, ['peminjaman', 'permintaan'])) {
             if ($request->tipe == 'peminjaman') {
                 // Peminjaman = Barang Sewa
                 $query->where('kategori', 'barang_sewa');

@@ -49,8 +49,11 @@ class DashboardController extends Controller
         $raks = collect(['1a', '1b', '1c', '2a', '2b', '2c']);
 
         // Recent transactions barang keluar (untuk user)
+        // Tampilkan pemakaian yang sudah di-approve tapi belum selesai
         $recentTransactions = OutgoingTransaction::with('stock')
             ->where('penginput', auth()->user()->email)
+            ->whereNotNull('diproses_oleh') // sudah di-approve admin
+            ->where('status', 'sedang_dipakai') // belum selesai
             ->orderBy('tanggal', 'desc')
             ->limit(5)
             ->get();

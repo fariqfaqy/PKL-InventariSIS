@@ -1,6 +1,6 @@
 @extends('layouts.user')
 
-@section('title', 'Barang Keluar' . (isset($tipe) ? ' - ' . ($tipe == 'peminjaman' ? 'Peminjaman (Sewa)' : 'Permintaan (Habis Pakai)') : ''))
+@section('title', 'Barang Keluar')
 @section('subtitle', 'Lihat semua pemakaian barang divisi')
 
 @section('content')
@@ -9,17 +9,35 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
             <div class="flex items-center gap-3">
-                <h2 class="text-2xl font-bold text-gray-800">
-                    Barang Keluar
-                    @if(isset($tipe))
-                        <span class="text-[#14a2ba]">{{ $tipe == 'peminjaman' ? 'Peminjaman' : 'Permintaan' }}</span>
-                    @endif
-                </h2>
+                <h2 class="text-2xl font-bold text-gray-800">Barang Keluar</h2>
                 <span class="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full border border-gray-300">
                     <x-heroicon-o-eye class="w-3 h-3" />
                     Read Only
                 </span>
             </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="border-b border-gray-200">
+            <nav class="flex -mb-px">
+                <button onclick="window.location.href='{{ route('user.barang-keluar.index') }}'" class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ !request('tipe') ? 'border-[#14a2ba] text-[#14a2ba]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    Semua
+                </button>
+                <button onclick="window.location.href='{{ route('user.barang-keluar.index', ['tipe' => 'peminjaman']) }}'" class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ request('tipe') == 'peminjaman' ? 'border-[#14a2ba] text-[#14a2ba]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    <span class="inline-flex items-center gap-2">
+                        <x-heroicon-o-computer-desktop class="w-4 h-4" />
+                        Peminjaman (Sewa)
+                    </span>
+                </button>
+                <button onclick="window.location.href='{{ route('user.barang-keluar.index', ['tipe' => 'permintaan']) }}'" class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ request('tipe') == 'permintaan' ? 'border-[#14a2ba] text-[#14a2ba]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    <span class="inline-flex items-center gap-2">
+                        <x-heroicon-o-shopping-bag class="w-4 h-4" />
+                        Permintaan (Habis Pakai)
+                    </span>
+                </button>
+            </nav>
         </div>
     </div>
 

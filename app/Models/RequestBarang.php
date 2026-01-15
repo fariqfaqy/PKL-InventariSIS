@@ -93,6 +93,14 @@ class RequestBarang extends Model
     }
 
     /**
+     * Get child change requests (request perubahan dari request ini)
+     */
+    public function changeRequests()
+    {
+        return $this->hasMany(RequestBarang::class, 'parent_request_id', 'id_request');
+    }
+
+    /**
      * Get outgoing transaction relationship
      */
     public function outgoingTransaction()

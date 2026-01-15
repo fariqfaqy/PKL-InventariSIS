@@ -34,15 +34,24 @@ class PermintaanController extends Controller
             ->orderBy('tanggal_request', 'desc')
             ->get();
         
-        // Request completed dan cancelled untuk history
-        $completedRequests = RequestBarang::with(['user', 'stock'])
-            ->whereIn('status', ['completed', 'cancelled'])
-            ->orderBy('tanggal_request', 'desc')
+        // History data dengan sub-tabs
+        // 1. Sedang Dipakai - sudah disetujui tapi belum selesai
+        $sedangDipakai = OutgoingTransaction::with(['stock', 'user'])
+            ->whereNotNull('diproses_oleh')
+            ->where('status', 'sedang_dipakai')
+            ->orderBy('tanggal', 'desc')
             ->get();
         
-        // Barang keluar (approved outgoing transactions) untuk history
-        $outgoingTransactions = OutgoingTransaction::with('stock')
-            ->orderBy('tanggal', 'desc')
+        // 2. Selesai - sudah selesai
+        $selesai = OutgoingTransaction::with(['stock', 'user'])
+            ->where('status', 'selesai')
+            ->orderBy('tanggal_selesai', 'desc')
+            ->get();
+        
+        // 3. Ditolak/Dibatalkan - request yang rejected atau cancelled
+        $ditolakDibatalkan = RequestBarang::with(['user', 'stock'])
+            ->whereIn('status', ['rejected', 'cancelled'])
+            ->orderBy('tanggal_request', 'desc')
             ->get();
         
         // Count by status for stats
@@ -51,9 +60,11 @@ class PermintaanController extends Controller
             'approved' => RequestBarang::where('status', 'approved')->count(),
             'processing' => RequestBarang::where('status', 'processing')->count(),
             'completed' => RequestBarang::where('status', 'completed')->count(),
+            'cancelled' => RequestBarang::where('status', 'cancelled')->count(),
+            'rejected' => RequestBarang::where('status', 'rejected')->count(),
         ];
         
-        return view('admin.permintaan.index', compact('normalRequests', 'changeRequests', 'completedRequests', 'outgoingTransactions', 'stats'));
+        return view('admin.permintaan.index', compact('normalRequests', 'changeRequests', 'sedangDipakai', 'selesai', 'ditolakDibatalkan', 'stats'));
     }
 
     /**
@@ -171,6 +182,10 @@ class PermintaanController extends Controller
                 // Convert tipe_request: pinjam_sewa -> peminjaman, pakai_habis_pakai -> permintaan
                 $tipeKeluar = $permintaan->tipe_request === 'pinjam_sewa' ? 'peminjaman' : 'permintaan';
                 
+                // Tentukan status: barang sewa = sedang_dipakai, habis pakai = langsung selesai
+                $status = ($tipeKeluar === 'peminjaman') ? 'sedang_dipakai' : 'selesai';
+                $tanggalSelesai = ($tipeKeluar === 'permintaan') ? now() : null;
+                
                 // Create outgoing transaction (barang keluar) dengan link ke request
                 OutgoingTransaction::create([
                     'id_request' => $permintaan->id_request,
@@ -180,20 +195,27 @@ class PermintaanController extends Controller
                     'qty' => $permintaan->qty,
                     'namabarang_k' => $permintaan->stock->namabarang,
                     'kodebarang_k' => $permintaan->stock->kodebarang,
-                    'penginput' => Auth::user()->name,
+                    'penginput' => $permintaan->user->name,
+                    'diproses_oleh' => Auth::user()->name,
                     'kategori' => $permintaan->stock->kategori,
                     'tanggal_mulai_sewa' => $permintaan->tanggal_mulai_sewa,
                     'tanggal_akhir_sewa' => $permintaan->tanggal_akhir_sewa,
                     'tipe_request' => $tipeKeluar,
+                    'status' => $status,
+                    'tanggal_selesai' => $tanggalSelesai,
                     'status_approval' => 'approved',
                 ]);
                 
                 // Update stock (kurangi stok)
                 $permintaan->stock->decrement('stock', $permintaan->qty);
                 
-                // Update request status
+                // Update request status:
+                // - Barang SEWA: tetap 'approved' karena user perlu tandai selesai nanti
+                // - Barang HABIS PAKAI: langsung 'completed' karena sudah selesai (barang habis)
+                $finalStatus = ($tipeKeluar === 'peminjaman') ? 'approved' : 'completed';
+                
                 $permintaan->update([
-                    'status' => 'approved',
+                    'status' => $finalStatus,
                     'diproses_oleh' => Auth::user()->name,
                     'tanggal_diproses' => now(),
                 ]);

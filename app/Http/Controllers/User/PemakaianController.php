@@ -18,11 +18,27 @@ class PemakaianController extends Controller
      */
     public function index()
     {
-        // Ambil request biasa (bukan request perubahan, bukan completed, bukan cancelled)
-        $requests = RequestBarang::with('stock')
+        // Ambil request AKTIF (pending & approved) - untuk tab "Request Saya"
+        // Exclude: completed, cancelled, rejected (masuk History)
+        // Eager load change requests count untuk prevent N+1 query
+        $requests = RequestBarang::with([
+                'stock',
+                'changeRequests' => function($query) {
+                    // Eager load pending change requests untuk cek cancellation
+                    $query->where('status', 'pending')->latest();
+                }
+            ])
+            ->withCount([
+                'changeRequests as pending_changes_count' => function($query) {
+                    $query->where('status', 'pending');
+                },
+                'changeRequests as approved_changes_count' => function($query) {
+                    $query->where('status', 'approved');
+                }
+            ])
             ->where('user_id', Auth::id())
             ->whereNull('parent_request_id')
-            ->whereNotIn('status', ['completed', 'cancelled'])
+            ->whereNotIn('status', ['completed', 'cancelled', 'rejected']) // Tambah rejected
             ->orderBy('tanggal_request', 'desc')
             ->paginate(20);
 
@@ -37,20 +53,30 @@ class PemakaianController extends Controller
             ->orderBy('tanggal_request', 'desc')
             ->get();
 
-        // Ambil barang keluar yang sudah disetujui dan request yang completed (untuk history)
-        $pemakaian = OutgoingTransaction::with('stock')
+        // Ambil history pemakaian berdasarkan status
+        // 1. Sedang dipakai - sudah disetujui tapi belum selesai
+        $sedangDipakai = OutgoingTransaction::with('stock')
             ->where('penginput', Auth::user()->name)
+            ->whereNotNull('diproses_oleh')
+            ->where('status', 'sedang_dipakai')
             ->orderBy('tanggal', 'desc')
-            ->paginate(20);
+            ->get();
         
-        // Ambil request completed dan cancelled untuk ditampilkan di history
-        $completedRequests = RequestBarang::with('stock')
+        // 2. Selesai - sudah selesai
+        $selesai = OutgoingTransaction::with('stock')
+            ->where('penginput', Auth::user()->name)
+            ->where('status', 'selesai')
+            ->orderBy('tanggal_selesai', 'desc')
+            ->get();
+        
+        // 3. Ditolak/Dibatalkan - request yang rejected atau cancelled
+        $ditolakDibatalkan = RequestBarang::with('stock')
             ->where('user_id', Auth::id())
-            ->whereIn('status', ['completed', 'cancelled'])
+            ->whereIn('status', ['rejected', 'cancelled'])
             ->orderBy('tanggal_request', 'desc')
             ->get();
 
-        return view('user.pemakaian.index', compact('requests', 'changeRequests', 'pemakaian', 'completedRequests'));
+        return view('user.pemakaian.index', compact('requests', 'changeRequests', 'sedangDipakai', 'selesai', 'ditolakDibatalkan'));
     }
 
     /**
@@ -315,7 +341,7 @@ class PemakaianController extends Controller
     {
         DB::beginTransaction();
         try {
-            $pemakaian = OutgoingTransaction::where('penginput', Auth::user()->email)
+            $pemakaian = OutgoingTransaction::where('penginput', Auth::user()->name)
                 ->where('status', 'sedang_dipakai')
                 ->findOrFail($id);
 

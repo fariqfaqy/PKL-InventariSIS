@@ -113,7 +113,7 @@
     <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
             <x-heroicon-o-clock class="w-5 h-5 text-[#14a2ba]" />
-            Riwayat Pemakaian Terbaru
+            Pemakaian Barang Aktif
         </h3>
         <a href="{{ route('user.pemakaian.index') }}" class="text-sm text-[#14a2ba] hover:text-[#0d7a8f] font-medium flex items-center gap-1">
             Lihat Semua
@@ -130,6 +130,7 @@
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Barang</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jumlah</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Penerima</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -149,6 +150,12 @@
                     <td class="px-4 py-3 text-sm text-gray-900">
                         {{ $trans->penerima }}
                     </td>
+                    <td class="px-4 py-3 text-sm">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                            <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
+                            Sedang Digunakan
+                        </span>
+                    </td>
                 </tr>
                 @endforeach
             </tbody>
@@ -157,7 +164,8 @@
     @else
     <div class="text-center py-8 text-gray-500">
         <x-heroicon-o-inbox class="w-12 h-12 mx-auto mb-3 opacity-30" />
-        <p class="text-sm">Belum ada riwayat pemakaian</p>
+        <p class="text-sm">Tidak ada pemakaian barang yang sedang berjalan</p>
+        <p class="text-xs text-gray-400 mt-1">Pemakaian yang sudah disetujui admin akan muncul di sini</p>
     </div>
     @endif
 </div>

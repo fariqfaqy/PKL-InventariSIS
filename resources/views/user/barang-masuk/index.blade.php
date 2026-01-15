@@ -1,6 +1,6 @@
 @extends('layouts.user')
 
-@section('title', 'Barang Masuk' . (isset($kategori) ? ' - ' . ($kategori == 'barang_sewa' ? 'Barang Sewa' : 'Barang Habis Pakai') : ''))
+@section('title', 'Barang Masuk')
 @section('subtitle', 'Lihat data barang masuk divisi')
 
 @section('content')
@@ -9,17 +9,41 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
             <div class="flex items-center gap-3">
-                <h2 class="text-2xl font-bold text-gray-800">
-                    Barang Masuk
-                    @if(isset($kategori))
-                        <span class="text-[#14a2ba]">{{ $kategori == 'barang_sewa' ? 'Barang Sewa' : 'Barang Habis Pakai' }}</span>
-                    @endif
-                </h2>
+                <h2 class="text-2xl font-bold text-gray-800">Barang Masuk</h2>
                 <span class="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full border border-gray-300">
                     <x-heroicon-o-eye class="w-3 h-3" />
                     Read Only
                 </span>
             </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="border-b border-gray-200">
+            <nav class="flex -mb-px">
+                <button onclick="window.location.href='{{ route('user.barang-masuk.index') }}'" class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ !request('kategori') ? 'border-[#14a2ba] text-[#14a2ba]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    Semua
+                </button>
+                <button onclick="window.location.href='{{ route('user.barang-masuk.index', ['kategori' => 'barang_sewa']) }}'" class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ request('kategori') == 'barang_sewa' ? 'border-[#14a2ba] text-[#14a2ba]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    <span class="inline-flex items-center gap-2">
+                        <x-heroicon-o-computer-desktop class="w-4 h-4" />
+                        Barang Sewa
+                    </span>
+                </button>
+                <button onclick="window.location.href='{{ route('user.barang-masuk.index', ['kategori' => 'habis_pakai']) }}'" class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ request('kategori') == 'habis_pakai' ? 'border-[#14a2ba] text-[#14a2ba]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    <span class="inline-flex items-center gap-2">
+                        <x-heroicon-o-shopping-bag class="w-4 h-4" />
+                        Habis Pakai
+                    </span>
+                </button>
+                <button onclick="window.location.href='{{ route('user.barang-masuk.index', ['kategori' => 'aset_tetap']) }}'" class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ request('kategori') == 'aset_tetap' ? 'border-[#14a2ba] text-[#14a2ba]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    <span class="inline-flex items-center gap-2">
+                        <x-heroicon-o-building-office class="w-4 h-4" />
+                        Aset Tetap
+                    </span>
+                </button>
+            </nav>
         </div>
     </div>
 
@@ -85,6 +109,11 @@
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                     <x-heroicon-o-computer-desktop class="w-3 h-3 mr-1" />
                                     Barang Sewa
+                                </span>
+                            @elseif($item->stock && $item->stock->kategori == 'aset_tetap')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    <x-heroicon-o-building-office class="w-3 h-3 mr-1" />
+                                    Aset Tetap
                                 </span>
                             @else
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">
