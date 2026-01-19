@@ -110,63 +110,244 @@
 
 <!-- Riwayat Pemakaian Terbaru -->
 <div class="bg-white rounded-xl shadow-md p-6">
-    <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-            <x-heroicon-o-clock class="w-5 h-5 text-[#14a2ba]" />
-            Pemakaian Barang Aktif
-        </h3>
-        <a href="{{ route('user.pemakaian.index') }}" class="text-sm text-[#14a2ba] hover:text-[#0d7a8f] font-medium flex items-center gap-1">
-            Lihat Semua
-            <x-heroicon-o-arrow-right class="w-4 h-4" />
-        </a>
+    <div class="flex items-center gap-2 mb-4">
+        <x-heroicon-o-clock class="w-5 h-5 text-[#14a2ba]" />
+        <h3 class="text-lg font-bold text-gray-800">Pinjaman Barang Sewa Sedang Progress</h3>
     </div>
     
-    @if($recentTransactions->count() > 0)
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Barang</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jumlah</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Penerima</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @foreach($recentTransactions as $trans)
+    <div id="pemakaian-container">
+        @if($recentTransactions->count() > 0)
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Barang</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jumlah</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Penerima</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="pemakaian-tbody" class="bg-white divide-y divide-gray-200">
+                    @foreach($recentTransactions as $trans)
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-4 py-3 text-sm text-gray-900">
+                            {{ $trans->tanggal->format('d/m/Y') }}
+                        </td>
+                        <td class="px-4 py-3 text-sm">
+                            <div>
+                                <div class="text-gray-900">{{ $trans->namabarang_k }}</div>
+                                @if($trans->kategori === 'barang_sewa')
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                            <x-heroicon-o-calendar class="w-3 h-3 mr-1" />
+                                            Sewa
+                                        </span>
+                                        @if($trans->durasi_sewa)
+                                            <span class="text-xs text-gray-500">{{ $trans->durasi_sewa }} Tahun</span>
+                                        @endif
+                                    </div>
+                                    @if($trans->tanggal_akhir_sewa)
+                                        @php
+                                            $sisaHari = now()->startOfDay()->diffInDays($trans->tanggal_akhir_sewa, false);
+                                        @endphp
+                                        <div class="text-xs mt-1 {{ $sisaHari < 0 ? 'text-red-600' : ($sisaHari <= 7 ? 'text-yellow-600' : 'text-gray-500') }}">
+                                            Berakhir: {{ $trans->tanggal_akhir_sewa->format('d/m/Y') }}
+                                            @if($sisaHari >= 0)
+                                                ({{ $sisaHari }} hari lagi)
+                                            @else
+                                                (Sudah berakhir)
+                                            @endif
+                                        </div>
+                                    @endif
+                                @endif
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-sm">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                {{ $trans->qty }} unit
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-900">
+                            {{ $trans->penerima }}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-center">
+                            <a href="{{ route('user.pemakaian.show', $trans->id_request) }}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-[#14a2ba] hover:bg-[#0d7a8f] text-white rounded-lg text-xs font-medium transition-colors">
+                                <x-heroicon-o-eye class="w-4 h-4" />
+                                Detail
+                            </a>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @else
+        <div id="empty-state" class="text-center py-8 text-gray-500">
+            <x-heroicon-o-inbox class="w-12 h-12 mx-auto mb-3 opacity-30" />
+            <p class="text-sm">Tidak ada pinjaman barang sewa yang sedang berjalan</p>
+            <p class="text-xs text-gray-400 mt-1">Pinjaman barang sewa yang sudah disetujui admin akan muncul di sini</p>
+        </div>
+        @endif
+    </div>
+</div>
+
+<script>
+let refreshInterval;
+let isRefreshing = false;
+
+// Fungsi untuk update tabel pemakaian
+function updatePemakaianTable(data) {
+    const tbody = document.getElementById('pemakaian-tbody');
+    const container = document.getElementById('pemakaian-container');
+    const emptyState = document.getElementById('empty-state');
+    
+    if (!data || data.length === 0) {
+        // Tampilkan empty state jika tidak ada data
+        if (tbody) tbody.closest('table').closest('.overflow-x-auto').style.display = 'none';
+        if (emptyState) {
+            emptyState.style.display = 'block';
+        } else {
+            container.innerHTML = `
+                <div class="text-center py-8 text-gray-500">
+                    <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                    </svg>
+                    <p class="text-sm">Tidak ada pinjaman barang sewa yang sedang berjalan</p>
+                    <p class="text-xs text-gray-400 mt-1">Pinjaman barang sewa yang sudah disetujui admin akan muncul di sini</p>
+                </div>
+            `;
+        }
+        return;
+    }
+    
+    // Hide empty state dan tampilkan tabel
+    if (emptyState) emptyState.style.display = 'none';
+    if (tbody) {
+        tbody.closest('table').closest('.overflow-x-auto').style.display = 'block';
+        
+        // Update konten tabel
+        tbody.innerHTML = data.map(trans => {
+            let kategoriInfo = '';
+            let sewaDetails = '';
+            
+            if (trans.is_barang_sewa) {
+                let sewaColorClass = 'text-gray-500';
+                if (trans.is_expired) {
+                    sewaColorClass = 'text-red-600';
+                } else if (trans.is_near_expiry) {
+                    sewaColorClass = 'text-yellow-600';
+                }
+                
+                kategoriInfo = `
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            Sewa
+                        </span>
+                        ${trans.durasi_sewa ? `<span class="text-xs text-gray-500">${trans.durasi_sewa} Tahun</span>` : ''}
+                    </div>
+                `;
+                
+                if (trans.tanggal_akhir_sewa) {
+                    sewaDetails = `
+                        <div class="text-xs mt-1 ${sewaColorClass}">
+                            Berakhir: ${trans.tanggal_akhir_sewa}
+                            ${trans.sisa_hari_text ? `(${trans.sisa_hari_text})` : ''}
+                        </div>
+                    `;
+                }
+            }
+            
+            return `
                 <tr class="hover:bg-gray-50 transition-colors">
                     <td class="px-4 py-3 text-sm text-gray-900">
-                        {{ $trans->tanggal->format('d/m/Y') }}
+                        ${trans.tanggal}
                     </td>
-                    <td class="px-4 py-3 text-sm text-gray-900">
-                        {{ $trans->namabarang_k }}
+                    <td class="px-4 py-3 text-sm">
+                        <div>
+                            <div class="text-gray-900">${trans.namabarang}</div>
+                            ${kategoriInfo}
+                            ${sewaDetails}
+                        </div>
                     </td>
                     <td class="px-4 py-3 text-sm">
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                            {{ $trans->qty }} unit
+                            ${trans.qty} unit
                         </span>
                     </td>
                     <td class="px-4 py-3 text-sm text-gray-900">
-                        {{ $trans->penerima }}
+                        ${trans.penerima}
                     </td>
-                    <td class="px-4 py-3 text-sm">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                            <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
-                            Sedang Digunakan
-                        </span>
+                    <td class="px-4 py-3 text-sm text-center">
+                        <a href="/user/pemakaian/${trans.id}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-[#14a2ba] hover:bg-[#0d7a8f] text-white rounded-lg text-xs font-medium transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            Detail
+                        </a>
                     </td>
                 </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-    @else
-    <div class="text-center py-8 text-gray-500">
-        <x-heroicon-o-inbox class="w-12 h-12 mx-auto mb-3 opacity-30" />
-        <p class="text-sm">Tidak ada pemakaian barang yang sedang berjalan</p>
-        <p class="text-xs text-gray-400 mt-1">Pemakaian yang sudah disetujui admin akan muncul di sini</p>
-    </div>
-    @endif
-</div>
+            `;
+        }).join('');
+    }
+}
+
+// Fungsi untuk fetch data dari API
+async function refreshPemakaianData() {
+    if (isRefreshing) return;
+    
+    isRefreshing = true;
+    
+    try {
+        const response = await fetch('{{ route("user.dashboard.pemakaian-aktif") }}', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            updatePemakaianTable(result.data);
+        }
+    } catch (error) {
+        console.error('Error fetching pemakaian data:', error);
+    } finally {
+        isRefreshing = false;
+    }
+}
+
+// Start auto-refresh saat halaman dimuat
+document.addEventListener('DOMContentLoaded', function() {
+    // Refresh pertama kali setelah 2 detik
+    setTimeout(refreshPemakaianData, 2000);
+    
+    // Set interval untuk refresh setiap 10 detik
+    refreshInterval = setInterval(refreshPemakaianData, 10000);
+});
+
+// Stop refresh saat user meninggalkan halaman
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+        }
+    } else {
+        // Resume refresh ketika user kembali
+        refreshPemakaianData();
+        refreshInterval = setInterval(refreshPemakaianData, 10000);
+    }
+});
+</script>
 @endsection

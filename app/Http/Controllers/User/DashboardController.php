@@ -49,14 +49,14 @@ class DashboardController extends Controller
         $raks = collect(['1a', '1b', '1c', '2a', '2b', '2c']);
 
         // Recent transactions barang keluar (untuk user)
-        // Tampilkan pemakaian yang sudah di-approve tapi belum selesai
+        // Tampilkan hanya barang sewa yang sedang dipakai milik user ini
         $recentTransactions = OutgoingTransaction::with('stock')
-            ->where('penginput', auth()->user()->email)
+            ->where('penginput', auth()->user()->name) // penginput berisi nama user, bukan email
             ->whereNotNull('diproses_oleh') // sudah di-approve admin
             ->where('status', 'sedang_dipakai') // belum selesai
+            ->where('kategori', 'barang_sewa') // hanya barang sewa
             ->orderBy('tanggal', 'desc')
-            ->limit(5)
-            ->get();
+            ->get(); // tampilkan semua tanpa limit
         
         return view('user.dashboard', compact(
             'totalBarang',
@@ -73,5 +73,58 @@ class DashboardController extends Controller
             'recentTransactions'
         ));
     }
-}
 
+    /**
+     * Get active pemakaian data for real-time updates (API endpoint)
+     */
+    public function getActivePemakaian()
+    {
+        // Ambil pemakaian yang aktif (hanya barang sewa yang sedang dipakai milik user ini)
+        $activePemakaian = OutgoingTransaction::with('stock')
+            ->where('penginput', auth()->user()->name) // penginput berisi nama user, bukan email
+            ->whereNotNull('diproses_oleh')
+            ->where('status', 'sedang_dipakai')
+            ->where('kategori', 'barang_sewa') // hanya barang sewa
+            ->orderBy('tanggal', 'desc')
+            ->get() // tampilkan semua tanpa limit
+            ->map(function ($trans) {
+                $data = [
+                    'id' => $trans->idkeluar,
+                    'tanggal' => $trans->tanggal->format('d/m/Y'),
+                    'tanggal_raw' => $trans->tanggal->toIso8601String(),
+                    'namabarang' => $trans->namabarang_k,
+                    'qty' => $trans->qty,
+                    'penerima' => $trans->penerima,
+                    'kategori' => $trans->kategori,
+                    'is_barang_sewa' => $trans->kategori === 'barang_sewa',
+                ];
+
+                // Tambahkan info sewa jika barang sewa
+                if ($trans->kategori === 'barang_sewa') {
+                    $data['durasi_sewa'] = $trans->durasi_sewa;
+                    $data['tanggal_mulai_sewa'] = $trans->tanggal_mulai_sewa ? $trans->tanggal_mulai_sewa->format('d/m/Y') : null;
+                    $data['tanggal_akhir_sewa'] = $trans->tanggal_akhir_sewa ? $trans->tanggal_akhir_sewa->format('d/m/Y') : null;
+                    
+                    // Hitung sisa hari sewa
+                    if ($trans->tanggal_akhir_sewa) {
+                        $today = now()->startOfDay();
+                        $endDate = $trans->tanggal_akhir_sewa;
+                        $sisaHari = $today->diffInDays($endDate, false);
+                        $data['sisa_hari'] = $sisaHari;
+                        $data['sisa_hari_text'] = $sisaHari > 0 ? $sisaHari . ' hari lagi' : 'Sudah berakhir';
+                        $data['is_expired'] = $sisaHari < 0;
+                        $data['is_near_expiry'] = $sisaHari >= 0 && $sisaHari <= 7;
+                    }
+                }
+
+                return $data;
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $activePemakaian,
+            'count' => $activePemakaian->count(),
+            'timestamp' => now()->toIso8601String(),
+        ]);
+    }
+}

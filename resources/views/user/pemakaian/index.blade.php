@@ -76,6 +76,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penerima</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
@@ -91,6 +92,7 @@
                                     <div class="text-gray-500 text-xs">{{ $item->stock->kodebarang }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->qty }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->penerima ?? '-' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                         <x-heroicon-o-document-plus class="w-3 h-3 mr-1" />
@@ -104,6 +106,9 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
                                     <div class="flex items-center justify-center gap-2">
+                                        <a href="{{ route('user.pemakaian.show', $item->id_request) }}" class="text-[#14a2ba] hover:text-[#0d7a8f]" title="Lihat Detail">
+                                            <x-heroicon-o-eye class="h-5 w-5 inline" />
+                                        </a>
                                         <a href="{{ route('user.request-barang.edit', $item->id_request) }}" class="text-blue-600 hover:text-blue-900" title="Edit Request">
                                             <x-heroicon-o-pencil class="h-5 w-5 inline" />
                                         </a>
@@ -142,8 +147,8 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penerima</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
@@ -158,39 +163,37 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->qty }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    @php
+                                        $outgoing = $outgoingTransactions->get($item->id_request);
+                                    @endphp
+                                    @if($outgoing && $outgoing->penerima)
+                                        <div class="text-gray-900 font-medium">{{ $outgoing->penerima }}</div>
+                                        @if($outgoing->kategori == 'barang_sewa' && $outgoing->tanggal_akhir_sewa)
+                                            @php
+                                                $sisaHari = now()->startOfDay()->diffInDays($outgoing->tanggal_akhir_sewa, false);
+                                            @endphp
+                                            <div class="text-xs mt-1 {{ $sisaHari < 0 ? 'text-red-600' : ($sisaHari <= 7 ? 'text-yellow-600' : 'text-gray-500') }}">
+                                                @if($sisaHari >= 0)
+                                                    {{ $sisaHari }} hari lagi
+                                                @else
+                                                    Sudah berakhir
+                                                @endif
+                                            </div>
+                                        @endif
+                                    @else
+                                        <span class="text-gray-400 text-xs italic">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_sewa' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
                                         {{ $item->tipe_request_label }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
                                     @php
                                         // Gunakan eager loaded data untuk prevent N+1 query
                                         $pendingRequest = $item->changeRequests->first(); // sudah di-eager load
                                         
-                                        // Detect tipe request: pembatalan atau perubahan
-                                        $isCancellation = $pendingRequest && (
-                                            str_contains(strtoupper($pendingRequest->keperluan), 'PEMBATALAN') ||
-                                            str_contains(strtoupper($pendingRequest->catatan_user ?? ''), 'PEMBATALAN')
-                                        );
-                                    @endphp
-                                    @if($item->pending_changes_count > 0 && $pendingRequest)
-                                        @if($isCancellation)
-                                            <span class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs">
-                                                <x-heroicon-o-exclamation-circle class="w-3 h-3 inline" /> Pembatalan pending
-                                            </span>
-                                        @else
-                                            <span class="px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 text-xs">
-                                                <x-heroicon-o-clock class="w-3 h-3 inline" /> Perubahan pending
-                                            </span>
-                                        @endif
-                                    @elseif($item->approved_changes_count > 0)
-                                        <span class="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs">
-                                            <x-heroicon-o-check class="w-3 h-3 inline" /> Diubah
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                    @php
                                         // Check cancellation dari eager loaded data
                                         $hasPendingCancellation = $pendingRequest && (
                                             str_contains(strtoupper($pendingRequest->keperluan), 'PEMBATALAN') ||
@@ -201,6 +204,9 @@
                                         <div class="text-xs text-gray-500 italic">Menunggu approval pembatalan</div>
                                     @else
                                     <div class="flex items-center justify-center gap-2">
+                                        <a href="{{ route('user.pemakaian.show', $item->id_request) }}" class="text-[#14a2ba] hover:text-[#0d7a8f]" title="Lihat Detail">
+                                            <x-heroicon-o-eye class="h-5 w-5 inline" />
+                                        </a>
                                         <form action="{{ route('user.request-barang.complete', $item->id_request) }}" method="POST" class="inline">
                                             @csrf
                                             @method('PATCH')
@@ -481,6 +487,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penerima</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -507,10 +514,23 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     {{ $item->penerima }}
                                 </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    @if($item->tipe_request == 'peminjaman')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                            <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
+                                            Peminjaman
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <x-heroicon-o-shopping-cart class="w-3 h-3 mr-1" />
+                                            Permintaan
+                                        </span>
+                                    @endif
+                                </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-12 text-center">
+                                <td colspan="7" class="px-6 py-12 text-center">
                                     <div class="flex flex-col items-center justify-center text-gray-500">
                                         <x-heroicon-o-check-circle class="w-16 h-16 mb-4 opacity-30" />
                                         <p class="text-lg font-medium">Belum ada pemakaian yang selesai</p>

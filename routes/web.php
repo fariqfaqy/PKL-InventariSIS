@@ -11,7 +11,6 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\ActivityLogController as AdminActivityLogController;
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\User\UserController;
-use App\Http\Controllers\User\ActivityLogController as UserActivityLogController;
 
 // Redirect root ke login
 Route::get('/', function () {
@@ -70,6 +69,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
 // User Routes
 Route::prefix('user')->name('user.')->middleware(['auth', 'role:user'])->group(function () {
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/pemakaian-aktif', [UserDashboardController::class, 'getActivePemakaian'])->name('dashboard.pemakaian-aktif');
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
     Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::get('/settings', [UserController::class, 'settings'])->name('settings');
@@ -105,6 +105,6 @@ Route::prefix('user')->name('user.')->middleware(['auth', 'role:user'])->group(f
     Route::post('/request-barang/{id}/request-cancel', [\App\Http\Controllers\User\RequestBarangController::class, 'requestCancel'])->name('request-barang.request-cancel');
     Route::patch('/request-barang/{id}/complete', [\App\Http\Controllers\User\RequestBarangController::class, 'complete'])->name('request-barang.complete');
     
-    // Activity Log (User hanya lihat log sendiri)
-    Route::get('/activity-log', [UserActivityLogController::class, 'index'])->name('activity-log.index');
+    // Activity Log (User hanya lihat log sendiri) - Disabled temporarily
+    // Route::get('/activity-log', [UserActivityLogController::class, 'index'])->name('activity-log.index');
 });

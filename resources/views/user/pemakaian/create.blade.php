@@ -164,11 +164,11 @@
 
             <!-- Penerima -->
             <div>
-                <label for="catatan_user" class="block text-sm font-medium text-gray-700 mb-2">Penerima *</label>
-                <input type="text" name="catatan_user" id="catatan_user" required
-                       placeholder="Nama penerima barang" value="{{ old('catatan_user') }}"
+                <label for="penerima" class="block text-sm font-medium text-gray-700 mb-2">Penerima *</label>
+                <input type="text" name="penerima" id="penerima" required
+                       placeholder="Nama penerima barang" value="{{ old('penerima') }}"
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
-                @error('catatan_user')
+                @error('penerima')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
@@ -180,6 +180,18 @@
                        placeholder="Jelaskan untuk apa barang ini dibutuhkan" 
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">{{ old('keperluan') }}</textarea>
                 @error('keperluan')
+                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Catatan Tambahan (Optional) -->
+            <div>
+                <label for="catatan_user" class="block text-sm font-medium text-gray-700 mb-2">Catatan Tambahan (Opsional)</label>
+                <textarea name="catatan_user" id="catatan_user" rows="2" 
+                       placeholder="Tambahkan catatan jika ada informasi tambahan" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">{{ old('catatan_user') }}</textarea>
+                <p class="mt-1 text-xs text-gray-500">Opsional - Tambahkan informasi tambahan jika diperlukan</p>
+                @error('catatan_user')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
@@ -199,9 +211,9 @@
 
             <!-- Buttons -->
             <div class="flex gap-3 pt-4">
-                <button type="submit" class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-300">
+                <button type="submit" id="submitButton" class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
                     <x-heroicon-o-paper-airplane class="w-5 h-5" />
-                    <span class="font-medium">Ajukan Request</span>
+                    <span class="font-medium" id="submitText">Ajukan Request</span>
                 </button>
                 <a href="{{ route('user.pemakaian.index') }}" class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300">
                     <x-heroicon-o-x-mark class="w-5 h-5" />
@@ -340,6 +352,24 @@ function updateStockInfo() {
 document.addEventListener('DOMContentLoaded', function() {
     const qtyInput = document.getElementById('qty');
     const form = document.querySelector('form');
+    const tanggalPinjam = document.getElementById('tanggal_pinjam');
+    const tanggalKembali = document.getElementById('tanggal_kembali');
+    
+    // Update min tanggal kembali saat tanggal pinjam berubah
+    tanggalPinjam.addEventListener('change', function() {
+        if (this.value) {
+            // Set min tanggal kembali = tanggal pinjam + 1 hari
+            const pinjamDate = new Date(this.value);
+            pinjamDate.setDate(pinjamDate.getDate() + 1);
+            const minKembali = pinjamDate.toISOString().split('T')[0];
+            tanggalKembali.setAttribute('min', minKembali);
+            
+            // Reset tanggal kembali jika kurang dari min
+            if (tanggalKembali.value && tanggalKembali.value <= this.value) {
+                tanggalKembali.value = '';
+            }
+        }
+    });
     
     // Restore state jika ada old values (after validation error)
     const oldTipeRequest = '{{ old("tipe_request") }}';
@@ -380,6 +410,12 @@ document.addEventListener('DOMContentLoaded', function() {
             qtyInput.focus();
             return false;
         }
+        
+        // Disable submit button to prevent double submission
+        const submitButton = document.getElementById('submitButton');
+        const submitText = document.getElementById('submitText');
+        submitButton.disabled = true;
+        submitText.textContent = 'Mengirim...';
     });
 });
 </script>

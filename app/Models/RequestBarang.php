@@ -21,6 +21,7 @@ class RequestBarang extends Model
         'tanggal_mulai_sewa',
         'tanggal_akhir_sewa',
         'keperluan',
+        'penerima',
         'status',
         'catatan_user',
         'catatan_admin',

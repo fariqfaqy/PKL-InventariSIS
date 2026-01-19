@@ -48,6 +48,12 @@ class PemakaianController extends Controller
             ->orderBy('tanggal_request', 'desc')
             ->paginate(self::ITEMS_PER_PAGE);
 
+        // Ambil outgoing transactions untuk requests yang approved (untuk mendapatkan data penerima)
+        $approvedRequestIds = $requests->where('status', 'approved')->pluck('id_request');
+        $outgoingTransactions = OutgoingTransaction::whereIn('id_request', $approvedRequestIds)
+            ->get()
+            ->keyBy('id_request');
+
         // Ambil request perubahan (yang punya parent_request_id)
         // Exclude yang parent-nya sudah completed/cancelled
         $changeRequests = RequestBarang::with(['stock', 'parentRequest'])
@@ -82,7 +88,7 @@ class PemakaianController extends Controller
             ->orderBy('tanggal_request', 'desc')
             ->get();
 
-        return view('user.pemakaian.index', compact('requests', 'changeRequests', 'sedangDipakai', 'selesai', 'ditolakDibatalkan'));
+        return view('user.pemakaian.index', compact('requests', 'changeRequests', 'sedangDipakai', 'selesai', 'ditolakDibatalkan', 'outgoingTransactions'));
     }
 
     /**
@@ -111,6 +117,7 @@ class PemakaianController extends Controller
             'idbarang' => 'required|exists:stock,idbarang',
             'qty' => 'required|integer|min:1',
             'keperluan' => 'required|string',
+            'penerima' => 'required|string|max:255',
             'tipe_request' => 'required|in:peminjaman,permintaan',
             'tanggal_pinjam' => 'nullable|required_if:tipe_request,peminjaman|date|after_or_equal:today',
             'tanggal_kembali' => 'nullable|required_if:tipe_request,peminjaman|date|after:tanggal_pinjam',
@@ -120,6 +127,7 @@ class PemakaianController extends Controller
             'idbarang.exists' => 'Barang yang dipilih tidak valid',
             'qty.required' => 'Jumlah harus diisi',
             'qty.min' => 'Jumlah minimal 1',
+            'penerima.required' => 'Nama penerima harus diisi',
             'tipe_request.required' => 'Tipe request harus dipilih',
             'tipe_request.in' => 'Tipe request tidak valid',
             'tanggal_pinjam.required_if' => 'Tanggal pinjam wajib diisi untuk peminjaman barang sewa',
@@ -168,6 +176,7 @@ class PemakaianController extends Controller
                 'qty' => $request->qty,
                 'tipe_request' => $tipeRequestBarang,
                 'keperluan' => $request->keperluan,
+                'penerima' => $request->penerima,
                 'catatan_user' => $request->catatan_user ?? null,
                 'tanggal_mulai_sewa' => $request->tipe_request == 'peminjaman' ? $request->tanggal_pinjam : null,
                 'tanggal_akhir_sewa' => $request->tipe_request == 'peminjaman' ? $request->tanggal_kembali : null,
@@ -198,6 +207,30 @@ class PemakaianController extends Controller
     {
         return redirect()->route('user.pemakaian.index')
             ->with('error', 'Tidak dapat mengedit transaksi yang sudah diproses. Silakan ajukan request baru jika diperlukan.');
+    }
+
+    /**
+     * Display the specified request detail
+     */
+    public function show($id)
+    {
+        $request = RequestBarang::with([
+                'stock',
+                'user',
+                'changeRequests' => function($query) {
+                    $query->latest();
+                }
+            ])
+            ->where('user_id', Auth::id())
+            ->findOrFail($id);
+
+        // Get related outgoing transaction if exists
+        $outgoingTransaction = null;
+        if ($request->status === 'approved') {
+            $outgoingTransaction = OutgoingTransaction::where('id_request', $id)->first();
+        }
+
+        return view('user.pemakaian.show', compact('request', 'outgoingTransaction'));
     }
 
     /**

@@ -115,11 +115,11 @@
 
                 <div class="border-t border-gray-200 my-4"></div>
 
-                <!-- Activity Log -->
-                <a href="{{ route('user.activity-log.index') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('user.activity-log.*') ? 'text-white bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f]' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
+                <!-- Activity Log - Temporarily Disabled -->
+                {{-- <a href="{{ route('user.activity-log.index') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('user.activity-log.*') ? 'text-white bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f]' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
                     <x-heroicon-o-document-text class="w-5 h-5 {{ request()->routeIs('user.activity-log.*') ? 'text-white' : 'group-hover:text-[#14a2ba]' }}" />
                     <span class="font-medium">Activity Log</span>
-                </a>
+                </a> --}}
 
                 <!-- Pengaturan -->
                 <a href="{{ route('user.settings') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('user.settings') ? 'text-white bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f]' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">

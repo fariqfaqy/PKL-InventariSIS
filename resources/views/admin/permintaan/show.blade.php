@@ -81,19 +81,23 @@
                         <span class="font-medium capitalize">{{ str_replace('_', ' ', $permintaan->stock->kategori) }}</span>
                     </div>
                     <div class="flex justify-between">
+                        <span class="text-gray-600">Tipe Request:</span>
+                        <span class="px-2 py-1 text-xs rounded-full {{ $permintaan->tipe_request == 'pinjam_sewa' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                            {{ $permintaan->tipe_request_label }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
                         <span class="text-gray-600">Jumlah Diminta:</span>
                         <span class="font-medium text-lg text-blue-600">{{ $permintaan->qty }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Penerima:</span>
+                        <span class="font-medium">{{ $permintaan->penerima ?? '-' }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-600">Stok Tersedia:</span>
                         <span class="font-medium text-lg {{ $permintaan->stock->stock >= $permintaan->qty ? 'text-green-600' : 'text-red-600' }}">
                             {{ $permintaan->stock->stock }}
-                        </span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Tipe Request:</span>
-                        <span class="px-2 py-1 text-xs rounded-full {{ $permintaan->tipe_request == 'pinjam_sewa' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
-                            {{ $permintaan->tipe_request_label }}
                         </span>
                     </div>
                     @if($permintaan->parent_request_id)
@@ -165,7 +169,7 @@
                     </div>
                     @if($permintaan->catatan_user)
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-2">Catatan User:</label>
+                            <label class="block text-sm font-medium text-gray-600 mb-2">Catatan Tambahan:</label>
                             <p class="text-gray-900 bg-gray-50 p-3 rounded">{{ $permintaan->catatan_user }}</p>
                         </div>
                     @endif

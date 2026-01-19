@@ -120,6 +120,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penerima</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                             </tr>
@@ -135,6 +136,7 @@
                                     <div class="text-gray-500 text-xs">{{ $item->stock->kodebarang }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->qty }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->penerima ?? '-' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_sewa' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
                                         {{ $item->tipe_request_label }}
@@ -172,8 +174,8 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penerima</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
@@ -188,32 +190,16 @@
                                     <div class="text-gray-500 text-xs">{{ $item->stock->kodebarang }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->qty }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->penerima ?? '-' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_sewa' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
                                         {{ $item->tipe_request_label }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    @php
-                                        // Use eager loaded change requests
-                                        $pendingChangeRequest = $item->changeRequests->first();
-                                        $isCancellation = $pendingChangeRequest && $pendingChangeRequest->isCancellationRequest();
-                                    @endphp
-                                    @if($pendingChangeRequest)
-                                        @if($isCancellation)
-                                            <span class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs">
-                                                <x-heroicon-o-exclamation-circle class="w-3 h-3 inline" /> Pembatalan pending
-                                            </span>
-                                        @else
-                                            <span class="px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 text-xs">
-                                                <x-heroicon-o-clock class="w-3 h-3 inline" /> Perubahan pending
-                                            </span>
-                                        @endif
-                                    @endif
-                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     @php
                                         // Check cancellation request from eager loaded data
+                                        $pendingChangeRequest = $item->changeRequests->first();
                                         $hasPendingCancellation = $pendingChangeRequest && $pendingChangeRequest->isCancellationRequest();
                                     @endphp
                                     <div class="flex items-center gap-2">
@@ -522,6 +508,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penerima</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -554,10 +541,23 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     {{ $trans->penerima }}
                                 </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    @if($trans->tipe_request == 'peminjaman')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                            <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
+                                            Peminjaman
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <x-heroicon-o-shopping-cart class="w-3 h-3 mr-1" />
+                                            Permintaan
+                                        </span>
+                                    @endif
+                                </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="8" class="px-6 py-12 text-center">
+                                <td colspan="9" class="px-6 py-12 text-center">
                                     <div class="flex flex-col items-center justify-center">
                                         <x-heroicon-o-check-circle class="w-16 h-16 text-gray-300 mb-4" />
                                         <p class="text-gray-500 text-lg font-medium">Belum ada pemakaian yang selesai</p>

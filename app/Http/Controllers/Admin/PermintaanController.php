@@ -205,7 +205,7 @@ class PermintaanController extends Controller
                     'id_request' => $permintaan->id_request,
                     'idbarang' => $permintaan->idbarang,
                     'tanggal' => now(),
-                    'penerima' => $permintaan->user->name,
+                    'penerima' => $permintaan->penerima ?? $permintaan->user->name,
                     'qty' => $permintaan->qty,
                     'namabarang_k' => $permintaan->stock->namabarang,
                     'kodebarang_k' => $permintaan->stock->kodebarang,
