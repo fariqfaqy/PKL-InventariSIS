@@ -70,7 +70,7 @@
                         <th class="px-6 py-4 text-left text-sm font-semibold">Nama Barang</th>
                         <th class="px-6 py-4 text-left text-sm font-semibold">Jumlah</th>
                         <th class="px-6 py-4 text-left text-sm font-semibold">Keterangan</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold">Tanggal</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold">Update Terakhir</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -91,7 +91,7 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-600">{{ $assignment->deskripsi ?? '-' }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600">{{ $assignment->created_at->format('d M Y') }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-600">{{ $assignment->updated_at->format('d M Y') }}</td>
                         </tr>
                     @empty
                         <tr>

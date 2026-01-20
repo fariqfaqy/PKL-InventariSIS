@@ -17,7 +17,7 @@ class BarangKeluarController extends Controller
 
         // Filter berdasarkan tipe (peminjaman=sewa, permintaan=habis_pakai)
         // Hanya filter jika ada tipe yang dipilih (bukan "semua")
-        if ($request->has('tipe') && $request->tipe && in_array($request->tipe, ['peminjaman', 'permintaan'])) {
+        if ($request->filled('tipe') && in_array($request->tipe, ['peminjaman', 'permintaan'])) {
             if ($request->tipe == 'peminjaman') {
                 // Peminjaman = Barang Sewa
                 $query->where('kategori', 'barang_sewa');
@@ -28,21 +28,21 @@ class BarangKeluarController extends Controller
         }
 
         // Filter berdasarkan pencarian
-        if ($request->has('search') && $request->search != '') {
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('kodebarang_k', 'like', "%{$search}%")
-                  ->orWhere('namabarang_k', 'like', "%{$search}%")
-                  ->orWhere('penerima', 'like', "%{$search}%");
+                $q->where('kodebarang_k', 'ILIKE', "%{$search}%")
+                  ->orWhere('namabarang_k', 'ILIKE', "%{$search}%")
+                  ->orWhere('penerima', 'ILIKE', "%{$search}%");
             });
         }
 
         // Filter berdasarkan tanggal
-        if ($request->has('tanggal') && $request->tanggal != '') {
+        if ($request->filled('tanggal')) {
             $query->whereDate('tanggal', $request->tanggal);
         }
 
-        $barangKeluar = $query->orderBy('tanggal', 'desc')->paginate(15);
+        $barangKeluar = $query->orderBy('tanggal', 'desc')->paginate(15)->withQueryString();
         $tipe = $request->tipe;
 
         return view('user.barang-keluar.index', compact('barangKeluar', 'tipe'));

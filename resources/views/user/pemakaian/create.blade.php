@@ -131,7 +131,6 @@
                         <label for="tanggal_pinjam" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Pinjam *</label>
                         <input type="date" name="tanggal_pinjam" id="tanggal_pinjam"
                                value="{{ old('tanggal_pinjam') }}"
-                               min="{{ date('Y-m-d') }}"
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
                         @error('tanggal_pinjam')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
