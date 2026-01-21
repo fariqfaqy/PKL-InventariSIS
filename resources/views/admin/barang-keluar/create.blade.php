@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Tambah Barang Keluar')
+@section('title', 'Barang Keluar')
 
 @section('content')
 <div class="space-y-6">
@@ -20,60 +20,53 @@
         <form action="{{ route('admin.barang-keluar.store') }}" method="POST" class="space-y-6">
             @csrf
 
-            <!-- Filter Cascade -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Filter Kategori -->
-                <div>
-                    <label for="filter_kategori" class="block text-sm font-medium text-gray-700 mb-2">
-                        Filter Kategori <span class="text-red-500">*</span>
-                    </label>
-                    <select id="filter_kategori" required
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
-                        <option value="">-- Pilih Kategori --</option>
-                        <option value="barang_sewa">Barang Sewa</option>
-                        <option value="habis_pakai">Habis Pakai</option>
-                    </select>
-                </div>
-
-                <!-- Filter Jenis -->
-                <div>
-                    <label for="filter_jenis" class="block text-sm font-medium text-gray-700 mb-2">
-                        Filter Jenis <span class="text-red-500">*</span>
-                    </label>
-                    <select id="filter_jenis" required disabled
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
-                        <option value="">-- Pilih Jenis --</option>
-                    </select>
-                </div>
+            <!-- Kategori -->
+            <div>
+                <label for="kategori" class="block text-sm font-medium text-gray-700 mb-2">
+                    Kategori <span class="text-red-500">*</span>
+                </label>
+                <select name="kategori" id="kategori" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('kategori') border-red-500 @enderror"
+                    onchange="toggleSubKategoriKeluar()">
+                    <option value="">-- Pilih Kategori --</option>
+                    <option value="barang_sewa" {{ old('kategori') == 'barang_sewa' ? 'selected' : '' }}>Aset Sewa</option>
+                    <option value="material_umum" {{ old('kategori') == 'material_umum' ? 'selected' : '' }}>Material Umum</option>
+                </select>
+                @error('kategori')
+                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                @enderror
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Filter Merek -->
-                <div>
-                    <label for="filter_merek" class="block text-sm font-medium text-gray-700 mb-2">
-                        Filter Merek <span class="text-red-500">*</span>
-                    </label>
-                    <select id="filter_merek" required disabled
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
-                        <option value="">-- Pilih Merek --</option>
-                    </select>
-                </div>
-
-                <!-- Filter Tipe -->
-                <div>
-                    <label for="filter_tipe" class="block text-sm font-medium text-gray-700 mb-2">
-                        Filter Tipe <span class="text-red-500">*</span>
-                    </label>
-                    <select id="filter_tipe" required disabled
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
-                        <option value="">-- Pilih Tipe --</option>
-                    </select>
-                </div>
+            <!-- Sub-Kategori untuk Material Umum -->
+            <div id="subKategoriFieldKeluar" class="hidden">
+                <label for="sub_kategori" class="block text-sm font-medium text-gray-700 mb-2">
+                    Sub-Kategori Material Umum <span class="text-red-500">*</span>
+                </label>
+                <select name="sub_kategori" id="sub_kategori_keluar"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('sub_kategori') border-red-500 @enderror">
+                    <option value="">-- Pilih Sub-Kategori --</option>
+                    <option value="habis_pakai" {{ old('sub_kategori') == 'habis_pakai' ? 'selected' : '' }}>Barang Habis Pakai</option>
+                    <option value="barang_pinjam" {{ old('sub_kategori') == 'barang_pinjam' ? 'selected' : '' }}>Barang Pinjam</option>
+                </select>
+                @error('sub_kategori')
+                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                @enderror
             </div>
 
-            <!-- Pilih Barang (Hidden - Auto filled) -->
-            <input type="hidden" name="idbarang" id="idbarang">
-            <input type="hidden" name="durasi_sewa" id="durasi_sewa">
+            <!-- Pilih Barang -->
+            <div>
+                <label for="idbarang" class="block text-sm font-medium text-gray-700 mb-2">
+                    Pilih Barang yang Tersedia <span class="text-red-500">*</span>
+                </label>
+                <select name="idbarang" id="idbarang" required disabled
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('idbarang') border-red-500 @enderror">
+                    <option value="">-- Pilih Kategori Terlebih Dahulu --</option>
+                </select>
+                @error('idbarang')
+                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                @enderror
+                <p class="mt-1 text-xs text-gray-500">Hanya barang dengan stok tersedia yang ditampilkan</p>
+            </div>
 
             <!-- Info Barang yang Dipilih -->
             <div id="selected-item-info" class="hidden bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-4">
@@ -134,70 +127,19 @@
                 <p id="stock-info" class="mt-1 text-xs text-gray-500"></p>
             </div>
 
-            <!-- Penerima -->
+            <!-- Pengguna -->
             <div>
                 <label for="penerima" class="block text-sm font-medium text-gray-700 mb-2">
-                    Penerima / Peminjam <span class="text-red-500">*</span>
+                    Pengguna <span class="text-red-500">*</span>
                 </label>
                 <input type="text" name="penerima" id="penerima" required
                     value="{{ old('penerima') }}"
-                    placeholder="Masukkan nama penerima/peminjam"
+                    placeholder="Masukkan nama pengguna"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('penerima') border-red-500 @enderror">
                 @error('penerima')
                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                 @enderror
             </div>
-            <!-- Rental Dates (Only shown for barang_sewa) -->
-            <div id="rentalDatesSection" class="hidden space-y-4 p-4 bg-blue-50 rounded-lg">
-                <p class="text-sm font-medium text-blue-800 mb-2">📅 Periode Sewa Barang</p>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Tanggal Mulai Sewa -->
-                    <div>
-                        <label for="tanggal_mulai_sewa" class="block text-sm font-medium text-gray-700 mb-2">
-                            Tanggal Mulai Sewa <span class="text-red-500">*</span>
-                        </label>
-                        <input type="date" name="tanggal_mulai_sewa" id="tanggal_mulai_sewa"
-                            value="{{ old('tanggal_mulai_sewa') }}"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('tanggal_mulai_sewa') border-red-500 @enderror">
-                        @error('tanggal_mulai_sewa')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Tanggal Akhir Sewa -->
-                    <div>
-                        <label for="tanggal_akhir_sewa" class="block text-sm font-medium text-gray-700 mb-2">
-                            Tanggal Akhir Sewa <span class="text-red-500">*</span>
-                        </label>
-                        <input type="date" name="tanggal_akhir_sewa" id="tanggal_akhir_sewa"
-                            value="{{ old('tanggal_akhir_sewa') }}"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('tanggal_akhir_sewa') border-red-500 @enderror">
-                        @error('tanggal_akhir_sewa')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-                <p class="text-xs text-blue-600 mt-2">* Tanggal sewa ini akan dicatat untuk periode peminjaman barang</p>
-            </div>
-            <!-- Info Tanggal Expire untuk Barang Sewa -->
-            <div id="expire-info" class="hidden bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
-                <h3 class="font-semibold text-purple-900 mb-2 flex items-center gap-2">
-                    <x-heroicon-o-calendar class="w-5 h-5" />
-                    Informasi Peminjaman
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <span class="text-gray-600">Peminjam:</span>
-                        <span id="display_peminjam" class="font-medium text-gray-900 ml-2">-</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-600">Tanggal Expire:</span>
-                        <span id="display_expire" class="font-bold text-red-600 ml-2">-</span>
-                    </div>
-                </div>
-            </div>
-
             <!-- Buttons -->
             <div class="flex items-center justify-end gap-4 pt-4 border-t border-gray-200">
                 <a href="{{ route('admin.barang-keluar.index') }}" 
@@ -217,166 +159,143 @@
 // Stock data from backend
 const stocksData = @json($stocks);
 
-// Cascade filter logic
-const filters = {
-    kategori: document.getElementById('filter_kategori'),
-    jenis: document.getElementById('filter_jenis'),
-    merek: document.getElementById('filter_merek'),
-    tipe: document.getElementById('filter_tipe')
-};
+// Elements
+const kategoriSelect = document.getElementById('kategori');
+const subKategoriSelect = document.getElementById('sub_kategori_keluar');
+const barangSelect = document.getElementById('idbarang');
+const qtyInput = document.getElementById('qty');
+const stockInfo = document.getElementById('stock-info');
+const selectedItemInfo = document.getElementById('selected-item-info');
 
-// Filter kategori change
-filters.kategori.addEventListener('change', function() {
-    const kategori = this.value;
-    resetFilter(['jenis', 'merek', 'tipe']);
+// Toggle sub-kategori field for Material Umum
+function toggleSubKategoriKeluar() {
+    const kategori = kategoriSelect.value;
+    const subKategoriField = document.getElementById('subKategoriFieldKeluar');
     
-    if (kategori) {
-        const jenisOptions = [...new Set(stocksData
-            .filter(s => s.kategori === kategori && s.stock > 0)
-            .map(s => s.jenis))];
-        
-        populateSelect(filters.jenis, jenisOptions);
-        filters.jenis.disabled = false;
+    if (kategori === 'material_umum') {
+        subKategoriField.classList.remove('hidden');
+        subKategoriSelect.required = true;
+        // Reset barang selection
+        barangSelect.innerHTML = '<option value="">-- Pilih Sub-Kategori Terlebih Dahulu --</option>';
+        barangSelect.disabled = true;
+    } else {
+        subKategoriField.classList.add('hidden');
+        subKategoriSelect.required = false;
+        subKategoriSelect.value = '';
+        // Enable barang selection for barang_sewa
+        if (kategori === 'barang_sewa') {
+            updateBarangOptions();
+        }
     }
-});
+}
 
-// Filter jenis change
-filters.jenis.addEventListener('change', function() {
-    const kategori = filters.kategori.value;
-    const jenis = this.value;
-    resetFilter(['merek', 'tipe']);
+// Update barang options based on kategori/sub-kategori
+function updateBarangOptions() {
+    const kategori = kategoriSelect.value;
+    const subKategori = subKategoriSelect.value;
     
-    if (jenis) {
-        const merekOptions = [...new Set(stocksData
-            .filter(s => s.kategori === kategori && s.jenis === jenis && s.stock > 0)
-            .map(s => s.merek))];
-        
-        populateSelect(filters.merek, merekOptions);
-        filters.merek.disabled = false;
+    barangSelect.innerHTML = '<option value="">-- Pilih Barang --</option>';
+    
+    let filterKategori = kategori;
+    
+    // Untuk Material Umum, gunakan sub-kategori sebagai filter
+    if (kategori === 'material_umum') {
+        if (!subKategori) {
+            barangSelect.innerHTML = '<option value="">-- Pilih Sub-Kategori Terlebih Dahulu --</option>';
+            barangSelect.disabled = true;
+            return;
+        }
+        filterKategori = subKategori;
     }
-});
-
-// Filter merek change
-filters.merek.addEventListener('change', function() {
-    const kategori = filters.kategori.value;
-    const jenis = filters.jenis.value;
-    const merek = this.value;
-    resetFilter(['tipe']);
     
-    if (merek) {
-        const tipeOptions = stocksData
-            .filter(s => s.kategori === kategori && s.jenis === jenis && s.merek === merek && s.stock > 0)
-            .map(s => ({ value: s.idbarang, text: s.tipe + ' (Stok: ' + s.stock + ')' }));
+    if (filterKategori) {
+        // Filter stocks by kategori and only show items with stock > 0
+        const availableStocks = stocksData.filter(s => s.kategori === filterKategori && s.stock > 0);
         
-        populateSelectWithValue(filters.tipe, tipeOptions);
-        filters.tipe.disabled = false;
-    }
-});
-
-// Filter tipe change - final selection
-filters.tipe.addEventListener('change', function() {
-    const selectedId = this.value;
-    
-    if (selectedId) {
-        const selectedStock = stocksData.find(s => s.idbarang == selectedId);
-        
-        if (selectedStock) {
-            // Set hidden input
-            document.getElementById('idbarang').value = selectedStock.idbarang;
-            
-            // Display selected item info
-            document.getElementById('display_kodebarang').textContent = selectedStock.kodebarang;
-            document.getElementById('display_namabarang').textContent = selectedStock.namabarang;
-            document.getElementById('display_rack').textContent = 'Rak ' + selectedStock.rack.toUpperCase();
-            document.getElementById('display_stock').textContent = selectedStock.stock;
-            
-            // Handle durasi sewa for barang sewa
-            if (selectedStock.kategori === 'barang_sewa' && selectedStock.durasi_sewa) {
-                document.getElementById('display_durasi_sewa').textContent = selectedStock.durasi_sewa + ' Tahun';
-                document.getElementById('display_durasi_container').classList.remove('hidden');
-                document.getElementById('durasi_sewa').value = selectedStock.durasi_sewa;
-            } else {
-                document.getElementById('display_durasi_container').classList.add('hidden');
-                document.getElementById('durasi_sewa').value = '';
-            }
-            
-            // Show/hide rental dates section based on kategori
-            const rentalSection = document.getElementById('rentalDatesSection');
-            const tanggalMulai = document.getElementById('tanggal_mulai_sewa');
-            const tanggalAkhir = document.getElementById('tanggal_akhir_sewa');
-            
-            if (selectedStock.kategori === 'barang_sewa') {
-                rentalSection.classList.remove('hidden');
-                tanggalMulai.required = true;
-                tanggalAkhir.required = true;
-            } else {
-                rentalSection.classList.add('hidden');
-                tanggalMulai.required = false;
-                tanggalAkhir.required = false;
-                tanggalMulai.value = '';
-                tanggalAkhir.value = '';
-            }
-            
-            document.getElementById('selected-item-info').classList.remove('hidden');
-            
-            // Set max qty
-            const qtyInput = document.getElementById('qty');
-            qtyInput.max = selectedStock.stock;
-            
-            // Focus on qty
-            setTimeout(() => qtyInput.focus(), 100);
+        if (availableStocks.length > 0) {
+            availableStocks.forEach(stock => {
+                const option = document.createElement('option');
+                option.value = stock.idbarang;
+                option.textContent = `${stock.kodebarang} - ${stock.namabarang} (Stok: ${stock.stock})`;
+                option.dataset.stock = stock.stock;
+                option.dataset.kodebarang = stock.kodebarang;
+                option.dataset.namabarang = stock.namabarang;
+                option.dataset.rack = stock.rack || '-';
+                option.dataset.kategori = stock.kategori;
+                option.dataset.durasiSewa = stock.durasi_sewa || '';
+                barangSelect.appendChild(option);
+            });
+            barangSelect.disabled = false;
+        } else {
+            barangSelect.innerHTML = '<option value="">-- Tidak Ada Barang Tersedia --</option>';
+            barangSelect.disabled = true;
         }
     } else {
-        document.getElementById('selected-item-info').classList.add('hidden');
-        document.getElementById('idbarang').value = '';
-        document.getElementById('durasi_sewa').value = '';
+        barangSelect.innerHTML = '<option value="">-- Pilih Kategori Terlebih Dahulu --</option>';
+        barangSelect.disabled = true;
+    }
+    
+    // Reset selection info
+    selectedItemInfo.classList.add('hidden');
+    qtyInput.value = '';
+    qtyInput.max = '';
+    stockInfo.textContent = '';
+}
+
+// Event listeners
+kategoriSelect.addEventListener('change', updateBarangOptions);
+subKategoriSelect.addEventListener('change', updateBarangOptions);
+
+// When barang changes, show item info
+barangSelect.addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    
+    if (this.value) {
+        const stock = selectedOption.dataset.stock;
+        const kodebarang = selectedOption.dataset.kodebarang;
+        const namabarang = selectedOption.dataset.namabarang;
+        const rack = selectedOption.dataset.rack;
+        const kategori = selectedOption.dataset.kategori;
+        const durasiSewa = selectedOption.dataset.durasiSewa;
         
-        // Hide rental section
-        const rentalSection = document.getElementById('rentalDatesSection');
-        rentalSection.classList.add('hidden');
+        // Display selected item info
+        document.getElementById('display_kodebarang').textContent = kodebarang;
+        document.getElementById('display_namabarang').textContent = namabarang;
+        document.getElementById('display_rack').textContent = rack === '-' ? '-' : 'Rak ' + rack.toUpperCase();
+        document.getElementById('display_stock').textContent = stock;
+        
+        // Show durasi sewa only for barang_sewa
+        if (kategori === 'barang_sewa' && durasiSewa) {
+            document.getElementById('display_durasi_sewa').textContent = durasiSewa + ' hari';
+            document.getElementById('display_durasi_container').classList.remove('hidden');
+        } else {
+            document.getElementById('display_durasi_container').classList.add('hidden');
+        }
+        
+        selectedItemInfo.classList.remove('hidden');
+        
+        // Set max qty
+        qtyInput.max = stock;
+        stockInfo.textContent = `Stok tersedia: ${stock}`;
+        stockInfo.classList.remove('text-red-500');
+        stockInfo.classList.add('text-gray-500');
+        
+        // Focus on qty
+        setTimeout(() => qtyInput.focus(), 100);
+    } else {
+        selectedItemInfo.classList.add('hidden');
+        qtyInput.value = '';
+        qtyInput.max = '';
+        stockInfo.textContent = '';
     }
 });
 
-function populateSelect(selectElement, options) {
-    selectElement.innerHTML = '<option value="">-- Pilih ' + selectElement.id.replace('filter_', '').charAt(0).toUpperCase() + selectElement.id.replace('filter_', '').slice(1) + ' --</option>';
-    options.forEach(opt => {
-        const option = document.createElement('option');
-        option.value = opt;
-        option.textContent = opt;
-        selectElement.appendChild(option);
-    });
-}
-
-function populateSelectWithValue(selectElement, options) {
-    selectElement.innerHTML = '<option value="">-- Pilih Tipe --</option>';
-    options.forEach(opt => {
-        const option = document.createElement('option');
-        option.value = opt.value;
-        option.textContent = opt.text;
-        selectElement.appendChild(option);
-    });
-}
-
-function resetFilter(filterNames) {
-    filterNames.forEach(name => {
-        const element = filters[name];
-        element.innerHTML = '<option value="">-- Pilih ' + name.charAt(0).toUpperCase() + name.slice(1) + ' --</option>';
-        element.disabled = true;
-        element.value = '';
-    });
-    
-    if (filterNames.includes('tipe')) {
-        document.getElementById('selected-item-info').classList.add('hidden');
-        document.getElementById('idbarang').value = '';
-    }
-}
-
 // Validate qty on input
-document.getElementById('qty').addEventListener('input', function() {
-    const max = this.max;
-    const stockInfo = document.getElementById('stock-info');
+qtyInput.addEventListener('input', function() {
+    const max = parseInt(this.max);
+    const value = parseInt(this.value);
     
-    if (max && parseInt(this.value) > parseInt(max)) {
+    if (max && value > max) {
         stockInfo.textContent = `Jumlah melebihi stok tersedia (${max})`;
         stockInfo.classList.remove('text-gray-500');
         stockInfo.classList.add('text-red-500');
@@ -386,33 +305,5 @@ document.getElementById('qty').addEventListener('input', function() {
         stockInfo.classList.add('text-gray-500');
     }
 });
-
-// Update expire info when penerima or tanggal changes
-function updateExpireInfo() {
-    const durasi = document.getElementById('durasi_sewa').value;
-    const peminjam = document.getElementById('penerima').value;
-    const tanggal = document.getElementById('tanggal').value;
-    
-    if (durasi && tanggal) {
-        // Calculate expire date
-        const tanggalKeluar = new Date(tanggal);
-        const expireDate = new Date(tanggalKeluar);
-        expireDate.setFullYear(expireDate.getFullYear() + parseInt(durasi));
-        
-        // Format expire date
-        const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        const expireFormatted = expireDate.toLocaleDateString('id-ID', options);
-        
-        // Show expire info
-        document.getElementById('display_peminjam').textContent = peminjam || '-';
-        document.getElementById('display_expire').textContent = expireFormatted;
-        document.getElementById('expire-info').classList.remove('hidden');
-    } else {
-        document.getElementById('expire-info').classList.add('hidden');
-    }
-}
-
-document.getElementById('penerima').addEventListener('input', updateExpireInfo);
-document.getElementById('tanggal').addEventListener('change', updateExpireInfo);
 </script>
 @endsection

@@ -37,7 +37,7 @@
                     <span class="text-gray-900">{{ $pemakaian->kodebarang_k }} - {{ $pemakaian->namabarang_k }}</span>
                     @if($pemakaian->kategori)
                         @if($pemakaian->kategori == 'barang_sewa')
-                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Barang Sewa</span>
+                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Aset Sewa</span>
                         @else
                             <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">Habis Pakai</span>
                         @endif

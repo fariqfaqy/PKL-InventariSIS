@@ -120,7 +120,7 @@
     <div class="info">
         <strong>Tanggal Cetak:</strong> {{ now()->format('d F Y, H:i') }} WIB<br>
         @if(isset($kategori))
-            <strong>Kategori:</strong> {{ $kategori == 'barang_sewa' ? 'Barang Sewa' : 'Barang Habis Pakai' }}<br>
+            <strong>Kategori:</strong> {{ $kategori == 'barang_sewa' ? 'Aset Sewa' : 'Material Umum' }}<br>
         @endif
         <strong>Total Item:</strong> {{ $stocks->count() }}
     </div>

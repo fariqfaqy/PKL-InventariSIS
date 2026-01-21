@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Barang Masuk')
+@section('title', 'Kelola Barang')
 
 @section('content')
 <div class="space-y-6">
@@ -39,7 +39,7 @@
             <a href="{{ route('admin.barang-masuk.index', ['kategori' => 'barang_sewa', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" 
                class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 {{ request('kategori') == 'barang_sewa' ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50' }}">
                 <x-heroicon-o-computer-desktop class="w-5 h-5" />
-                Barang Sewa
+                Aset Sewa
             </a>
             <a href="{{ route('admin.barang-masuk.index', ['kategori' => 'habis_pakai', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" 
                class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 {{ request('kategori') == 'habis_pakai' ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50' }}">

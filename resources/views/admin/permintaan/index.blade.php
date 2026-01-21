@@ -130,7 +130,15 @@
                             <tr class="hover:bg-yellow-50 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#{{ $item->id_request }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $item->tanggal_request->format('d/m/Y H:i') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->user->name }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <div class="font-medium">{{ $item->user->name }}</div>
+                                    @if($item->user->nip)
+                                    <div class="text-gray-500 text-xs">NIP: {{ $item->user->nip }}</div>
+                                    @endif
+                                    @if($item->user->division)
+                                    <div class="text-gray-500 text-xs">{{ $item->user->division->nama_divisi }}</div>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
                                     <div class="font-medium">{{ $item->stock->namabarang }}</div>
                                     <div class="text-gray-500 text-xs">{{ $item->stock->kodebarang }}</div>
@@ -184,7 +192,15 @@
                             <tr class="hover:bg-green-50 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#{{ $item->id_request }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $item->tanggal_request->format('d/m/Y H:i') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->user->name }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <div class="font-medium">{{ $item->user->name }}</div>
+                                    @if($item->user->nip)
+                                    <div class="text-gray-500 text-xs">NIP: {{ $item->user->nip }}</div>
+                                    @endif
+                                    @if($item->user->division)
+                                    <div class="text-gray-500 text-xs">{{ $item->user->division->nama_divisi }}</div>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
                                     <div class="font-medium">{{ $item->stock->namabarang }}</div>
                                     <div class="text-gray-500 text-xs">{{ $item->stock->kodebarang }}</div>
@@ -253,7 +269,15 @@
                             <tr class="hover:bg-red-50 transition-colors">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#{{ $item->id_request }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $item->tanggal_request->format('d/m/Y H:i') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->user->name }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <div class="font-medium">{{ $item->user->name }}</div>
+                                    @if($item->user->nip)
+                                    <div class="text-gray-500 text-xs">NIP: {{ $item->user->nip }}</div>
+                                    @endif
+                                    @if($item->user->division)
+                                    <div class="text-gray-500 text-xs">{{ $item->user->division->nama_divisi }}</div>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
                                     <div class="font-medium">{{ $item->stock->namabarang }}</div>
                                     <div class="text-gray-500 text-xs">{{ $item->stock->kodebarang }}</div>
@@ -316,8 +340,14 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {{ $item->tanggal_request->format('d/m/Y H:i') }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $item->user->name }}
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                <div class="font-medium">{{ $item->user->name }}</div>
+                                @if($item->user->nip)
+                                <div class="text-gray-500 text-xs">NIP: {{ $item->user->nip }}</div>
+                                @endif
+                                @if($item->user->division)
+                                <div class="text-gray-500 text-xs">{{ $item->user->division->nama_divisi }}</div>
+                                @endif
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900">
                                 <div class="font-medium">{{ $item->stock->namabarang }}</div>
@@ -448,8 +478,14 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ $trans->tanggal->format('d/m/Y H:i') }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ $trans->penginput }}
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <div class="font-medium">{{ $trans->penginput }}</div>
+                                    @if($trans->user && $trans->user->nip)
+                                    <div class="text-gray-500 text-xs">NIP: {{ $trans->user->nip }}</div>
+                                    @endif
+                                    @if($trans->user && $trans->user->division)
+                                    <div class="text-gray-500 text-xs">{{ $trans->user->division->nama_divisi }}</div>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
                                     <div class="font-medium">{{ $trans->namabarang_k }}</div>
@@ -526,8 +562,14 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ $trans->tanggal_selesai ? $trans->tanggal_selesai->format('d/m/Y') : '-' }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ $trans->penginput }}
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <div class="font-medium">{{ $trans->penginput }}</div>
+                                    @if($trans->user && $trans->user->nip)
+                                    <div class="text-gray-500 text-xs">NIP: {{ $trans->user->nip }}</div>
+                                    @endif
+                                    @if($trans->user && $trans->user->division)
+                                    <div class="text-gray-500 text-xs">{{ $trans->user->division->nama_divisi }}</div>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
                                     <div class="font-medium">{{ $trans->namabarang_k }}</div>
@@ -601,8 +643,14 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ $request->tanggal_request->format('d/m/Y H:i') }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ $request->user->name }}
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <div class="font-medium">{{ $request->user->name }}</div>
+                                    @if($request->user->nip)
+                                    <div class="text-gray-500 text-xs">NIP: {{ $request->user->nip }}</div>
+                                    @endif
+                                    @if($request->user->division)
+                                    <div class="text-gray-500 text-xs">{{ $request->user->division->nama_divisi }}</div>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
                                     <div class="font-medium">{{ $request->stock->namabarang }}</div>

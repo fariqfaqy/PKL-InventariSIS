@@ -44,16 +44,16 @@
                     
                     <!-- Submenu Stok Barang -->
                     <div id="stok-barang-submenu" class="{{ request()->routeIs('admin.stok-barang.*') ? '' : 'hidden' }} ml-4 space-y-1">
-                        <!-- Barang Sewa -->
+                        <!-- Aset Sewa -->
                         <a href="{{ route('admin.stok-barang.index', ['kategori' => 'barang_sewa']) }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('admin.stok-barang.*') && request('kategori') == 'barang_sewa' ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
                             <x-heroicon-o-computer-desktop class="w-4 h-4" />
-                            <span class="text-sm font-medium">Barang Sewa</span>
+                            <span class="text-sm font-medium">Aset Sewa</span>
                         </a>
                         
-                        <!-- Barang Habis Pakai -->
-                        <a href="{{ route('admin.stok-barang.index', ['kategori' => 'habis_pakai']) }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('admin.stok-barang.*') && request('kategori') == 'habis_pakai' ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
+                        <!-- Material Umum -->
+                        <a href="{{ route('admin.stok-barang.index', ['kategori' => 'material_umum']) }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('admin.stok-barang.*') && request('kategori') == 'material_umum' ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
                             <x-heroicon-o-shopping-bag class="w-4 h-4" />
-                            <span class="text-sm font-medium">Barang Habis Pakai</span>
+                            <span class="text-sm font-medium">Material Umum</span>
                         </a>
                         
                         <!-- Aset Tetap -->
@@ -107,7 +107,13 @@
                 <!-- Kelola User -->
                 <a href="{{ route('admin.users.index') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('admin.users.*') ? 'text-white bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f]' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
                     <x-heroicon-o-users class="w-5 h-5 {{ request()->routeIs('admin.users.*') ? '' : 'group-hover:text-[#14a2ba]' }}" />
-                    <span class="font-medium">Kelola User</span>
+                    <span class="font-medium">Kelola Pegawai</span>
+                </a>
+
+                <!-- Kelola Divisi -->
+                <a href="{{ route('admin.divisions.index') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('admin.divisions.*') ? 'text-white bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f]' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
+                    <x-heroicon-o-building-office class="w-5 h-5 {{ request()->routeIs('admin.divisions.*') ? '' : 'group-hover:text-[#14a2ba]' }}" />
+                    <span class="font-medium">Kelola Divisi</span>
                 </a>
 
                 <div class="border-t border-gray-200 my-4"></div>

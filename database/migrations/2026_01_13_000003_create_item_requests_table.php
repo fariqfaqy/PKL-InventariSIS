@@ -16,9 +16,9 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('idbarang');
             $table->integer('qty');
-            $table->enum('tipe_request', ['pinjam_sewa', 'pakai_habis_pakai'])->comment('Pinjam barang sewa atau pakai habis pakai');
-            $table->date('tanggal_mulai_sewa')->nullable()->comment('Untuk barang sewa');
-            $table->date('tanggal_akhir_sewa')->nullable()->comment('Untuk barang sewa');
+            $table->enum('tipe_request', ['pinjam_sewa', 'pakai_habis_pakai'])->comment('Pinjam aset sewa atau pakai material umum');
+            $table->date('tanggal_mulai_sewa')->nullable()->comment('Untuk aset sewa');
+            $table->date('tanggal_akhir_sewa')->nullable()->comment('Untuk aset sewa');
             $table->text('keperluan')->nullable();
             $table->enum('status', ['pending', 'approved', 'processing', 'rejected', 'completed'])->default('pending');
             $table->text('catatan_user')->nullable();

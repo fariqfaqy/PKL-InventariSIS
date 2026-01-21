@@ -86,16 +86,47 @@
                         Kategori <span class="text-red-500">*</span>
                     </label>
                     <select name="kategori" id="kategori" required
+                        onchange="toggleSubKategoriField()"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('kategori') border-red-500 @enderror">
                         <option value="">-- Pilih Kategori --</option>
-                        <option value="barang_sewa" {{ old('kategori') == 'barang_sewa' ? 'selected' : '' }}>Barang Sewa</option>
-                        <option value="habis_pakai" {{ old('kategori') == 'habis_pakai' ? 'selected' : '' }}>Habis Pakai</option>
+                        <option value="barang_sewa" {{ old('kategori') == 'barang_sewa' ? 'selected' : '' }}>Aset Sewa</option>
+                        <option value="habis_pakai" {{ old('kategori') == 'habis_pakai' ? 'selected' : '' }}>Material Umum</option>
+                        <option value="aset_tetap" {{ old('kategori') == 'aset_tetap' ? 'selected' : '' }}>Aset Tetap</option>
                     </select>
+                    <p class="mt-1 text-xs text-gray-500">Material Umum dapat direquest pegawai</p>
                     @error('kategori')
                     <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
 
+                <!-- Sub-Kategori (hanya untuk Material Umum) -->
+                <div id="subKategoriField" style="display: none;">
+                    <label for="sub_kategori" class="block text-sm font-medium text-gray-700 mb-2">
+                        Sub-Kategori Material Umum <span class="text-red-500">*</span>
+                    </label>
+                    <select name="sub_kategori" id="sub_kategori"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('sub_kategori') border-red-500 @enderror">
+                        <option value="">-- Pilih Sub-Kategori --</option>
+                        <option value="barang_habis_pakai" {{ old('sub_kategori') == 'barang_habis_pakai' ? 'selected' : '' }}>
+                            Barang Habis Pakai
+                        </option>
+                        <option value="barang_pinjam" {{ old('sub_kategori') == 'barang_pinjam' ? 'selected' : '' }}>
+                            Barang Pinjam
+                        </option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">
+                        <span class="inline-flex items-center gap-1">
+                            <x-heroicon-o-information-circle class="w-3 h-3" />
+                            Habis Pakai: tidak perlu dikembalikan | Pinjam: harus dikembalikan
+                        </span>
+                    </p>
+                    @error('sub_kategori')
+                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Jenis -->
                 <div>
                     <label for="jenis" class="block text-sm font-medium text-gray-700 mb-2">
@@ -248,6 +279,28 @@ function updateKodeBarang() {
         rackSelect.value = prefix.toLowerCase();
     }
 }
+
+function toggleSubKategoriField() {
+    const kategori = document.getElementById('kategori').value;
+    const subKategoriField = document.getElementById('subKategoriField');
+    const subKategoriSelect = document.getElementById('sub_kategori');
+    
+    if (kategori === 'habis_pakai') {
+        // Show sub-kategori field for Material Umum
+        subKategoriField.style.display = 'block';
+        subKategoriSelect.required = true;
+    } else {
+        // Hide sub-kategori field for other categories
+        subKategoriField.style.display = 'none';
+        subKategoriSelect.required = false;
+        subKategoriSelect.value = ''; // Clear selection
+    }
+}
+
+// Check on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleSubKategoriField();
+});
 
 // Auto-format 3 digit number
 document.getElementById('kode_suffix').addEventListener('input', function(e) {

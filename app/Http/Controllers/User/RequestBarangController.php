@@ -39,7 +39,7 @@ class RequestBarangController extends Controller
      */
     public function create()
     {
-        // Only show barang sewa dan habis pakai (exclude aset tetap)
+        // Only show aset sewa dan material umum (exclude aset tetap)
         $stocks = Stock::whereIn('kategori', ['barang_sewa', 'habis_pakai'])
             ->where('stock', '>', 0)
             ->orderBy('namabarang')
@@ -81,10 +81,10 @@ class RequestBarangController extends Controller
             return back()->with('error', 'Kategori barang tidak valid untuk request!')->withInput();
         }
         
-        // Validate rental dates untuk barang sewa
+        // Validate rental dates untuk aset sewa
         if ($tipeRequest === 'pinjam_sewa') {
             if (!$request->filled('tanggal_mulai_sewa') || !$request->filled('tanggal_akhir_sewa')) {
-                return back()->with('error', 'Tanggal sewa harus diisi untuk barang sewa!')->withInput();
+                return back()->with('error', 'Tanggal sewa harus diisi untuk aset sewa!')->withInput();
             }
         }
         
@@ -349,6 +349,15 @@ class RequestBarangController extends Controller
         $request->update([
             'status' => 'completed',
         ]);
+        
+        // Update status kondisi barang sewa menjadi tersedia
+        if ($request->stock->kategori === 'barang_sewa') {
+            Stock::where('idbarang', $request->idbarang)->update([
+                'status_kondisi' => 'tersedia',
+                'keterangan_kondisi' => null,
+                'tanggal_update_kondisi' => now(),
+            ]);
+        }
 
         return redirect()->route('user.pemakaian.index')
             ->with('success', 'Request berhasil ditandai selesai dan masuk ke history.');

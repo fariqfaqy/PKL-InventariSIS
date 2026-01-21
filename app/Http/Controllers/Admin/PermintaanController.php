@@ -191,7 +191,7 @@ class PermintaanController extends Controller
                 // Convert tipe_request: pinjam_sewa -> peminjaman, pakai_habis_pakai -> permintaan
                 $tipeKeluar = $permintaan->tipe_request === 'pinjam_sewa' ? 'peminjaman' : 'permintaan';
                 
-                // Tentukan status: barang sewa = sedang_dipakai, habis pakai = langsung selesai
+                // Tentukan status: aset sewa = sedang_dipakai, material umum = langsung selesai
                 $status = ($tipeKeluar === 'peminjaman') ? 'sedang_dipakai' : 'selesai';
                 $tanggalSelesai = ($tipeKeluar === 'permintaan') ? now() : null;
                 
@@ -199,6 +199,15 @@ class PermintaanController extends Controller
                 // untuk memastikan stok berkurang dulu sebelum transaksi dicatat
                 Stock::where('idbarang', $permintaan->idbarang)
                     ->decrement('stock', $permintaan->qty);
+                
+                // Update status kondisi jika aset sewa
+                if ($permintaan->stock->kategori === 'barang_sewa' && $tipeKeluar === 'peminjaman') {
+                    Stock::where('idbarang', $permintaan->idbarang)->update([
+                        'status_kondisi' => 'digunakan',
+                        'keterangan_kondisi' => 'Sedang dipinjam oleh ' . ($permintaan->penerima ?? $permintaan->user->name),
+                        'tanggal_update_kondisi' => now(),
+                    ]);
+                }
                 
                 // Create outgoing transaction (barang keluar) dengan link ke request
                 OutgoingTransaction::create([
@@ -222,8 +231,8 @@ class PermintaanController extends Controller
                 
                 
                 // Update request status:
-                // - Barang SEWA: tetap 'approved' karena user perlu tandai selesai nanti
-                // - Barang HABIS PAKAI: langsung 'completed' karena sudah selesai (barang habis)
+                // - Aset SEWA: tetap 'approved' karena user perlu tandai selesai nanti
+                // - Material UMUM: langsung 'completed' karena sudah selesai (barang habis)
                 $finalStatus = ($tipeKeluar === 'peminjaman') ? 'approved' : 'completed';
                 
                 $permintaan->update([
@@ -310,6 +319,15 @@ class PermintaanController extends Controller
         $permintaan->update([
             'status' => 'completed',
         ]);
+        
+        // Update status kondisi barang sewa menjadi tersedia
+        if ($permintaan->stock->kategori === 'barang_sewa') {
+            Stock::where('idbarang', $permintaan->idbarang)->update([
+                'status_kondisi' => 'tersedia',
+                'keterangan_kondisi' => null,
+                'tanggal_update_kondisi' => now(),
+            ]);
+        }
         
         return back()->with('success', 'Permintaan berhasil diselesaikan!');
     }

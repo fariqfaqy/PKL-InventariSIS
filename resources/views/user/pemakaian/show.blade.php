@@ -103,7 +103,7 @@
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $request->stock->kategori == 'barang_sewa' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800' }}">
                         @if($request->stock->kategori == 'barang_sewa')
                             <x-heroicon-o-calendar class="w-4 h-4 mr-1" />
-                            Barang Sewa
+                            Aset Sewa
                         @else
                             <x-heroicon-o-shopping-cart class="w-4 h-4 mr-1" />
                             Habis Pakai
@@ -136,7 +136,7 @@
                 @endif
             </div>
 
-            <!-- Periode Sewa untuk Barang Sewa -->
+            <!-- Periode Sewa untuk Aset Sewa -->
             @if($request->tipe_request == 'pinjam_sewa' && $request->tanggal_mulai_sewa && $request->tanggal_akhir_sewa)
             <div class="mt-6 pt-6 border-t">
                 <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">

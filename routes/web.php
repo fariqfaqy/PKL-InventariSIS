@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\BarangMasukController;
 use App\Http\Controllers\Admin\BarangKeluarController;
 use App\Http\Controllers\Admin\StokBarangController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\DivisionController;
 use App\Http\Controllers\Admin\ActivityLogController as AdminActivityLogController;
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\User\UserController;
@@ -34,6 +35,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // Kelola Barang
     // Export routes MUST be defined BEFORE resource routes
     Route::get('stok-barang/export-pdf', [StokBarangController::class, 'exportPdf'])->name('stok-barang.export-pdf');
+    Route::put('stok-barang/{idbarang}/update-status', [\App\Http\Controllers\Admin\StatusKondisiController::class, 'update'])->name('stok-barang.update-status');
     Route::resource('stok-barang', StokBarangController::class)->except(['create', 'store']);
     
     Route::get('barang-masuk/export-pdf', [BarangMasukController::class, 'exportPdf'])->name('barang-masuk.export-pdf');
@@ -46,6 +48,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // Kelola User
     Route::get('users-export-pdf', [AdminUserController::class, 'exportPdf'])->name('users.export-pdf');
     Route::resource('users', AdminUserController::class);
+    
+    // Kelola Divisi
+    Route::get('divisions-export-pdf', [DivisionController::class, 'exportPdf'])->name('divisions.export-pdf');
+    Route::resource('divisions', DivisionController::class);
     
     // Activity Log
     Route::get('activity-log', [AdminActivityLogController::class, 'index'])->name('activity-log.index');
@@ -71,9 +77,7 @@ Route::prefix('user')->name('user.')->middleware(['auth', 'role:user'])->group(f
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/pemakaian-aktif', [UserDashboardController::class, 'getActivePemakaian'])->name('dashboard.pemakaian-aktif');
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
-    Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
-    Route::get('/settings', [UserController::class, 'settings'])->name('settings');
-    Route::put('/settings', [UserController::class, 'updateSettings'])->name('settings.update');
+    Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.update-password');
     
     // Stok Barang (Read Only untuk User)
     Route::get('/stok-barang', [\App\Http\Controllers\User\StokBarangController::class, 'index'])->name('stok-barang.index');

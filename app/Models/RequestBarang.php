@@ -112,13 +112,54 @@ class RequestBarang extends Model
 
     /**
      * Get tipe request label
+     * Mapping tipe_request ke label yang user-friendly
      */
     public function getTipeRequestLabelAttribute()
     {
         return match($this->tipe_request) {
-            'pinjam_sewa' => 'Pinjam Barang Sewa',
-            'pakai_habis_pakai' => 'Pakai Barang Habis Pakai',
-            default => $this->tipe_request
+            // Material Umum - Sub: Barang Habis Pakai
+            'pakai_habis_pakai' => 'Barang Habis Pakai',
+            
+            // Material Umum - Sub: Barang Pinjam
+            'pinjam_material' => 'Barang Pinjam',
+            
+            // Legacy: Aset Sewa (admin only)
+            'pinjam_sewa' => 'Pinjam Aset Sewa',
+            
+            default => ucwords(str_replace('_', ' ', $this->tipe_request))
+        };
+    }
+
+    /**
+     * Get sub kategori dari stock
+     * Untuk menampilkan badge sub-kategori di view
+     */
+    public function getSubKategoriLabelAttribute()
+    {
+        if (!$this->stock) {
+            return '-';
+        }
+
+        return match($this->stock->sub_kategori) {
+            'barang_habis_pakai' => 'Barang Habis Pakai',
+            'barang_pinjam' => 'Barang Pinjam',
+            default => '-'
+        };
+    }
+
+    /**
+     * Get badge color untuk sub kategori
+     */
+    public function getSubKategoriBadgeColorAttribute()
+    {
+        if (!$this->stock) {
+            return 'gray';
+        }
+
+        return match($this->stock->sub_kategori) {
+            'barang_habis_pakai' => 'green',
+            'barang_pinjam' => 'blue',
+            default => 'gray'
         };
     }
 

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Detail User')
+@section('title', 'Detail Pegawai')
 
 @section('content')
 <div class="space-y-6">
@@ -11,8 +11,8 @@
                 <x-heroicon-o-arrow-left class="w-6 h-6" />
             </a>
             <div>
-                <h2 class="text-2xl font-bold text-gray-800">Detail User</h2>
-                <p class="text-sm text-gray-500 mt-1">Informasi lengkap pengguna</p>
+                <h2 class="text-2xl font-bold text-gray-800">Detail Pegawai</h2>
+                <p class="text-sm text-gray-500 mt-1">Informasi lengkap pegawai</p>
             </div>
         </div>
         <div class="flex gap-2">
@@ -64,15 +64,11 @@
 
     <!-- Details Card -->
     <div class="bg-white rounded-xl shadow-md p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
             <x-heroicon-o-information-circle class="w-6 h-6 text-[#14a2ba]" />
             Informasi Akun
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-500 mb-1">ID User</label>
-                <p class="text-gray-800 font-semibold">{{ $user->id }}</p>
-            </div>
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Nama Lengkap</label>
                 <p class="text-gray-800 font-semibold">{{ $user->name }}</p>
@@ -89,10 +85,49 @@
                 <label class="block text-sm font-medium text-gray-500 mb-1">Terdaftar Sejak</label>
                 <p class="text-gray-800">{{ $user->created_at->format('d F Y, H:i') }}</p>
             </div>
+        </div>
+    </div>
+
+    <!-- Employee Data Card -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200 flex items-center gap-2">
+            <x-heroicon-o-identification class="w-6 h-6 text-[#14a2ba]" />
+            Data Pegawai
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <label class="block text-sm font-medium text-gray-500 mb-1">Terakhir Diperbarui</label>
-                <p class="text-gray-800">{{ $user->updated_at->format('d F Y, H:i') }}</p>
+                <label class="block text-sm font-medium text-gray-500 mb-1">NIP</label>
+                <p class="text-gray-800 font-mono font-semibold">{{ $user->nip ?? '-' }}</p>
             </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Divisi</label>
+                @if($user->division)
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+                        <x-heroicon-o-building-office class="w-4 h-4 mr-1" />
+                        {{ $user->division->nama_divisi }}
+                    </span>
+                @else
+                    <p class="text-gray-400">-</p>
+                @endif
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Jabatan</label>
+                <p class="text-gray-800">{{ $user->jabatan ?? '-' }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">No. Telepon</label>
+                <p class="text-gray-800">{{ $user->no_telp ?? '-' }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Tanggal Masuk</label>
+                <p class="text-gray-800">{{ $user->tanggal_masuk ? $user->tanggal_masuk->format('d F Y') : '-' }}</p>
+            </div>
+            @if($user->tanggal_masuk)
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Masa Kerja</label>
+                <p class="text-gray-800 font-semibold">{{ $user->tanggal_masuk->diffForHumans(null, true) }}</p>
+            </div>
+            @endif
         </div>
     </div>
 
@@ -116,11 +151,11 @@
         </a>
         @if($user->id !== auth()->id())
         <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" 
-            onsubmit="return confirm('Yakin ingin menghapus user {{ $user->name }}?');">
+            onsubmit="return confirm('Yakin ingin menghapus pegawai {{ $user->name }}?');">
             @csrf
             @method('DELETE')
             <button type="submit" class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors inline-flex items-center gap-2">
-                <x-heroicon-o-trash class="w-5 h-5" /> Hapus User
+                <x-heroicon-o-trash class="w-5 h-5" /> Hapus Pegawai
             </button>
         </form>
         @endif

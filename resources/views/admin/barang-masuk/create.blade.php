@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Tambah Barang Masuk')
+@section('title', 'Barang Masuk')
 
 @section('content')
 <style>
@@ -130,18 +130,84 @@
                     Kategori <span class="text-red-500">*</span>
                 </label>
                 <select name="kategori" id="kategori" required
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('kategori') border-red-500 @enderror">
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('kategori') border-red-500 @enderror"
+                    onchange="toggleSewaFields(); toggleSubKategori()">
                     <option value="">-- Pilih Kategori --</option>
-                    <option value="barang_sewa" {{ old('kategori') == 'barang_sewa' ? 'selected' : '' }}>Barang Sewa</option>
-                    <option value="habis_pakai" {{ old('kategori') == 'habis_pakai' ? 'selected' : '' }}>Habis Pakai</option>
+                    <option value="barang_sewa" {{ old('kategori') == 'barang_sewa' ? 'selected' : '' }}>Aset Sewa</option>
                     <option value="aset_tetap" {{ old('kategori') == 'aset_tetap' ? 'selected' : '' }}>Aset Tetap</option>
+                    <option value="material_umum" {{ old('kategori') == 'material_umum' ? 'selected' : '' }}>Material Umum</option>
                 </select>
                 <p class="mt-1 text-xs text-gray-500">
-                    <span class="font-medium">Catatan:</span> Barang Sewa dapat dipinjam dengan tanggal sewa. Aset Tetap tidak dapat dipinjam.
+                    <span class="font-medium">Catatan:</span> Aset Sewa dapat dipinjam dengan tanggal sewa. Aset Tetap tidak dapat dipinjam.
                 </p>
                 @error('kategori')
                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                 @enderror
+            </div>
+
+            <!-- Sub-Kategori untuk Material Umum -->
+            <div id="subKategoriField" class="hidden">
+                <label for="sub_kategori" class="block text-sm font-medium text-gray-700 mb-2">
+                    Sub-Kategori Material Umum <span class="text-red-500">*</span>
+                </label>
+                <select name="sub_kategori" id="sub_kategori"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('sub_kategori') border-red-500 @enderror">
+                    <option value="">-- Pilih Sub-Kategori --</option>
+                    <option value="barang_habis_pakai" {{ old('sub_kategori') == 'barang_habis_pakai' ? 'selected' : '' }}>Barang Habis Pakai</option>
+                    <option value="barang_pinjam" {{ old('sub_kategori') == 'barang_pinjam' ? 'selected' : '' }}>Barang Pinjam</option>
+                </select>
+                @error('sub_kategori')
+                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Fields untuk Aset Sewa -->
+            <div id="sewaFields" class="hidden space-y-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h3 class="text-sm font-semibold text-blue-800 flex items-center gap-2">
+                    <x-heroicon-o-user-circle class="w-5 h-5" />
+                    Informasi Penyewa
+                </h3>
+
+                <!-- Pengguna -->
+                <div>
+                    <label for="nama_pengguna" class="block text-sm font-medium text-gray-700 mb-2">
+                        Nama Pengguna
+                    </label>
+                    <input type="text" name="nama_pengguna" id="nama_pengguna"
+                        value="{{ old('nama_pengguna') }}"
+                        placeholder="Masukkan nama pengguna yang menggunakan aset"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('nama_pengguna') border-red-500 @enderror">
+                    <p class="mt-1 text-xs text-gray-500">Kosongkan jika aset belum digunakan.</p>
+                    @error('nama_pengguna')
+                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Tanggal Mulai Pakai -->
+                <div>
+                    <label for="tanggal_mulai_pakai" class="block text-sm font-medium text-gray-700 mb-2">
+                        Tanggal Mulai Pakai
+                    </label>
+                    <input type="date" name="tanggal_mulai_pakai" id="tanggal_mulai_pakai"
+                        value="{{ old('tanggal_mulai_pakai') }}"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('tanggal_mulai_pakai') border-red-500 @enderror">
+                    @error('tanggal_mulai_pakai')
+                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Tanggal Akhir Pakai -->
+                <div>
+                    <label for="tanggal_akhir_pakai" class="block text-sm font-medium text-gray-700 mb-2">
+                        Tanggal Akhir Pakai
+                    </label>
+                    <input type="date" name="tanggal_akhir_pakai" id="tanggal_akhir_pakai"
+                        value="{{ old('tanggal_akhir_pakai') }}"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('tanggal_akhir_pakai') border-red-500 @enderror">
+                    @error('tanggal_akhir_pakai')
+                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
 
             <!-- 5. Stok -->
@@ -432,10 +498,46 @@ function previewImage(event) {
     }
 }
 
+// Toggle sewa fields visibility
+function toggleSewaFields() {
+    const kategori = document.getElementById('kategori').value;
+    const sewaFields = document.getElementById('sewaFields');
+    
+    if (kategori === 'barang_sewa') {
+        sewaFields.classList.remove('hidden');
+    } else {
+        sewaFields.classList.add('hidden');
+        // Reset sewa fields
+        document.getElementById('nama_pengguna').value = '';
+        document.getElementById('tanggal_mulai_pakai').value = '';
+        document.getElementById('tanggal_akhir_pakai').value = '';
+    }
+}
+
+// Toggle sub-kategori field for Material Umum
+function toggleSubKategori() {
+    const kategori = document.getElementById('kategori').value;
+    const subKategoriField = document.getElementById('subKategoriField');
+    const subKategoriSelect = document.getElementById('sub_kategori');
+    
+    if (kategori === 'material_umum') {
+        subKategoriField.classList.remove('hidden');
+        subKategoriSelect.required = true;
+    } else {
+        subKategoriField.classList.add('hidden');
+        subKategoriSelect.required = false;
+        subKategoriSelect.value = '';
+    }
+}
+
 // On page load
 document.addEventListener('DOMContentLoaded', function() {
     // Pastikan semua field enabled saat pertama kali load
     enableFields();
+    
+    // Toggle sewa fields based on initial kategori
+    toggleSewaFields();
+    toggleSubKategori();
     
     // Add event listeners to prevent changes on locked select fields
     const kategoriSelect = document.getElementById('kategori');

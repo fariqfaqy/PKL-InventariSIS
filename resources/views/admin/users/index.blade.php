@@ -1,14 +1,14 @@
 @extends('layouts.admin')
 
-@section('title', 'Kelola User')
+@section('title', 'Kelola Pegawai')
 
 @section('content')
 <div class="space-y-6">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h2 class="text-2xl font-bold text-gray-800">Kelola User</h2>
-            <p class="text-sm text-gray-500 mt-1">Manajemen pengguna sistem</p>
+            <h2 class="text-2xl font-bold text-gray-800">Kelola Pegawai</h2>
+            <p class="text-sm text-gray-500 mt-1">Manajemen data pegawai</p>
         </div>
         <div class="flex items-center gap-3">
             <a href="{{ route('admin.users.export-pdf') }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-md hover:shadow-lg">
@@ -17,7 +17,7 @@
             </a>
             <a href="{{ route('admin.users.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-300">
                 <x-heroicon-o-plus class="w-5 h-5" />
-                <span class="font-medium">Tambah User</span>
+                <span class="font-medium">Tambah Pegawai</span>
             </a>
         </div>
     </div>
@@ -41,7 +41,7 @@
         <div class="bg-white rounded-xl shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-500 mb-1">Total User</p>
+                    <p class="text-sm text-gray-500 mb-1">Total Pegawai</p>
                     <p class="text-2xl font-bold text-gray-800">{{ $users->total() }}</p>
                 </div>
                 <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -65,11 +65,11 @@
         <div class="bg-white rounded-xl shadow-md p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-500 mb-1">User Divisi</p>
-                    <p class="text-2xl font-bold text-gray-800">{{ \App\Models\User::where('role', 'user')->count() }}</p>
+                    <p class="text-sm text-gray-500 mb-1">Terdaftar di Divisi</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ \App\Models\User::whereNotNull('division_id')->count() }}</p>
                 </div>
                 <div class="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center">
-                    <x-heroicon-o-user class="w-6 h-6 text-cyan-600" />
+                    <x-heroicon-o-building-office class="w-6 h-6 text-cyan-600" />
                 </div>
             </div>
         </div>
@@ -83,9 +83,10 @@
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">No</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIP</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Divisi</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Role</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">Terdaftar</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Role</th>
                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-40">Aksi</th>
                     </tr>
                 </thead>
@@ -102,11 +103,27 @@
                                 </div>
                                 <div>
                                     <p class="font-semibold">{{ $user->name }}</p>
+                                    @if($user->jabatan)
+                                    <p class="text-xs text-gray-500">{{ $user->jabatan }}</p>
+                                    @endif
                                     @if($user->id === auth()->id())
-                                    <span class="text-xs text-gray-500">(Anda)</span>
+                                    <span class="text-xs text-blue-600 font-medium">(Anda)</span>
                                     @endif
                                 </div>
                             </div>
+                        </td>
+                        <td class="px-4 py-3 text-sm font-mono text-gray-900">
+                            {{ $user->nip ?? '-' }}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-900">
+                            @if($user->division)
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                    <x-heroicon-o-building-office class="w-3 h-3 mr-1" />
+                                    {{ $user->division->nama_divisi }}
+                                </span>
+                            @else
+                                <span class="text-gray-400">-</span>
+                            @endif
                         </td>
                         <td class="px-4 py-3 text-sm text-gray-900">
                             {{ $user->email }}
@@ -124,9 +141,6 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                            {{ $user->created_at->format('d/m/Y') }}
-                        </td>
                         <td class="px-4 py-3 whitespace-nowrap text-center text-sm font-medium">
                             <div class="flex items-center justify-center gap-2">
                                 <a href="{{ route('admin.users.show', $user->id) }}" class="text-[#14a2ba] hover:text-[#0d7a8f] transition-colors" title="Detail">
@@ -136,7 +150,7 @@
                                     <x-heroicon-o-pencil class="w-5 h-5" />
                                 </a>
                                 @if($user->id !== auth()->id())
-                                <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus user ini?')">
+                                <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus pegawai ini?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="text-red-600 hover:text-red-700 transition-colors" title="Hapus">
@@ -153,11 +167,11 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center">
+                        <td colspan="7" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center justify-center text-gray-500">
                                 <x-heroicon-o-user-group class="w-16 h-16 mb-4 opacity-30" />
-                                <p class="text-lg font-medium">Belum ada data user</p>
-                                <p class="text-sm mt-1">Klik tombol "Tambah User" untuk menambahkan data</p>
+                                <p class="text-lg font-medium">Belum ada data pegawai</p>
+                                <p class="text-sm mt-1">Klik tombol "Tambah Pegawai" untuk menambahkan data</p>
                             </div>
                         </td>
                     </tr>

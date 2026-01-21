@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Division;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -16,7 +17,9 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::orderBy('created_at', 'desc')->paginate(10);
+        $users = User::with('division')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
         return view('admin.users.index', compact('users'));
     }
 
@@ -25,7 +28,8 @@ class UserController extends Controller
      */
     public function create()
     {
-        return view('admin.users.create');
+        $divisions = Division::active()->orderBy('nama_divisi', 'asc')->get();
+        return view('admin.users.create', compact('divisions'));
     }
 
     /**
@@ -38,6 +42,11 @@ class UserController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|in:admin,user',
+            'division_id' => 'nullable|exists:divisions,id',
+            'nip' => 'nullable|string|max:50|unique:users,nip',
+            'jabatan' => 'nullable|string|max:255',
+            'no_telp' => 'nullable|string|max:20',
+            'tanggal_masuk' => 'nullable|date',
         ]);
 
         User::create([
@@ -45,10 +54,15 @@ class UserController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
+            'division_id' => $validated['division_id'] ?? null,
+            'nip' => $validated['nip'] ?? null,
+            'jabatan' => $validated['jabatan'] ?? null,
+            'no_telp' => $validated['no_telp'] ?? null,
+            'tanggal_masuk' => $validated['tanggal_masuk'] ?? null,
         ]);
 
         return redirect()->route('admin.users.index')
-            ->with('success', 'User berhasil ditambahkan!');
+            ->with('success', 'Pegawai berhasil ditambahkan!');
     }
 
     /**
@@ -56,6 +70,7 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
+        $user->load('division');
         return view('admin.users.show', compact('user'));
     }
 
@@ -64,7 +79,8 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        return view('admin.users.edit', compact('user'));
+        $divisions = Division::active()->orderBy('nama_divisi', 'asc')->get();
+        return view('admin.users.edit', compact('user', 'divisions'));
     }
 
     /**
@@ -77,11 +93,21 @@ class UserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'role' => 'required|in:admin,user',
             'password' => 'nullable|string|min:8|confirmed',
+            'division_id' => 'nullable|exists:divisions,id',
+            'nip' => ['nullable', 'string', 'max:50', Rule::unique('users')->ignore($user->id)],
+            'jabatan' => 'nullable|string|max:255',
+            'no_telp' => 'nullable|string|max:20',
+            'tanggal_masuk' => 'nullable|date',
         ]);
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
         $user->role = $validated['role'];
+        $user->division_id = $validated['division_id'] ?? null;
+        $user->nip = $validated['nip'] ?? null;
+        $user->jabatan = $validated['jabatan'] ?? null;
+        $user->no_telp = $validated['no_telp'] ?? null;
+        $user->tanggal_masuk = $validated['tanggal_masuk'] ?? null;
 
         if ($request->filled('password')) {
             $user->password = Hash::make($validated['password']);
@@ -90,7 +116,7 @@ class UserController extends Controller
         $user->save();
 
         return redirect()->route('admin.users.index')
-            ->with('success', 'User berhasil diperbarui!');
+            ->with('success', 'Pegawai berhasil diperbarui!');
     }
 
     /**
@@ -99,14 +125,14 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         // Prevent deleting self
-        if ($user->id === auth()->user()->id) {
+        if ($user->id === auth()->id()) {
             return back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri!');
         }
 
         $user->delete();
 
         return redirect()->route('admin.users.index')
-            ->with('success', 'User berhasil dihapus!');
+            ->with('success', 'Pegawai berhasil dihapus!');
     }
 
     /**
@@ -114,12 +140,14 @@ class UserController extends Controller
      */
     public function exportPdf()
     {
-        $users = User::orderBy('name', 'asc')->get();
+        $users = User::with('division')
+            ->orderBy('name', 'asc')
+            ->get();
         
         $pdf = Pdf::loadView('admin.pdf.users', compact('users'))
-            ->setPaper('a4', 'portrait');
+            ->setPaper('a4', 'landscape');
         
-        $filename = 'Laporan_Data_User_' . now()->format('Y-m-d_His') . '.pdf';
+        $filename = 'Laporan_Data_Pegawai_' . now()->format('Y-m-d_His') . '.pdf';
         
         return $pdf->stream($filename);
     }

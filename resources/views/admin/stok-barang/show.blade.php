@@ -79,6 +79,50 @@
                 </span>
             </div>
             <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Kategori</label>
+                @if($stock->kategori === 'barang_sewa')
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                        <x-heroicon-o-computer-desktop class="w-4 h-4 mr-1.5" />
+                        Aset Sewa
+                    </span>
+                @elseif($stock->kategori === 'barang_pinjam')
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                        <x-heroicon-o-arrow-path-rounded-square class="w-4 h-4 mr-1.5" />
+                        Barang Pinjam
+                    </span>
+                @elseif($stock->kategori === 'aset_tetap')
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-teal-100 text-teal-800">
+                        <x-heroicon-o-building-office class="w-4 h-4 mr-1.5" />
+                        Aset Tetap
+                    </span>
+                @elseif($stock->kategori === 'habis_pakai')
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                        <x-heroicon-o-shopping-bag class="w-4 h-4 mr-1.5" />
+                        Barang Habis Pakai
+                    </span>
+                @else
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                        {{ ucfirst(str_replace('_', ' ', $stock->kategori)) }}
+                    </span>
+                @endif
+            </div>
+            @if($stock->kategori === 'barang_sewa')
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Status Kondisi</label>
+                <div class="flex items-center gap-2">
+                    <span class="inline-block px-3 py-1 rounded-full text-sm font-medium {{ $stock->status_kondisi_badge ?? 'bg-gray-100 text-gray-800' }}">
+                        {{ $stock->status_kondisi_label ?? 'Digunakan' }}
+                    </span>
+                    @if($stock->keterangan_kondisi)
+                    <span class="text-xs text-gray-500">- {{ $stock->keterangan_kondisi }}</span>
+                    @endif
+                </div>
+                @if($stock->tanggal_update_kondisi)
+                <p class="text-xs text-gray-400 mt-1">Diupdate: {{ \Carbon\Carbon::parse($stock->tanggal_update_kondisi)->format('d M Y') }}</p>
+                @endif
+            </div>
+            @endif
+            <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Penginput</label>
                 <p class="text-gray-800">{{ $stock->penginput }}</p>
             </div>
@@ -86,7 +130,133 @@
                 <label class="block text-sm font-medium text-gray-500 mb-1">Tanggal Input</label>
                 <p class="text-gray-800">{{ $stock->created_at->format('d M Y H:i') }}</p>
             </div>
+            @if($stock->jenis || $stock->merek || $stock->tipe)
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Spesifikasi Teknis</label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    @if($stock->jenis)
+                    <div class="bg-gray-50 px-3 py-2 rounded-lg">
+                        <span class="text-xs text-gray-500 block">Jenis</span>
+                        <span class="text-sm font-medium text-gray-800">{{ $stock->jenis }}</span>
+                    </div>
+                    @endif
+                    @if($stock->merek)
+                    <div class="bg-gray-50 px-3 py-2 rounded-lg">
+                        <span class="text-xs text-gray-500 block">Merek</span>
+                        <span class="text-sm font-medium text-gray-800">{{ $stock->merek }}</span>
+                    </div>
+                    @endif
+                    @if($stock->tipe)
+                    <div class="bg-gray-50 px-3 py-2 rounded-lg">
+                        <span class="text-xs text-gray-500 block">Tipe</span>
+                        <span class="text-sm font-medium text-gray-800">{{ $stock->tipe }}</span>
+                    </div>
+                    @endif
                 </div>
+            </div>
+            @endif
+                </div>
+                
+                <!-- Informasi Pengguna & Peminjaman (untuk Aset Sewa) -->
+                @if($stock->kategori === 'barang_sewa' && ($stock->nama_pengguna || $stock->tanggal_mulai_pakai || $stock->tanggal_akhir_pakai))
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h4 class="text-md font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <x-heroicon-o-user class="w-5 h-5 text-blue-600" />
+                        Informasi Pengguna & Masa Peminjaman
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50 p-4 rounded-lg">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Nama Pengguna</label>
+                            <p class="text-gray-800 font-semibold text-lg">{{ $stock->nama_pengguna ?? '-' }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Durasi Peminjaman</label>
+                            <p class="text-gray-800 font-semibold">
+                                @if($stock->durasi_pakai)
+                                    <span class="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">
+                                        {{ $stock->durasi_pakai }} hari
+                                    </span>
+                                @else
+                                    -
+                                @endif
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Tanggal Mulai Peminjaman</label>
+                            <p class="text-gray-800 font-medium">
+                                @if($stock->tanggal_mulai_pakai)
+                                    <span class="flex items-center gap-2">
+                                        <x-heroicon-o-calendar class="w-4 h-4 text-gray-500" />
+                                        {{ \Carbon\Carbon::parse($stock->tanggal_mulai_pakai)->format('d M Y') }}
+                                    </span>
+                                @else
+                                    -
+                                @endif
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Tanggal Akhir Peminjaman</label>
+                            <p class="text-gray-800 font-medium">
+                                @if($stock->tanggal_akhir_pakai)
+                                    <span class="flex items-center gap-2">
+                                        <x-heroicon-o-calendar class="w-4 h-4 text-gray-500" />
+                                        {{ \Carbon\Carbon::parse($stock->tanggal_akhir_pakai)->format('d M Y') }}
+                                    </span>
+                                @else
+                                    -
+                                @endif
+                            </p>
+                        </div>
+                        @if($stock->tanggal_akhir_pakai && $stock->tanggal_mulai_pakai)
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-600 mb-2">Status Peminjaman</label>
+                            @php
+                                $now = \Carbon\Carbon::now();
+                                $endDate = \Carbon\Carbon::parse($stock->tanggal_akhir_pakai);
+                                $startDate = \Carbon\Carbon::parse($stock->tanggal_mulai_pakai);
+                                $daysLeft = $now->diffInDays($endDate, false);
+                                $totalDays = $startDate->diffInDays($endDate);
+                                $daysPassed = $startDate->diffInDays($now);
+                                $progress = $totalDays > 0 ? min(100, ($daysPassed / $totalDays) * 100) : 0;
+                            @endphp
+                            
+                            <div class="space-y-2">
+                                @if($daysLeft > 7)
+                                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                        <x-heroicon-o-check-circle class="w-5 h-5 mr-2" />
+                                        Masih {{ ceil($daysLeft) }} hari lagi
+                                    </span>
+                                @elseif($daysLeft > 0)
+                                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                                        <x-heroicon-o-exclamation-triangle class="w-5 h-5 mr-2" />
+                                        Segera berakhir dalam {{ ceil($daysLeft) }} hari
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                        <x-heroicon-o-x-circle class="w-5 h-5 mr-2" />
+                                        Sudah melewati {{ abs(floor($daysLeft)) }} hari
+                                    </span>
+                                @endif
+                                
+                                <!-- Progress Bar -->
+                                <div class="w-full bg-gray-200 rounded-full h-2.5 mt-3">
+                                    <div class="h-2.5 rounded-full transition-all duration-300
+                                        @if($progress < 50) bg-green-500
+                                        @elseif($progress < 90) bg-yellow-500
+                                        @else bg-red-500
+                                        @endif" 
+                                        style="width: {{ $progress }}%">
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 text-center mt-1">
+                                    {{ number_format($progress, 1) }}% waktu peminjaman telah berlalu
+                                </p>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
     </div>

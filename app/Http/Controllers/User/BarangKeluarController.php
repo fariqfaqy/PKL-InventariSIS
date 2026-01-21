@@ -19,10 +19,10 @@ class BarangKeluarController extends Controller
         // Hanya filter jika ada tipe yang dipilih (bukan "semua")
         if ($request->has('tipe') && $request->tipe && in_array($request->tipe, ['peminjaman', 'permintaan'])) {
             if ($request->tipe == 'peminjaman') {
-                // Peminjaman = Barang Sewa
+                // Peminjaman = Aset Sewa
                 $query->where('kategori', 'barang_sewa');
             } else {
-                // Permintaan = Barang Habis Pakai
+                // Permintaan = Material Umum
                 $query->where('kategori', 'habis_pakai');
             }
         }

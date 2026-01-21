@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('request_barangs', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        Schema::table('stock', function (Blueprint $table) {
+            $table->string('nama_pengguna')->nullable()->after('user_pakai_id')
+                  ->comment('Nama pengguna yang menggunakan aset (input manual)');
         });
     }
 
@@ -22,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('request_barangs');
+        Schema::table('stock', function (Blueprint $table) {
+            $table->dropColumn('nama_pengguna');
+        });
     }
 };

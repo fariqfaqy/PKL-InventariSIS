@@ -96,7 +96,7 @@
                 <label class="block text-sm font-medium text-gray-500 mb-1">Kategori</label>
                 @if($barangKeluar->stock->kategori === 'barang_sewa')
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-                        Barang Sewa
+                        Aset Sewa
                     </span>
                 @else
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">

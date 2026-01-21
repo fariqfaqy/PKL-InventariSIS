@@ -22,6 +22,11 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'division_id',
+        'nip',
+        'jabatan',
+        'no_telp',
+        'tanggal_masuk',
     ];
 
     /**
@@ -44,6 +49,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'tanggal_masuk' => 'date',
         ];
     }
 
@@ -61,5 +67,33 @@ class User extends Authenticatable
     public function isUser(): bool
     {
         return $this->role === 'user';
+    }
+
+    /**
+     * Get the division that the user belongs to.
+     */
+    public function division()
+    {
+        return $this->belongsTo(Division::class);
+    }
+
+    /**
+     * Get all request barang made by the user.
+     */
+    public function requestBarangs()
+    {
+        return $this->hasMany(RequestBarang::class, 'user_id');
+    }
+
+    /**
+     * Get the user's full information.
+     */
+    public function getFullInfoAttribute()
+    {
+        $info = $this->name;
+        if ($this->nip) {
+            $info .= ' (' . $this->nip . ')';
+        }
+        return $info;
     }
 }

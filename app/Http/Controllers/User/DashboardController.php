@@ -49,12 +49,12 @@ class DashboardController extends Controller
         $raks = collect(['1a', '1b', '1c', '2a', '2b', '2c']);
 
         // Recent transactions barang keluar (untuk user)
-        // Tampilkan hanya barang sewa yang sedang dipakai milik user ini
+        // Tampilkan hanya aset sewa yang sedang dipakai milik user ini
         $recentTransactions = OutgoingTransaction::with('stock')
             ->where('penginput', auth()->user()->name) // penginput berisi nama user, bukan email
             ->whereNotNull('diproses_oleh') // sudah di-approve admin
             ->where('status', 'sedang_dipakai') // belum selesai
-            ->where('kategori', 'barang_sewa') // hanya barang sewa
+            ->where('kategori', 'barang_sewa') // hanya aset sewa
             ->orderBy('tanggal', 'desc')
             ->get(); // tampilkan semua tanpa limit
         
@@ -79,12 +79,12 @@ class DashboardController extends Controller
      */
     public function getActivePemakaian()
     {
-        // Ambil pemakaian yang aktif (hanya barang sewa yang sedang dipakai milik user ini)
+        // Ambil pemakaian yang aktif (hanya aset sewa yang sedang dipakai milik user ini)
         $activePemakaian = OutgoingTransaction::with('stock')
             ->where('penginput', auth()->user()->name) // penginput berisi nama user, bukan email
             ->whereNotNull('diproses_oleh')
             ->where('status', 'sedang_dipakai')
-            ->where('kategori', 'barang_sewa') // hanya barang sewa
+            ->where('kategori', 'barang_sewa') // hanya aset sewa
             ->orderBy('tanggal', 'desc')
             ->get() // tampilkan semua tanpa limit
             ->map(function ($trans) {
@@ -99,7 +99,7 @@ class DashboardController extends Controller
                     'is_barang_sewa' => $trans->kategori === 'barang_sewa',
                 ];
 
-                // Tambahkan info sewa jika barang sewa
+                // Tambahkan info sewa jika aset sewa
                 if ($trans->kategori === 'barang_sewa') {
                     $data['durasi_sewa'] = $trans->durasi_sewa;
                     $data['tanggal_mulai_sewa'] = $trans->tanggal_mulai_sewa ? $trans->tanggal_mulai_sewa->format('d/m/Y') : null;

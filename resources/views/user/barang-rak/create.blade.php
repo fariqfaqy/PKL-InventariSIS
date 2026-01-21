@@ -144,7 +144,7 @@ function updateBarangInfo() {
         
         const kategoriSpan = document.getElementById('info-kategori');
         if (kategori === 'barang_sewa') {
-            kategoriSpan.innerHTML = '<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">Barang Sewa</span>';
+            kategoriSpan.innerHTML = '<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">Aset Sewa</span>';;
         } else {
             kategoriSpan.innerHTML = '<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">Habis Pakai</span>';
         }

@@ -21,8 +21,12 @@ class BarangMasukController extends Controller
             ->select('masuk.*', 'stock.kategori');
         
         // Filter by kategori if provided
-        if ($request->filled('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
-            $query->where('stock.kategori', $request->kategori);
+        if ($request->filled('kategori')) {
+            if ($request->kategori === 'material_umum') {
+                $query->whereIn('stock.kategori', ['habis_pakai', 'barang_pinjam']);
+            } elseif (in_array($request->kategori, ['barang_sewa', 'aset_tetap'])) {
+                $query->where('stock.kategori', $request->kategori);
+            }
         }
         
         // Search by kode or nama barang
@@ -64,13 +68,19 @@ class BarangMasukController extends Controller
             'kodebarang' => 'required|string|max:255',
             'namabarang' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'kategori' => 'required|in:barang_sewa,habis_pakai,aset_tetap',
+            'kategori' => 'required|in:barang_sewa,material_umum,aset_tetap',
+            'sub_kategori' => 'nullable|required_if:kategori,material_umum|in:barang_habis_pakai,barang_pinjam',
             'qty' => 'required|integer|min:1',
             'rack' => 'required|in:1a,1b,1c,2a,2b,2c',
             'deskripsi' => 'nullable|string',
             'tanggal' => 'required|date',
             'keterangan' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'nama_pengguna' => 'nullable|string|max:255',
+            'tanggal_mulai_pakai' => 'nullable|date',
+            'tanggal_akhir_pakai' => 'nullable|date|after_or_equal:tanggal_mulai_pakai',
+        ], [
+            'sub_kategori.required_if' => 'Sub-kategori wajib diisi untuk Material Umum',
+            'sub_kategori.in' => 'Sub-kategori harus berupa Barang Habis Pakai atau Barang Pinjam',
         ]);
 
         // Handle image upload with security
@@ -100,12 +110,18 @@ class BarangMasukController extends Controller
         // Check if stock exists by kodebarang
         $stock = Stock::where('kodebarang', $validated['kodebarang'])->first();
 
+        // Determine actual kategori for database storage
+        // material_umum -> habis_pakai (kategori), with sub_kategori (barang_habis_pakai/barang_pinjam)
+        $actualKategori = $validated['kategori'] === 'material_umum' ? 'habis_pakai' : $validated['kategori'];
+        $actualSubKategori = $validated['kategori'] === 'material_umum' ? $validated['sub_kategori'] : null;
+
         if ($stock) {
             // If stock exists, update the quantity and other fields
             $stock->increment('stock', $validated['qty']);
             
-            // Update kategori, namabarang, deskripsi if provided
-            $stock->kategori = $validated['kategori'];
+            // Update kategori, sub_kategori, namabarang, deskripsi
+            $stock->kategori = $actualKategori;
+            $stock->sub_kategori = $actualSubKategori;
             $stock->namabarang = $validated['namabarang'];
             if (isset($validated['deskripsi'])) {
                 $stock->deskripsi = $validated['deskripsi'];
@@ -120,20 +136,51 @@ class BarangMasukController extends Controller
                 $stock->image = $imagePath;
             }
             
+            // Update user and rental dates for barang_sewa
+            if ($validated['kategori'] === 'barang_sewa') {
+                $stock->nama_pengguna = $validated['nama_pengguna'] ?? null;
+                $stock->tanggal_mulai_pakai = $validated['tanggal_mulai_pakai'] ?? null;
+                $stock->tanggal_akhir_pakai = $validated['tanggal_akhir_pakai'] ?? null;
+                
+                // Set status kondisi based on user assignment
+                if ($validated['nama_pengguna']) {
+                    $stock->status_kondisi = 'digunakan';
+                } else {
+                    $stock->status_kondisi = 'tersedia';
+                }
+            }
+            
             $stock->save();
             $idbarang = $stock->idbarang;
         } else {
             // If stock doesn't exist, create new stock
-            $stock = Stock::create([
+            $stockData = [
                 'kodebarang' => $validated['kodebarang'],
                 'namabarang' => $validated['namabarang'],
                 'stock' => $validated['qty'],
                 'deskripsi' => $validated['deskripsi'] ?? 'Barang baru',
                 'image' => $imagePath,
                 'rack' => $validated['rack'],
-                'kategori' => $validated['kategori'],
+                'kategori' => $actualKategori,
+                'sub_kategori' => $actualSubKategori,
                 'penginput' => auth()->user()->name,
-            ]);
+            ];
+            
+            // Add user and rental info for barang_sewa
+            if ($actualKategori === 'barang_sewa') {
+                $stockData['nama_pengguna'] = $validated['nama_pengguna'] ?? null;
+                $stockData['tanggal_mulai_pakai'] = $validated['tanggal_mulai_pakai'] ?? null;
+                $stockData['tanggal_akhir_pakai'] = $validated['tanggal_akhir_pakai'] ?? null;
+                
+                // Set status kondisi based on user assignment
+                if ($validated['nama_pengguna']) {
+                    $stockData['status_kondisi'] = 'digunakan';
+                } else {
+                    $stockData['status_kondisi'] = 'tersedia';
+                }
+            }
+            
+            $stock = Stock::create($stockData);
             $idbarang = $stock->idbarang;
         }
 

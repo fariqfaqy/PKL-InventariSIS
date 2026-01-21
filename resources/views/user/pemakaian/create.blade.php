@@ -12,8 +12,8 @@
                 <x-heroicon-o-document-plus class="w-7 h-7 text-white" />
             </div>
             <div>
-                <h2 class="text-2xl font-bold text-gray-800">Ajukan Request Pemakaian</h2>
-                <p class="text-sm text-gray-500 mt-1">Ajukan permintaan barang habis pakai atau peminjaman barang sewa</p>
+                <h2 class="text-2xl font-bold text-gray-800">Ajukan Request Material Umum</h2>
+                <p class="text-sm text-gray-500 mt-1">Pegawai dapat request material umum untuk barang habis pakai atau barang pinjam</p>
             </div>
         </div>
         <a href="{{ route('user.pemakaian.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300">
@@ -50,15 +50,32 @@
         <form action="{{ route('user.pemakaian.store') }}" method="POST" class="space-y-6">
             @csrf
             
-            <!-- Pilih Tipe Request -->
+            <!-- Info Box Material Umum -->
+            <div class="bg-cyan-50 border-l-4 border-cyan-500 p-4 rounded-lg">
+                <div class="flex items-start">
+                    <x-heroicon-o-information-circle class="w-5 h-5 text-cyan-500 mt-0.5 mr-3 shrink-0" />
+                    <div>
+                        <p class="text-sm font-semibold text-cyan-800">Kategori Material Umum</p>
+                        <p class="text-sm text-cyan-700 mt-1">
+                            <span class="font-semibold">Barang Habis Pakai:</span> Barang yang digunakan dan tidak dikembalikan (ATK, konsumable).<br>
+                            <span class="font-semibold">Barang Pinjam:</span> Barang yang dipinjam sementara dan harus dikembalikan (alat kerja, equipment).
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pilih Sub-Kategori Material Umum -->
             <div>
-                <label for="tipe_request" class="block text-sm font-medium text-gray-700 mb-2">Tipe Request *</label>
-                <select name="tipe_request" id="tipe_request" required onchange="toggleTipeRequest()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('tipe_request') border-red-500 @enderror">
-                    <option value="">-- Pilih Tipe Request --</option>
-                    <option value="permintaan" {{ old('tipe_request') == 'permintaan' ? 'selected' : '' }}>Permintaan (Barang Habis Pakai)</option>
-                    <option value="peminjaman" {{ old('tipe_request') == 'peminjaman' ? 'selected' : '' }}>Peminjaman (Barang Sewa)</option>
+                <label for="sub_kategori" class="block text-sm font-medium text-gray-700 mb-2">Sub-Kategori Material Umum *</label>
+                <select name="sub_kategori" id="sub_kategori" required onchange="updateBarangList()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('sub_kategori') border-red-500 @enderror">
+                    <option value="">-- Pilih Sub-Kategori --</option>
+                    <option value="barang_habis_pakai" {{ old('sub_kategori') == 'barang_habis_pakai' ? 'selected' : '' }}>Barang Habis Pakai (Permintaan)</option>
+                    <option value="barang_pinjam" {{ old('sub_kategori') == 'barang_pinjam' ? 'selected' : '' }}>Barang Pinjam (Peminjaman)</option>
                 </select>
-                @error('tipe_request')
+                <p class="mt-1 text-xs text-gray-500">
+                    Pilih apakah Anda membutuhkan barang habis pakai atau barang pinjam
+                </p>
+                @error('sub_kategori')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
@@ -67,35 +84,34 @@
             <div>
                 <label for="idbarang" class="block text-sm font-medium text-gray-700 mb-2">Pilih Barang *</label>
                 <select name="idbarang" id="idbarang" required onchange="updateStockInfo()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('idbarang') border-red-500 @enderror">
-                    <option value="">-- Pilih tipe request terlebih dahulu --</option>
-                    @if(old('idbarang'))
-                        @foreach($barangs as $barang)
-                            @if($barang->idbarang == old('idbarang'))
-                                <option value="{{ $barang->idbarang }}" selected
-                                        data-stock="{{ $barang->stock }}"
-                                        data-nama="{{ $barang->namabarang }}"
-                                        data-kode="{{ $barang->kodebarang }}"
-                                        data-kategori="{{ $barang->kategori }}"
-                                        data-durasi="{{ $barang->durasi_sewa }}">
-                                    {{ $barang->kodebarang }} - {{ $barang->namabarang }} (Stok: {{ $barang->stock }})
-                                </option>
-                            @endif
-                        @endforeach
-                    @endif
+                    <option value="">-- Pilih sub-kategori terlebih dahulu --</option>
                 </select>
                 @error('idbarang')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
-                <!-- Hidden data untuk barang -->
-                <div id="barangData" style="display: none;">
-                    @foreach($barangs as $barang)
+                
+                <!-- Hidden data untuk barang habis pakai -->
+                <div id="barangHabisPakaiData" style="display: none;">
+                    @foreach($barangHabisPakai as $barang)
                     <div class="barang-item" 
                          data-id="{{ $barang->idbarang }}"
                          data-stock="{{ $barang->stock }}"
                          data-nama="{{ $barang->namabarang }}"
                          data-kode="{{ $barang->kodebarang }}"
-                         data-kategori="{{ $barang->kategori }}"
-                         data-durasi="{{ $barang->durasi_sewa }}">
+                         data-sub-kategori="barang_habis_pakai">
+                    </div>
+                    @endforeach
+                </div>
+                
+                <!-- Hidden data untuk barang pinjam -->
+                <div id="barangPinjamData" style="display: none;">
+                    @foreach($barangPinjam as $barang)
+                    <div class="barang-item" 
+                         data-id="{{ $barang->idbarang }}"
+                         data-stock="{{ $barang->stock }}"
+                         data-nama="{{ $barang->namabarang }}"
+                         data-kode="{{ $barang->kodebarang }}"
+                         data-sub-kategori="barang_pinjam">
                     </div>
                     @endforeach
                 </div>
@@ -110,19 +126,22 @@
                     </div>
                     <div class="border-t border-blue-200 pt-2">
                         <div class="flex justify-between items-center">
-                            <span class="text-sm text-gray-600">Kategori Barang:</span>
-                            <span id="kategoriValue" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">-</span>
+                            <span class="text-sm text-gray-600">Sub-Kategori:</span>
+                            <span id="subKategoriValue" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">-</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tanggal Peminjaman (hanya untuk peminjaman barang sewa) -->
+            <!-- Tanggal Peminjaman (hanya untuk barang_pinjam) -->
+            <div id="tanggalSection" class="hidden space-y-4">
             <div id="tanggalSection" class="hidden space-y-4">
                 <div class="bg-purple-50 border-l-4 border-purple-400 p-4 rounded-lg">
                     <p class="text-sm text-purple-800 font-medium">
                         <x-heroicon-o-information-circle class="w-4 h-4 inline mr-1" />
-                        Tentukan periode peminjaman barang sewa
+                        Tentukan periode peminjaman barang. Barang harus dikembalikan sesuai tanggal yang ditentukan.
+                    </p>
+                </div>
                     </p>
                 </div>
                 
@@ -225,85 +244,66 @@
 </div>
 
 <script>
-function toggleTipeRequest() {
-    const tipeRequestSelect = document.getElementById('tipe_request');
-    const tipeRequest = tipeRequestSelect.value;
+/**
+ * Update list barang berdasarkan sub-kategori yang dipilih
+ */
+function updateBarangList() {
+    const subKategoriSelect = document.getElementById('sub_kategori');
+    const subKategori = subKategoriSelect.value;
+    const barangSelect = document.getElementById('idbarang');
     const tanggalSection = document.getElementById('tanggalSection');
     const tanggalPinjam = document.getElementById('tanggal_pinjam');
     const tanggalKembali = document.getElementById('tanggal_kembali');
-    const barangSelect = document.getElementById('idbarang');
-    
-    console.log('Tipe request dipilih:', tipeRequest);
     
     // Reset select barang
     barangSelect.innerHTML = '<option value="">-- Pilih Barang --</option>';
     document.getElementById('stockInfo').classList.add('hidden');
     
-    if (!tipeRequest) {
-        barangSelect.innerHTML = '<option value="">-- Pilih tipe request terlebih dahulu --</option>';
+    if (!subKategori) {
+        barangSelect.innerHTML = '<option value="">-- Pilih sub-kategori terlebih dahulu --</option>';
         tanggalSection.classList.add('hidden');
         tanggalPinjam.required = false;
         tanggalKembali.required = false;
         return;
     }
     
-    // Ambil data barang dari hidden div
-    const barangItems = document.querySelectorAll('.barang-item');
-    let filteredCount = 0;
+    // Pilih data barang berdasarkan sub-kategori
+    const dataContainerId = subKategori === 'barang_habis_pakai' ? 'barangHabisPakaiData' : 'barangPinjamData';
+    const barangItems = document.querySelectorAll(`#${dataContainerId} .barang-item`);
     
-    console.log('Total barang items:', barangItems.length);
-    
+    let count = 0;
     barangItems.forEach(item => {
-        const kategori = item.getAttribute('data-kategori');
         const id = item.getAttribute('data-id');
         const kode = item.getAttribute('data-kode');
         const nama = item.getAttribute('data-nama');
         const stock = item.getAttribute('data-stock');
-        const durasi = item.getAttribute('data-durasi');
         
-        console.log('Barang:', kode, '| Kategori:', kategori);
-        
-        let shouldShow = false;
-        
-        if (tipeRequest === 'peminjaman' && kategori === 'barang_sewa') {
-            shouldShow = true;
-        } else if (tipeRequest === 'permintaan' && kategori === 'habis_pakai') {
-            shouldShow = true;
-        }
-        
-        if (shouldShow) {
-            const option = document.createElement('option');
-            option.value = id;
-            option.textContent = kode + ' - ' + nama + ' (Stok: ' + stock + ')';
-            option.setAttribute('data-stock', stock);
-            option.setAttribute('data-nama', nama);
-            option.setAttribute('data-kode', kode);
-            option.setAttribute('data-kategori', kategori);
-            option.setAttribute('data-durasi', durasi);
-            barangSelect.appendChild(option);
-            filteredCount++;
-            console.log('Barang ditambahkan:', kode);
-        }
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = kode + ' - ' + nama + ' (Stok: ' + stock + ')';
+        option.setAttribute('data-stock', stock);
+        option.setAttribute('data-nama', nama);
+        option.setAttribute('data-kode', kode);
+        option.setAttribute('data-sub-kategori', subKategori);
+        barangSelect.appendChild(option);
+        count++;
     });
     
-    console.log('Filtered count:', filteredCount);
+    // Update placeholder dan section tanggal
+    if (count === 0) {
+        const labelText = subKategori === 'barang_habis_pakai' ? 'barang habis pakai' : 'barang pinjam';
+        barangSelect.innerHTML = `<option value="">-- Tidak ada ${labelText} tersedia --</option>`;
+    } else {
+        const labelText = subKategori === 'barang_habis_pakai' ? 'barang habis pakai' : 'barang pinjam';
+        barangSelect.options[0].text = `-- Pilih ${labelText} --`;
+    }
     
-    // Update placeholder dan tanggal section
-    if (tipeRequest === 'peminjaman') {
-        if (filteredCount === 0) {
-            barangSelect.innerHTML = '<option value="">-- Tidak ada barang sewa tersedia --</option>';
-        } else {
-            barangSelect.options[0].text = '-- Pilih barang sewa --';
-        }
+    // Show/hide tanggal section berdasarkan sub-kategori
+    if (subKategori === 'barang_pinjam') {
         tanggalSection.classList.remove('hidden');
         tanggalPinjam.required = true;
         tanggalKembali.required = true;
-    } else if (tipeRequest === 'permintaan') {
-        if (filteredCount === 0) {
-            barangSelect.innerHTML = '<option value="">-- Tidak ada barang habis pakai tersedia --</option>';
-        } else {
-            barangSelect.options[0].text = '-- Pilih barang habis pakai --';
-        }
+    } else {
         tanggalSection.classList.add('hidden');
         tanggalPinjam.required = false;
         tanggalKembali.required = false;
@@ -312,27 +312,31 @@ function toggleTipeRequest() {
     }
 }
 
+/**
+ * Update info stok saat barang dipilih
+ */
 function updateStockInfo() {
     const select = document.getElementById('idbarang');
     const option = select.options[select.selectedIndex];
     const stockInfo = document.getElementById('stockInfo');
     const stockValue = document.getElementById('stockValue');
-    const kategoriValue = document.getElementById('kategoriValue');
+    const subKategoriValue = document.getElementById('subKategoriValue');
     const qtyInput = document.getElementById('qty');
     
     if (option.value) {
         const stock = option.getAttribute('data-stock');
-        const kategori = option.getAttribute('data-kategori');
+        const subKategori = option.getAttribute('data-sub-kategori');
         
         stockInfo.classList.remove('hidden');
         stockValue.textContent = stock + ' unit';
         
-        if (kategori === 'barang_sewa') {
-            kategoriValue.textContent = 'Barang Sewa';
-            kategoriValue.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800';
-        } else {
-            kategoriValue.textContent = 'Habis Pakai';
-            kategoriValue.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800';
+        // Set badge sub-kategori
+        if (subKategori === 'barang_habis_pakai') {
+            subKategoriValue.textContent = 'Barang Habis Pakai';
+            subKategoriValue.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800';
+        } else if (subKategori === 'barang_pinjam') {
+            subKategoriValue.textContent = 'Barang Pinjam';
+            subKategoriValue.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800';
         }
         
         // Set max qty
@@ -348,7 +352,7 @@ function updateStockInfo() {
     }
 }
 
-// Validasi qty saat user mengetik
+// DOM Ready
 document.addEventListener('DOMContentLoaded', function() {
     const qtyInput = document.getElementById('qty');
     const form = document.querySelector('form');
@@ -371,27 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Restore state jika ada old values (after validation error)
-    const oldTipeRequest = '{{ old("tipe_request") }}';
-    const oldIdBarang = '{{ old("idbarang") }}';
-    
-    if (oldTipeRequest) {
-        console.log('Restoring old state:', oldTipeRequest, oldIdBarang);
-        // Trigger toggle to populate barang options
-        setTimeout(function() {
-            toggleTipeRequest();
-            
-            // Select the old barang if exists
-            if (oldIdBarang) {
-                setTimeout(function() {
-                    const barangSelect = document.getElementById('idbarang');
-                    barangSelect.value = oldIdBarang;
-                    updateStockInfo();
-                }, 100);
-            }
-        }, 100);
-    }
-    
+    // Validasi qty saat user mengetik
     qtyInput.addEventListener('input', function() {
         const max = this.getAttribute('max');
         if (max && parseInt(this.value) > parseInt(max)) {
@@ -400,6 +384,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Validasi sebelum submit
     form.addEventListener('submit', function(e) {
         const max = qtyInput.getAttribute('max');
         const value = qtyInput.value;
@@ -417,6 +402,24 @@ document.addEventListener('DOMContentLoaded', function() {
         submitButton.disabled = true;
         submitText.textContent = 'Mengirim...';
     });
+    
+    // Restore state jika ada old values (after validation error)
+    const oldSubKategori = '{{ old("sub_kategori") }}';
+    const oldIdBarang = '{{ old("idbarang") }}';
+    
+    if (oldSubKategori) {
+        setTimeout(function() {
+            updateBarangList();
+            
+            if (oldIdBarang) {
+                setTimeout(function() {
+                    const barangSelect = document.getElementById('idbarang');
+                    barangSelect.value = oldIdBarang;
+                    updateStockInfo();
+                }, 100);
+            }
+        }, 100);
+    }
 });
 </script>
 @endsection

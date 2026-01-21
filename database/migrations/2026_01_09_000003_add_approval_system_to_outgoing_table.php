@@ -15,7 +15,7 @@ return new class extends Migration
             // Ubah status menjadi approval status
             $table->enum('status_approval', ['pending', 'approved', 'rejected'])->default('pending')->after('kodebarang_k');
             
-            // Tanggal peminjaman dan pengembalian untuk barang sewa
+            // Tanggal peminjaman dan pengembalian untuk aset sewa
             $table->date('tanggal_pinjam')->nullable()->after('tanggal');
             $table->date('tanggal_kembali')->nullable()->after('tanggal_pinjam');
             

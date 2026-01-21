@@ -88,25 +88,64 @@ class PemakaianController extends Controller
             ->orderBy('tanggal_request', 'desc')
             ->get();
 
-        return view('user.pemakaian.index', compact('requests', 'changeRequests', 'sedangDipakai', 'selesai', 'ditolakDibatalkan', 'outgoingTransactions'));
+        // Hitung notifikasi untuk badge
+        $requestNotifCount = $requests->where('status', 'pending')->count() + 
+                            $requests->where('status', 'approved')->count();
+        $changeRequestNotifCount = $changeRequests->where('status', 'pending')->count();
+        $historyNotifCount = $sedangDipakai->count() + $selesai->count();
+        
+        // Total notifikasi untuk badge sidebar (hanya muncul jika ada yang belum dilihat)
+        $userNotificationCount = $requestNotifCount + $changeRequestNotifCount + $historyNotifCount;
+
+        return view('user.pemakaian.index', compact(
+            'requests', 
+            'changeRequests', 
+            'sedangDipakai', 
+            'selesai', 
+            'ditolakDibatalkan', 
+            'outgoingTransactions',
+            'requestNotifCount',
+            'changeRequestNotifCount',
+            'historyNotifCount',
+            'userNotificationCount'
+        ));
     }
 
     /**
      * Show the form for creating a new pemakaian.
+     * 
+     * Pegawai hanya bisa request Material Umum (kategori: habis_pakai)
+     * dengan 2 sub-kategori:
+     * - barang_habis_pakai (permintaan - tidak dikembalikan)
+     * - barang_pinjam (peminjaman - harus dikembalikan)
      */
     public function create()
     {
-        // Tampilkan hanya barang sewa dan habis pakai yang ada stoknya (exclude aset tetap)
-        $barangs = Stock::whereIn('kategori', ['barang_sewa', 'habis_pakai'])
+        // Pegawai hanya bisa request Material Umum (habis_pakai)
+        // Pisahkan berdasarkan sub_kategori
+        $barangHabisPakai = Stock::where('kategori', 'habis_pakai')
+            ->where('sub_kategori', 'barang_habis_pakai')
+            ->where('stock', '>', 0)
+            ->orderBy('namabarang')
+            ->get();
+            
+        $barangPinjam = Stock::where('kategori', 'habis_pakai')
+            ->where('sub_kategori', 'barang_pinjam')
             ->where('stock', '>', 0)
             ->orderBy('namabarang')
             ->get();
 
-        return view('user.pemakaian.create', compact('barangs'));
+        return view('user.pemakaian.create', compact('barangHabisPakai', 'barangPinjam'));
     }
 
     /**
      * Store a newly created pemakaian in storage.
+     * 
+     * Validasi ketat:
+     * - Pegawai hanya bisa request Material Umum (kategori: habis_pakai)
+     * - Sub-kategori: barang_habis_pakai atau barang_pinjam
+     * - Barang pinjam butuh tanggal pinjam & kembali
+     * - Barang habis pakai tidak perlu tanggal
      */
     public function store(Request $request)
     {
@@ -115,23 +154,23 @@ class PemakaianController extends Controller
 
         $request->validate([
             'idbarang' => 'required|exists:stock,idbarang',
+            'sub_kategori' => 'required|in:barang_habis_pakai,barang_pinjam',
             'qty' => 'required|integer|min:1',
             'keperluan' => 'required|string',
             'penerima' => 'required|string|max:255',
-            'tipe_request' => 'required|in:peminjaman,permintaan',
-            'tanggal_pinjam' => 'nullable|required_if:tipe_request,peminjaman|date|after_or_equal:today',
-            'tanggal_kembali' => 'nullable|required_if:tipe_request,peminjaman|date|after:tanggal_pinjam',
+            'tanggal_pinjam' => 'nullable|required_if:sub_kategori,barang_pinjam|date|after_or_equal:today',
+            'tanggal_kembali' => 'nullable|required_if:sub_kategori,barang_pinjam|date|after:tanggal_pinjam',
             'catatan_user' => 'nullable|string',
         ], [
             'idbarang.required' => 'Barang harus dipilih',
             'idbarang.exists' => 'Barang yang dipilih tidak valid',
+            'sub_kategori.required' => 'Sub-kategori harus dipilih',
+            'sub_kategori.in' => 'Sub-kategori tidak valid',
             'qty.required' => 'Jumlah harus diisi',
             'qty.min' => 'Jumlah minimal 1',
             'penerima.required' => 'Nama penerima harus diisi',
-            'tipe_request.required' => 'Tipe request harus dipilih',
-            'tipe_request.in' => 'Tipe request tidak valid',
-            'tanggal_pinjam.required_if' => 'Tanggal pinjam wajib diisi untuk peminjaman barang sewa',
-            'tanggal_kembali.required_if' => 'Tanggal kembali wajib diisi untuk peminjaman barang sewa',
+            'tanggal_pinjam.required_if' => 'Tanggal pinjam wajib diisi untuk barang pinjam',
+            'tanggal_kembali.required_if' => 'Tanggal kembali wajib diisi untuk barang pinjam',
             'tanggal_kembali.after' => 'Tanggal kembali harus setelah tanggal pinjam',
             'keperluan.required' => 'Keperluan wajib diisi',
         ]);
@@ -140,21 +179,22 @@ class PemakaianController extends Controller
         try {
             $stock = Stock::findOrFail($request->idbarang);
 
-            // Validasi tipe request sesuai dengan kategori barang
-            if ($request->tipe_request == 'peminjaman' && $stock->kategori != 'barang_sewa') {
-                Log::warning('Tipe request tidak sesuai kategori', [
-                    'tipe_request' => $request->tipe_request,
-                    'kategori' => $stock->kategori
+            // VALIDASI KETAT: Pegawai hanya bisa request Material Umum (habis_pakai)
+            if ($stock->kategori !== 'habis_pakai') {
+                Log::warning('Kategori barang tidak diizinkan untuk pegawai', [
+                    'kategori' => $stock->kategori,
+                    'user' => Auth::user()->name
                 ]);
-                return back()->withInput()->with('error', 'Peminjaman hanya untuk barang sewa!');
+                return back()->withInput()->with('error', 'Pegawai hanya dapat request Material Umum!');
             }
-            
-            if ($request->tipe_request == 'permintaan' && $stock->kategori != 'habis_pakai') {
-                Log::warning('Tipe request tidak sesuai kategori', [
-                    'tipe_request' => $request->tipe_request,
-                    'kategori' => $stock->kategori
+
+            // Validasi sub_kategori harus sesuai dengan barang yang dipilih
+            if ($stock->sub_kategori !== $request->sub_kategori) {
+                Log::warning('Sub-kategori request tidak sesuai dengan barang', [
+                    'request_sub_kategori' => $request->sub_kategori,
+                    'stock_sub_kategori' => $stock->sub_kategori
                 ]);
-                return back()->withInput()->with('error', 'Permintaan hanya untuk barang habis pakai!');
+                return back()->withInput()->with('error', 'Sub-kategori barang tidak sesuai!');
             }
 
             // Validasi stok mencukupi
@@ -166,8 +206,12 @@ class PemakaianController extends Controller
                 return back()->withInput()->with('error', 'Stok tidak mencukupi! Stok tersedia: ' . $stock->stock . ' unit');
             }
 
-            // Determine tipe_request untuk RequestBarang
-            $tipeRequestBarang = $request->tipe_request == 'peminjaman' ? 'pinjam_sewa' : 'pakai_habis_pakai';
+            // Tentukan tipe_request untuk RequestBarang
+            // barang_habis_pakai -> pakai_habis_pakai (permintaan)
+            // barang_pinjam -> pinjam_material (peminjaman)
+            $tipeRequestBarang = $request->sub_kategori === 'barang_habis_pakai' 
+                ? 'pakai_habis_pakai' 
+                : 'pinjam_material';
 
             // Create RequestBarang untuk approval admin
             $requestBarang = RequestBarang::create([
@@ -178,16 +222,25 @@ class PemakaianController extends Controller
                 'keperluan' => $request->keperluan,
                 'penerima' => $request->penerima,
                 'catatan_user' => $request->catatan_user ?? null,
-                'tanggal_mulai_sewa' => $request->tipe_request == 'peminjaman' ? $request->tanggal_pinjam : null,
-                'tanggal_akhir_sewa' => $request->tipe_request == 'peminjaman' ? $request->tanggal_kembali : null,
+                'tanggal_mulai_sewa' => $request->sub_kategori === 'barang_pinjam' ? $request->tanggal_pinjam : null,
+                'tanggal_akhir_sewa' => $request->sub_kategori === 'barang_pinjam' ? $request->tanggal_kembali : null,
                 'status' => 'pending',
                 'tanggal_request' => now(),
             ]);
 
-            Log::info('RequestBarang created successfully', ['id' => $requestBarang->id_request]);
+            Log::info('RequestBarang created successfully', [
+                'id' => $requestBarang->id_request,
+                'sub_kategori' => $request->sub_kategori,
+                'tipe_request' => $tipeRequestBarang
+            ]);
 
             DB::commit();
-            return redirect()->route('user.pemakaian.index')->with('success', 'Request berhasil diajukan! Menunggu persetujuan admin.');
+            
+            $message = $request->sub_kategori === 'barang_habis_pakai' 
+                ? 'Permintaan barang habis pakai berhasil diajukan! Menunggu persetujuan admin.' 
+                : 'Peminjaman barang berhasil diajukan! Menunggu persetujuan admin.';
+                
+            return redirect()->route('user.pemakaian.index')->with('success', $message);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error creating request', [

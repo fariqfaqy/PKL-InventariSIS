@@ -21,12 +21,20 @@ class Stock extends Model
         'kodebarang',
         'rack',
         'kategori',
+        'sub_kategori',
         'jenis',
         'merek',
         'tipe',
         'durasi_sewa',
         'tanggal_mulai_sewa',
         'tanggal_akhir_sewa',
+        'status_kondisi',
+        'keterangan_kondisi',
+        'tanggal_update_kondisi',
+        'nama_pengguna',
+        'durasi_pakai',
+        'tanggal_mulai_pakai',
+        'tanggal_akhir_pakai',
     ];
 
     /**
@@ -82,5 +90,46 @@ class Stock extends Model
             default:
                 return 'secondary';
         }
+    }
+
+    /**
+     * Get status kondisi label
+     */
+    public function getStatusKondisiLabelAttribute()
+    {
+        return match($this->status_kondisi) {
+            'digunakan' => 'Digunakan',
+            'diperbaiki' => 'Diperbaiki',
+            'rusak' => 'Rusak',
+            default => 'Digunakan'
+        };
+    }
+
+    /**
+     * Get status kondisi badge color
+     */
+    public function getStatusKondisiBadgeAttribute()
+    {
+        return match($this->status_kondisi) {
+            'digunakan' => 'bg-blue-100 text-blue-800',
+            'diperbaiki' => 'bg-yellow-100 text-yellow-800',
+            'rusak' => 'bg-red-100 text-red-800',
+            default => 'bg-gray-100 text-gray-800'
+        };
+    }
+
+    /**
+     * Get durasi pakai (dalam hari)
+     */
+    public function getDurasiPakaiAttribute()
+    {
+        if (!$this->tanggal_mulai_pakai || !$this->tanggal_akhir_pakai) {
+            return null;
+        }
+        
+        $mulai = \Carbon\Carbon::parse($this->tanggal_mulai_pakai);
+        $akhir = \Carbon\Carbon::parse($this->tanggal_akhir_pakai);
+        
+        return $mulai->diffInDays($akhir) + 1; // +1 untuk include hari pertama
     }
 }

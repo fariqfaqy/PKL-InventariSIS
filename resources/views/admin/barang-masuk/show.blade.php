@@ -83,7 +83,7 @@
                 @if($barangMasuk->stock->kategori === 'barang_sewa')
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
                         <x-heroicon-o-computer-desktop class="w-4 h-4 mr-1" />
-                        Barang Sewa
+                        Aset Sewa
                     </span>
                 @elseif($barangMasuk->stock->kategori === 'aset_tetap')
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">

@@ -233,7 +233,7 @@
                     <div class="flex items-center justify-between text-sm">
                         <div class="flex items-center gap-2">
                             <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
-                            <span class="text-gray-700">Barang Sewa</span>
+                            <span class="text-gray-700">Aset Sewa</span>
                         </div>
                         <span class="font-semibold text-gray-900">{{ $categoryStats['barang_sewa'] }}</span>
                     </div>
@@ -691,7 +691,7 @@
     new Chart(ctxCategory, {
         type: 'doughnut',
         data: {
-            labels: ['Barang Sewa', 'Habis Pakai', 'Aset Tetap'],
+            labels: ['Aset Sewa', 'Material Umum', 'Aset Tetap'],
             datasets: [{
                 data: [
                     {{ $categoryStats['barang_sewa'] }},

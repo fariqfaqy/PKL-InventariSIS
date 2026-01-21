@@ -31,23 +31,47 @@
     </div>
     @endif
 
+    @php
+        $requestsWithAdminNotes = $requests->filter(fn($r) => $r->catatan_admin);
+        $hasAdminUpdates = $requestsWithAdminNotes->count() > 0;
+        
+        // Get latest update timestamp untuk invalidate localStorage jika ada update baru
+        $latestUpdate = $requests->filter(fn($r) => $r->tanggal_diproses)
+            ->sortByDesc('tanggal_diproses')
+            ->first();
+        $latestUpdateTimestamp = $latestUpdate ? $latestUpdate->tanggal_diproses->timestamp : 0;
+    @endphp
+
+    @if($hasAdminUpdates)
+    <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-800 px-4 py-3 rounded-lg flex items-start gap-3">
+        <x-heroicon-o-bell class="w-5 h-5 mt-0.5" />
+        <div>
+            <p class="font-medium">Ada {{ $requestsWithAdminNotes->count() }} pesan dari admin!</p>
+            <p class="text-sm mt-1">Klik "Lihat Detail" pada request yang memiliki badge "Pesan" untuk membaca catatan dari admin.</p>
+        </div>
+    </div>
+    @endif
+
     <!-- Tabs -->
     <div class="border-b border-gray-200">
         <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-            <button onclick="switchTab('requests')" id="tab-requests" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm tab-button active">
+            <button onclick="switchTab('requests')" id="tab-requests" class="border-[#14a2ba] text-[#14a2ba] hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm tab-button active">
                 Request Saya
-                @if($requests->where('status', 'pending')->count() > 0)
-                    <span class="ml-2 bg-red-500 text-white rounded-full px-2 py-0.5 text-xs">{{ $requests->where('status', 'pending')->count() }}</span>
+                @if($requestNotifCount > 0)
+                    <span class="ml-2 bg-blue-500 text-white rounded-full px-2 py-0.5 text-xs font-semibold">{{ $requestNotifCount }}</span>
                 @endif
             </button>
             <button onclick="switchTab('changes')" id="tab-changes" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm tab-button">
                 Request Perubahan
-                @if($changeRequests->where('status', 'pending')->count() > 0)
-                    <span class="ml-2 bg-orange-500 text-white rounded-full px-2 py-0.5 text-xs">{{ $changeRequests->where('status', 'pending')->count() }}</span>
+                @if($changeRequestNotifCount > 0)
+                    <span class="ml-2 bg-orange-500 text-white rounded-full px-2 py-0.5 text-xs font-semibold">{{ $changeRequestNotifCount }}</span>
                 @endif
             </button>
             <button onclick="switchTab('history')" id="tab-history" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm tab-button">
                 History Pemakaian
+                @if($historyNotifCount > 0)
+                    <span class="ml-2 bg-green-500 text-white rounded-full px-2 py-0.5 text-xs font-semibold">{{ $historyNotifCount }}</span>
+                @endif
             </button>
         </nav>
     </div>
@@ -77,8 +101,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penerima</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sub-Kategori</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
@@ -94,15 +117,19 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->qty }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->penerima ?? '-' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <x-heroicon-o-document-plus class="w-3 h-3 mr-1" />
-                                        Request Asli
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_sewa' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
-                                        {{ $item->tipe_request_label }}
-                                    </span>
+                                    @if($item->stock && $item->stock->sub_kategori)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $item->sub_kategori_badge_color == 'green' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }}">
+                                            @if($item->stock->sub_kategori == 'barang_habis_pakai')
+                                                <x-heroicon-o-archive-box class="w-3 h-3 mr-1" />
+                                                Barang Habis Pakai
+                                            @else
+                                                <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
+                                                Barang Pinjam
+                                            @endif
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400 text-xs">-</span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
                                     <div class="flex items-center justify-center gap-2">
@@ -148,14 +175,24 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penerima</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sub-Kategori</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @foreach($approvedRequests as $item)
-                            <tr class="hover:bg-green-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#{{ $item->id_request }}</td>
+                            <tr class="hover:bg-green-50 transition-colors {{ $item->catatan_admin ? 'bg-blue-50' : '' }}">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-medium text-gray-900">#{{ $item->id_request }}</span>
+                                        @if($item->catatan_admin)
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-500 text-white">
+                                                <x-heroicon-o-chat-bubble-left-ellipsis class="w-3 h-3 mr-0.5" />
+                                                Pesan
+                                            </span>
+                                        @endif
+                                    </div>
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $item->tanggal_request->format('d/m/Y H:i') }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
                                     <div class="font-medium">{{ $item->stock->namabarang }}</div>
@@ -185,9 +222,19 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_sewa' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
-                                        {{ $item->tipe_request_label }}
-                                    </span>
+                                    @if($item->stock && $item->stock->sub_kategori)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $item->sub_kategori_badge_color == 'green' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }}">
+                                            @if($item->stock->sub_kategori == 'barang_habis_pakai')
+                                                <x-heroicon-o-archive-box class="w-3 h-3 mr-1" />
+                                                Barang Habis Pakai
+                                            @else
+                                                <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
+                                                Barang Pinjam
+                                            @endif
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400 text-xs">-</span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
                                     @php
@@ -295,12 +342,12 @@
                                 @if($item->tipe_request == 'pinjam_sewa')
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                         <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
-                                        Pinjam Barang Sewa
+                                        Pinjam Aset Sewa
                                     </span>
                                 @else
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                         <x-heroicon-o-shopping-cart class="w-3 h-3 mr-1" />
-                                        Pakai Barang Habis Pakai
+                                        Pakai Material Umum
                                     </span>
                                 @endif
                             </td>
@@ -563,9 +610,17 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse($ditolakDibatalkan as $item)
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    #{{ $item->id_request }}
+                            <tr class="hover:bg-gray-50 transition-colors {{ $item->catatan_admin ? 'bg-red-50' : '' }}">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-medium text-gray-900">#{{ $item->id_request }}</span>
+                                        @if($item->catatan_admin)
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-500 text-white">
+                                                <x-heroicon-o-chat-bubble-left-ellipsis class="w-3 h-3 mr-0.5" />
+                                                Alasan
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     {{ $item->tanggal_request->format('d/m/Y H:i') }}
@@ -632,6 +687,7 @@
 </div>
 
 <script>
+// Simple tab switching - no localStorage tracking, seperti admin
 function switchTab(tab) {
     // Hide all tab contents
     document.querySelectorAll('.tab-content').forEach(content => {

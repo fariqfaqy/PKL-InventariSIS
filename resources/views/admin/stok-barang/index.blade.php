@@ -10,14 +10,14 @@
             <h2 class="text-2xl font-bold text-gray-800">
                 @if(isset($kategori))
                     @if($kategori == 'barang_sewa')
-                        Stok Barang Sewa
+                        Aset Sewa
                     @elseif($kategori == 'aset_tetap')
-                        Stok Aset Tetap
+                        Aset Tetap
                     @else
-                        Stok Barang Habis Pakai
+                        Material Umum
                     @endif
                 @else
-                    Stok Barang - Semua Kategori
+                    Semua Kategori
                 @endif
             </h2>
             <p class="text-sm text-gray-500 mt-1">Daftar stok barang</p>
@@ -125,10 +125,19 @@
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Kode Barang</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Gambar</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Barang</th>
+                        @if(request('kategori') != 'barang_sewa')
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Kategori</th>
+                        @endif
+                        @if(request('kategori') == 'barang_sewa')
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Status Kondisi</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Pengguna</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Durasi</th>
+                        @endif
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Stok</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Rak</th>
+                        @if(request('kategori') != 'barang_sewa')
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Penginput</th>
+                        @endif
                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Aksi</th>
                     </tr>
                 </thead>
@@ -153,19 +162,76 @@
                         <td class="px-4 py-3 text-sm text-gray-900">
                             {{ $stock->namabarang }}
                         </td>
+                        @if(request('kategori') != 'barang_sewa')
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                             @if($stock->kategori === 'barang_sewa')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                     <x-heroicon-o-computer-desktop class="w-3 h-3 mr-1" />
-                                    Barang Sewa
+                                    Aset Sewa
                                 </span>
-                            @else
+                            @elseif($stock->kategori === 'barang_pinjam')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    <x-heroicon-o-arrow-path-rounded-square class="w-3 h-3 mr-1" />
+                                    Barang Pinjam
+                                </span>
+                            @elseif($stock->kategori === 'aset_tetap')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
+                                    <x-heroicon-o-building-office class="w-3 h-3 mr-1" />
+                                    Aset Tetap
+                                </span>
+                            @elseif($stock->kategori === 'habis_pakai')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                                     <x-heroicon-o-shopping-bag class="w-3 h-3 mr-1" />
-                                    Habis Pakai
+                                    Barang Habis Pakai
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    <x-heroicon-o-question-mark-circle class="w-3 h-3 mr-1" />
+                                    {{ ucfirst(str_replace('_', ' ', $stock->kategori)) }}
                                 </span>
                             @endif
                         </td>
+                        @endif
+                        @if(request('kategori') == 'barang_sewa')
+                        <td class="px-4 py-3 whitespace-nowrap text-sm">
+                            <div class="flex items-center gap-2">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $stock->status_kondisi_badge ?? 'bg-gray-100 text-gray-800' }}">
+                                    {{ $stock->status_kondisi_label ?? 'Digunakan' }}
+                                </span>
+                                <button 
+                                    onclick="openStatusModal({{ $stock->idbarang }}, '{{ $stock->namabarang }}', '{{ $stock->status_kondisi ?? 'digunakan' }}', '{{ $stock->keterangan_kondisi ?? '' }}')"
+                                    class="text-blue-600 hover:text-blue-700"
+                                    title="Update Status"
+                                >
+                                    <x-heroicon-o-pencil-square class="w-4 h-4" />
+                                </button>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                            @if($stock->nama_pengguna)
+                                <div class="flex flex-col">
+                                    <span class="font-medium text-gray-800">{{ $stock->nama_pengguna }}</span>
+                                    @if($stock->tanggal_mulai_pakai && $stock->tanggal_akhir_pakai)
+                                    <span class="text-xs text-gray-500">
+                                        {{ \Carbon\Carbon::parse($stock->tanggal_mulai_pakai)->format('d/m/Y') }} - 
+                                        {{ \Carbon\Carbon::parse($stock->tanggal_akhir_pakai)->format('d/m/Y') }}
+                                    </span>
+                                    @endif
+                                </div>
+                            @else
+                                <span class="text-gray-400 text-xs">-</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                            @if($stock->durasi_pakai)
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                    {{ $stock->durasi_pakai }} hari
+                                </span>
+                            @else
+                                <span class="text-gray-400 text-xs">-</span>
+                            @endif
+                        </td>
+                        @endif
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $stock->stock > 10 ? 'bg-green-100 text-green-800' : ($stock->stock > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
                                 {{ $stock->stock }}
@@ -176,9 +242,11 @@
                                 {{ strtoupper($stock->rack) }}
                             </span>
                         </td>
+                        @if(request('kategori') != 'barang_sewa')
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                             {{ $stock->penginput }}
                         </td>
+                        @endif
                         <td class="px-4 py-3 whitespace-nowrap text-center text-sm font-medium">
                             <div class="flex items-center justify-center gap-2">
                                 <a href="{{ route('admin.stok-barang.show', $stock->idbarang) }}" class="text-blue-600 hover:text-blue-700 transition-colors" title="Detail">
@@ -226,9 +294,58 @@
     </div>
 </div>
 
+<!-- Status Kondisi Modal -->
+<div id="statusModal" class="hidden fixed inset-0 backdrop-blur-sm bg-white/30 z-50 flex items-center justify-center transition-all duration-300 opacity-0" onclick="closeStatusModal()">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl transform scale-95 transition-all duration-300" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold text-gray-800">Update Status Kondisi</h3>
+            <button onclick="closeStatusModal()" class="text-gray-400 hover:text-gray-600">
+                <x-heroicon-o-x-mark class="w-6 h-6" />
+            </button>
+        </div>
+        
+        <form id="statusForm" method="POST" action="">
+            @csrf
+            @method('PUT')
+            
+            <div class="mb-4">
+                <p class="text-sm text-gray-600 mb-4">Barang: <span id="statusBarangName" class="font-semibold text-gray-800"></span></p>
+            </div>
+            
+            <div class="mb-4">
+                <label for="status_kondisi" class="block text-sm font-medium text-gray-700 mb-2">Status Kondisi</label>
+                <select id="status_kondisi" name="status_kondisi" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
+                    <option value="digunakan">Digunakan</option>
+                    <option value="diperbaiki">Diperbaiki</option>
+                    <option value="rusak">Rusak</option>
+                </select>
+            </div>
+            
+            <div class="mb-6">
+                <label for="keterangan_kondisi" class="block text-sm font-medium text-gray-700 mb-2">Keterangan (Opsional)</label>
+                <textarea id="keterangan_kondisi" name="keterangan_kondisi" rows="3"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent"
+                    placeholder="Tambahkan keterangan jika diperlukan..."></textarea>
+            </div>
+            
+            <div class="flex gap-3">
+                <button type="button" onclick="closeStatusModal()"
+                    class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    Batal
+                </button>
+                <button type="submit"
+                    class="flex-1 px-4 py-2 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-300">
+                    Simpan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- QR Code Modal -->
-<div id="qrModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" onclick="closeQRModal()">
-    <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl" onclick="event.stopPropagation()">
+<div id="qrModal" class="hidden fixed inset-0 backdrop-blur-sm bg-white/30 z-50 flex items-center justify-center transition-all duration-300 opacity-0" onclick="closeQRModal()">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl transform scale-95 transition-all duration-300" onclick="event.stopPropagation()">
         <div class="text-center">
             <h3 class="text-xl font-bold text-gray-800 mb-2">QR Code Produk</h3>
             <p class="text-sm text-gray-500 mb-6">Scan untuk lihat detail produk</p>
@@ -247,20 +364,64 @@
 function openQRModal(qrId, kode) {
     const qrElement = document.getElementById(qrId);
     if (qrElement) {
-        document.getElementById('qrModal').classList.remove('hidden');
+        const modal = document.getElementById('qrModal');
+        modal.classList.remove('hidden');
         document.getElementById('qrCodeText').textContent = kode;
         document.getElementById('qrCodeContainer').innerHTML = qrElement.innerHTML;
+        
+        // Trigger animation
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modal.querySelector('div').classList.remove('scale-95');
+            modal.querySelector('div').classList.add('scale-100');
+        }, 10);
     }
 }
 
 function closeQRModal() {
-    document.getElementById('qrModal').classList.add('hidden');
+    const modal = document.getElementById('qrModal');
+    modal.classList.add('opacity-0');
+    modal.querySelector('div').classList.remove('scale-100');
+    modal.querySelector('div').classList.add('scale-95');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+// Modal Status Kondisi
+function openStatusModal(idbarang, namabarang, status, keterangan) {
+    const modal = document.getElementById('statusModal');
+    modal.classList.remove('hidden');
+    document.getElementById('statusBarangName').textContent = namabarang;
+    document.getElementById('statusForm').action = `/admin/stok-barang/${idbarang}/update-status`;
+    document.getElementById('status_kondisi').value = status;
+    document.getElementById('keterangan_kondisi').value = keterangan;
+    
+    // Trigger animation
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.querySelector('div').classList.remove('scale-95');
+        modal.querySelector('div').classList.add('scale-100');
+    }, 10);
+}
+
+function closeStatusModal() {
+    const modal = document.getElementById('statusModal');
+    modal.classList.add('opacity-0');
+    modal.querySelector('div').classList.remove('scale-100');
+    modal.querySelector('div').classList.add('scale-95');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
 }
 
 // Close modal dengan ESC key
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeQRModal();
+        closeStatusModal();
     }
 });
 </script>

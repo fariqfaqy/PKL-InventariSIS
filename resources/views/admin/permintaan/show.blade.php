@@ -47,12 +47,30 @@
 
             <!-- User Info -->
             <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Informasi User</h2>
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Informasi Pegawai</h2>
                 <div class="space-y-3">
                     <div class="flex justify-between">
                         <span class="text-gray-600">Nama:</span>
                         <span class="font-medium">{{ $permintaan->user->name }}</span>
                     </div>
+                    @if($permintaan->user->nip)
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">NIP:</span>
+                        <span class="font-medium font-mono">{{ $permintaan->user->nip }}</span>
+                    </div>
+                    @endif
+                    @if($permintaan->user->division)
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Divisi:</span>
+                        <span class="font-medium">{{ $permintaan->user->division->nama_divisi }}</span>
+                    </div>
+                    @endif
+                    @if($permintaan->user->jabatan)
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Jabatan:</span>
+                        <span class="font-medium">{{ $permintaan->user->jabatan }}</span>
+                    </div>
+                    @endif
                     <div class="flex justify-between">
                         <span class="text-gray-600">Email:</span>
                         <span class="font-medium">{{ $permintaan->user->email }}</span>

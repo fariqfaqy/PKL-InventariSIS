@@ -39,7 +39,7 @@
                             <div>
                                 <span class="text-gray-600">Kategori:</span>
                                 @if($assignment->stock->kategori === 'barang_sewa')
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full ml-2">Barang Sewa</span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full ml-2">Aset Sewa</span>
                                 @else
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full ml-2">Habis Pakai</span>
                                 @endif

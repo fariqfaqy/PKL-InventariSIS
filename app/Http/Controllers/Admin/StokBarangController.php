@@ -17,8 +17,13 @@ class StokBarangController extends Controller
         $query = Stock::query();
         
         // Filter by kategori if provided
-        if ($request->has('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
-            $query->where('kategori', $request->kategori);
+        if ($request->has('kategori')) {
+            if ($request->kategori === 'material_umum') {
+                // Material Umum includes both habis_pakai and barang_pinjam
+                $query->whereIn('kategori', ['habis_pakai', 'barang_pinjam']);
+            } elseif (in_array($request->kategori, ['barang_sewa', 'habis_pakai', 'barang_pinjam', 'aset_tetap'])) {
+                $query->where('kategori', $request->kategori);
+            }
         }
         
         // Search by kode or nama barang
@@ -82,11 +87,19 @@ class StokBarangController extends Controller
             'deskripsi' => 'nullable|string',
             'stock' => 'required|integer|min:0',
             'rack' => 'required|in:1a,1b,1c,2a,2b,2c',
-            'kategori' => 'required|in:barang_sewa,habis_pakai',
+            'kategori' => 'required|in:barang_sewa,habis_pakai,aset_tetap',
+            'sub_kategori' => 'nullable|required_if:kategori,habis_pakai|in:barang_habis_pakai,barang_pinjam',
             'jenis' => 'required|string|max:100',
             'merek' => 'required|string|max:100',
             'tipe' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'nama_pengguna' => 'nullable|string|max:255',
+            'durasi_pakai' => 'nullable|integer|min:1',
+            'tanggal_mulai_pakai' => 'nullable|date',
+            'tanggal_akhir_pakai' => 'nullable|date|after_or_equal:tanggal_mulai_pakai',
+        ], [
+            'sub_kategori.required_if' => 'Sub-kategori wajib diisi untuk Material Umum',
+            'sub_kategori.in' => 'Sub-kategori tidak valid',
         ]);
 
         // Handle image upload with security
@@ -120,11 +133,17 @@ class StokBarangController extends Controller
             'stock' => $validated['stock'],
             'rack' => $validated['rack'],
             'kategori' => $validated['kategori'],
+            'sub_kategori' => $validated['kategori'] === 'habis_pakai' ? $validated['sub_kategori'] : null,
             'jenis' => $validated['jenis'],
             'merek' => $validated['merek'],
             'tipe' => $validated['tipe'],
             'image' => $imagePath,
             'penginput' => auth()->user()->name,
+            'nama_pengguna' => $validated['nama_pengguna'] ?? null,
+            'durasi_pakai' => $validated['durasi_pakai'] ?? null,
+            'tanggal_mulai_pakai' => $validated['tanggal_mulai_pakai'] ?? null,
+            'tanggal_akhir_pakai' => $validated['tanggal_akhir_pakai'] ?? null,
+            'status_kondisi' => $validated['kategori'] === 'barang_sewa' ? 'digunakan' : null,
         ]);
 
         return redirect()->route('admin.stok-barang.index')
@@ -162,11 +181,15 @@ class StokBarangController extends Controller
             'deskripsi' => 'nullable|string',
             'stock' => 'required|integer|min:0',
             'rack' => 'required|in:1a,1b,1c,2a,2b,2c',
-            'kategori' => 'required|in:barang_sewa,habis_pakai',
+            'kategori' => 'required|in:barang_sewa,habis_pakai,aset_tetap',
+            'sub_kategori' => 'nullable|required_if:kategori,habis_pakai|in:barang_habis_pakai,barang_pinjam',
             'jenis' => 'required|string|max:100',
             'merek' => 'required|string|max:100',
             'tipe' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ], [
+            'sub_kategori.required_if' => 'Sub-kategori wajib diisi untuk Material Umum',
+            'sub_kategori.in' => 'Sub-kategori tidak valid',
         ]);
 
         // Handle image upload if present with security
@@ -195,6 +218,13 @@ class StokBarangController extends Controller
             
             $image->move(public_path('images/barang'), $imageName);
             $validated['image'] = $imageName;
+        }
+
+        // Set sub_kategori based on kategori
+        if ($validated['kategori'] === 'habis_pakai') {
+            $validated['sub_kategori'] = $validated['sub_kategori'];
+        } else {
+            $validated['sub_kategori'] = null;
         }
 
         $stock->update($validated);

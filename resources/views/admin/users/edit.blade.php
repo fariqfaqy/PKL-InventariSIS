@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Edit User')
+@section('title', 'Edit Pegawai')
 
 @section('content')
 <div class="space-y-6">
@@ -10,8 +10,8 @@
             <x-heroicon-o-arrow-left class="w-6 h-6" />
         </a>
         <div>
-            <h2 class="text-2xl font-bold text-gray-800">Edit User</h2>
-            <p class="text-sm text-gray-500 mt-1">Perbarui data pengguna</p>
+            <h2 class="text-2xl font-bold text-gray-800">Edit Pegawai</h2>
+            <p class="text-sm text-gray-500 mt-1">Perbarui data pegawai</p>
         </div>
     </div>
 
@@ -21,48 +21,140 @@
             @csrf
             @method('PUT')
 
-            <!-- Nama -->
+            <!-- Section: Informasi Akun -->
             <div>
-                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
-                    Nama Lengkap <span class="text-red-500">*</span>
-                </label>
-                <input type="text" name="name" id="name" required
-                    value="{{ old('name', $user->name) }}"
-                    placeholder="Masukkan nama lengkap"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('name') border-red-500 @enderror">
-                @error('name')
-                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                @enderror
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+                    <x-heroicon-o-user class="w-5 h-5 inline-block mr-2" />
+                    Informasi Akun
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Nama -->
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                            Nama Lengkap <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="name" id="name" required
+                            value="{{ old('name', $user->name) }}"
+                            placeholder="Masukkan nama lengkap"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('name') border-red-500 @enderror">
+                        @error('name')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                            Email <span class="text-red-500">*</span>
+                        </label>
+                        <input type="email" name="email" id="email" required
+                            value="{{ old('email', $user->email) }}"
+                            placeholder="contoh@email.com"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('email') border-red-500 @enderror">
+                        @error('email')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Role -->
+                    <div class="md:col-span-2">
+                        <label for="role" class="block text-sm font-medium text-gray-700 mb-2">
+                            Role <span class="text-red-500">*</span>
+                        </label>
+                        <select name="role" id="role" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('role') border-red-500 @enderror">
+                            <option value="">-- Pilih Role --</option>
+                            <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
+                            <option value="user" {{ old('role', $user->role) == 'user' ? 'selected' : '' }}>User</option>
+                        </select>
+                        @error('role')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
             </div>
 
-            <!-- Email -->
-            <div>
-                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                    Email <span class="text-red-500">*</span>
-                </label>
-                <input type="email" name="email" id="email" required
-                    value="{{ old('email', $user->email) }}"
-                    placeholder="contoh@email.com"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('email') border-red-500 @enderror">
-                @error('email')
-                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                @enderror
-            </div>
+            <!-- Section: Data Pegawai -->
+            <div class="pt-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+                    <x-heroicon-o-identification class="w-5 h-5 inline-block mr-2" />
+                    Data Pegawai
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- NIP -->
+                    <div>
+                        <label for="nip" class="block text-sm font-medium text-gray-700 mb-2">
+                            NIP
+                        </label>
+                        <input type="text" name="nip" id="nip"
+                            value="{{ old('nip', $user->nip) }}"
+                            placeholder="Nomor Induk Pegawai"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('nip') border-red-500 @enderror">
+                        @error('nip')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
 
-            <!-- Role -->
-            <div>
-                <label for="role" class="block text-sm font-medium text-gray-700 mb-2">
-                    Role <span class="text-red-500">*</span>
-                </label>
-                <select name="role" id="role" required
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('role') border-red-500 @enderror">
-                    <option value="">-- Pilih Role --</option>
-                    <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
-                    <option value="user" {{ old('role', $user->role) == 'user' ? 'selected' : '' }}>User</option>
-                </select>
-                @error('role')
-                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                @enderror
+                    <!-- Divisi -->
+                    <div>
+                        <label for="division_id" class="block text-sm font-medium text-gray-700 mb-2">
+                            Divisi
+                        </label>
+                        <select name="division_id" id="division_id"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('division_id') border-red-500 @enderror">
+                            <option value="">-- Pilih Divisi --</option>
+                            @foreach($divisions as $division)
+                            <option value="{{ $division->id }}" {{ old('division_id', $user->division_id) == $division->id ? 'selected' : '' }}>
+                                {{ $division->nama_divisi }}
+                            </option>
+                            @endforeach
+                        </select>
+                        @error('division_id')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Jabatan -->
+                    <div>
+                        <label for="jabatan" class="block text-sm font-medium text-gray-700 mb-2">
+                            Jabatan
+                        </label>
+                        <input type="text" name="jabatan" id="jabatan"
+                            value="{{ old('jabatan', $user->jabatan) }}"
+                            placeholder="Contoh: Staff IT"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('jabatan') border-red-500 @enderror">
+                        @error('jabatan')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- No Telp -->
+                    <div>
+                        <label for="no_telp" class="block text-sm font-medium text-gray-700 mb-2">
+                            No. Telepon
+                        </label>
+                        <input type="text" name="no_telp" id="no_telp"
+                            value="{{ old('no_telp', $user->no_telp) }}"
+                            placeholder="08XXXXXXXXXX"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('no_telp') border-red-500 @enderror">
+                        @error('no_telp')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Tanggal Masuk -->
+                    <div>
+                        <label for="tanggal_masuk" class="block text-sm font-medium text-gray-700 mb-2">
+                            Tanggal Masuk
+                        </label>
+                        <input type="date" name="tanggal_masuk" id="tanggal_masuk"
+                            value="{{ old('tanggal_masuk', $user->tanggal_masuk ? $user->tanggal_masuk->format('Y-m-d') : '') }}"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('tanggal_masuk') border-red-500 @enderror">
+                        @error('tanggal_masuk')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
             </div>
 
             <!-- Password Section -->

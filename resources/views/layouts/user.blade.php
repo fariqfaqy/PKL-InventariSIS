@@ -44,16 +44,16 @@
                     
                     <!-- Submenu Stok Barang -->
                     <div id="stok-barang-user-submenu" class="{{ request()->routeIs('user.stok-barang.*') ? '' : 'hidden' }} ml-4 space-y-1">
-                        <!-- Barang Sewa -->
+                        <!-- Aset Sewa -->
                         <a href="{{ route('user.stok-barang.index', ['kategori' => 'barang_sewa']) }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('user.stok-barang.*') && request('kategori') == 'barang_sewa' ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200">
                             <x-heroicon-o-computer-desktop class="w-4 h-4" />
-                            <span class="text-sm font-medium">Barang Sewa</span>
+                            <span class="text-sm font-medium">Aset Sewa</span>
                         </a>
                         
-                        <!-- Barang Habis Pakai -->
+                        <!-- Material Umum -->
                         <a href="{{ route('user.stok-barang.index', ['kategori' => 'habis_pakai']) }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('user.stok-barang.*') && request('kategori') == 'habis_pakai' ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200">
                             <x-heroicon-o-shopping-bag class="w-4 h-4" />
-                            <span class="text-sm font-medium">Barang Habis Pakai</span>
+                            <span class="text-sm font-medium">Material Umum</span>
                         </a>
                         
                         <!-- Aset Tetap -->
@@ -100,9 +100,16 @@
                 </a>
 
                 <!-- Pemakaian Barang (CRUD - Standalone) -->
-                <a href="{{ route('user.pemakaian.index') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('user.pemakaian.*') ? 'text-white bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f]' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
-                    <x-heroicon-o-clipboard-document-list class="w-5 h-5" />
-                    <span class="font-medium">Pemakaian Saya</span>
+                <a href="{{ route('user.pemakaian.index') }}" class="flex items-center justify-between gap-3 px-4 py-3 {{ request()->routeIs('user.pemakaian.*') ? 'text-white bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f]' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
+                    <div class="flex items-center gap-3">
+                        <x-heroicon-o-clipboard-document-list class="w-5 h-5" />
+                        <span class="font-medium">Pemakaian Saya</span>
+                    </div>
+                    @if(isset($userNotificationCount) && $userNotificationCount > 0)
+                        <span id="pemakaian-sidebar-badge" class="flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-xs font-bold rounded-full">
+                            {{ $userNotificationCount > 9 ? '9+' : $userNotificationCount }}
+                        </span>
+                    @endif
                 </a>
 
                 <div class="border-t border-gray-200 my-4"></div>
@@ -120,12 +127,6 @@
                     <x-heroicon-o-document-text class="w-5 h-5 {{ request()->routeIs('user.activity-log.*') ? 'text-white' : 'group-hover:text-[#14a2ba]' }}" />
                     <span class="font-medium">Activity Log</span>
                 </a> --}}
-
-                <!-- Pengaturan -->
-                <a href="{{ route('user.settings') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('user.settings') ? 'text-white bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f]' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
-                    <x-heroicon-o-cog-6-tooth class="w-5 h-5" />
-                    <span class="font-medium">Pengaturan</span>
-                </a>
 
                 <!-- Logout -->
                 <form action="{{ route('logout') }}" method="POST">
