@@ -18,26 +18,26 @@ class StokBarangController extends Controller
         $query = Stock::query();
 
         // Filter berdasarkan kategori
-        if ($request->has('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
+        if ($request->filled('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
             $query->where('kategori', $request->kategori);
         }
 
         // Filter berdasarkan pencarian
-        if ($request->has('search') && $request->search != '') {
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('kodebarang', 'like', "%{$search}%")
-                  ->orWhere('namabarang', 'like', "%{$search}%");
+                $q->where('kodebarang', 'ILIKE', "%{$search}%")
+                  ->orWhere('namabarang', 'ILIKE', "%{$search}%");
             });
         }
 
         // Filter berdasarkan rak (dari kolom rack di stock)
-        if ($request->has('rack') && $request->rack != '') {
+        if ($request->filled('rack')) {
             $query->where('rack', $request->rack);
         }
 
         // Filter berdasarkan status stok
-        if ($request->has('status') && $request->status != '') {
+        if ($request->filled('status')) {
             switch ($request->status) {
                 case 'kritis':
                     $query->where('stock', '<=', 4);
@@ -51,7 +51,7 @@ class StokBarangController extends Controller
             }
         }
 
-        $stocks = $query->orderBy('created_at', 'desc')->paginate(15);
+        $stocks = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
         
         // Get racks yang tersedia (dari kolom rack di stock)
         $racks = Stock::whereNotNull('rack')

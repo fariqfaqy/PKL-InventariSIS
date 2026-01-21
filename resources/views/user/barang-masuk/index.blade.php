@@ -71,7 +71,7 @@
                     <x-heroicon-o-magnifying-glass class="w-4 h-4" />
                     <span class="font-medium">Filter</span>
                 </button>
-                <a href="{{ route('user.barang-masuk.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300">
+                <a href="{{ route('user.barang-masuk.index', isset($kategori) ? ['kategori' => $kategori] : []) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300">
                     <x-heroicon-o-x-mark class="w-4 h-4" />
                     <span class="font-medium">Reset</span>
                 </a>

@@ -65,7 +65,7 @@
                     <x-heroicon-o-magnifying-glass class="w-4 h-4" />
                     <span class="font-medium">Filter</span>
                 </button>
-                <a href="{{ route('user.barang-keluar.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300">
+                <a href="{{ route('user.barang-keluar.index', isset($tipe) ? ['tipe' => $tipe] : []) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300">
                     <x-heroicon-o-x-mark class="w-4 h-4" />
                     <span class="font-medium">Reset</span>
                 </a>
@@ -84,8 +84,8 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode Barang</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Barang</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Periode Sewa</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penerima</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penginput</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -119,26 +119,35 @@
                         <td class="px-6 py-4 text-sm text-gray-900">
                             {{ $item->namabarang_k }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            @if($item->kategori == 'barang_sewa')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                    Sewa
-                                </span>
-                                @if($item->durasi_sewa)
-                                    <div class="text-xs text-gray-500 mt-1">{{ $item->durasi_sewa }} bulan</div>
-                                @endif
-                            @elseif($item->kategori == 'habis_pakai')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">
-                                    Habis Pakai
-                                </span>
-                            @else
-                                <span class="text-xs text-gray-400">-</span>
-                            @endif
-                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                 -{{ $item->qty }}
                             </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            @if($item->kategori == 'barang_sewa' && ($item->tanggal_mulai_sewa || $item->tanggal_akhir_sewa))
+                                <div class="space-y-1">
+                                    @if($item->tanggal_mulai_sewa)
+                                        <div class="flex items-center gap-1 text-xs">
+                                            <span class="text-gray-500">Mulai:</span>
+                                            <span class="font-medium text-blue-600">{{ $item->tanggal_mulai_sewa->format('d/m/Y') }}</span>
+                                        </div>
+                                    @endif
+                                    @if($item->tanggal_akhir_sewa)
+                                        <div class="flex items-center gap-1 text-xs">
+                                            <span class="text-gray-500">Kembali:</span>
+                                            <span class="font-medium text-orange-600">{{ $item->tanggal_akhir_sewa->format('d/m/Y') }}</span>
+                                        </div>
+                                    @endif
+                                    @if($item->tanggal_mulai_sewa && $item->tanggal_akhir_sewa)
+                                        <div class="text-xs text-gray-500">
+                                            ({{ $item->tanggal_mulai_sewa->diffInDays($item->tanggal_akhir_sewa) }} hari)
+                                        </div>
+                                    @endif
+                                </div>
+                            @else
+                                <span class="text-xs text-gray-400">-</span>
+                            @endif
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-900">
                             {{ $item->penerima }}

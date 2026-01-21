@@ -16,20 +16,20 @@ class BarangRakController extends Controller
         $query = Stock::whereNotNull('rack');
 
         // Filter by rack
-        if ($request->has('rack') && $request->rack != '') {
+        if ($request->filled('rack')) {
             $query->where('rack', $request->rack);
         }
 
         // Filter by search
-        if ($request->has('search') && $request->search != '') {
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('kodebarang', 'like', "%{$search}%")
-                  ->orWhere('namabarang', 'like', "%{$search}%");
+                $q->where('kodebarang', 'ILIKE', "%{$search}%")
+                  ->orWhere('namabarang', 'ILIKE', "%{$search}%");
             });
         }
 
-        $assignments = $query->orderBy('rack')->orderBy('namabarang')->paginate(15);
+        $assignments = $query->orderBy('rack')->orderBy('namabarang')->paginate(15)->withQueryString();
         $racks = ['1a', '1b', '1c', '2a', '2b', '2c'];
 
         return view('user.barang-rak.index', compact('assignments', 'racks'));
