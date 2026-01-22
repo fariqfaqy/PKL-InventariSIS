@@ -188,10 +188,16 @@ class PermintaanController extends Controller
                     throw new \Exception('Stok tidak mencukupi! Stok tersedia: ' . $permintaan->stock->stock);
                 }
                 
-                // Convert tipe_request: pinjam_sewa -> peminjaman, pakai_habis_pakai -> permintaan
-                $tipeKeluar = $permintaan->tipe_request === 'pinjam_sewa' ? 'peminjaman' : 'permintaan';
+                // Convert tipe_request untuk OutgoingTransaction
+                // pinjam_sewa / pinjam_material -> 'peminjaman' (harus dikembalikan)
+                // pakai_habis_pakai -> 'permintaan' (tidak dikembalikan)
+                $tipeKeluar = in_array($permintaan->tipe_request, ['pinjam_sewa', 'pinjam_material']) 
+                    ? 'peminjaman' 
+                    : 'permintaan';
                 
-                // Tentukan status: aset sewa = sedang_dipakai, material umum = langsung selesai
+                // Tentukan status OutgoingTransaction:
+                // - peminjaman (pinjam_sewa/pinjam_material) = sedang_dipakai (belum dikembalikan)
+                // - permintaan (pakai_habis_pakai) = selesai (langsung completed)
                 $status = ($tipeKeluar === 'peminjaman') ? 'sedang_dipakai' : 'selesai';
                 $tanggalSelesai = ($tipeKeluar === 'permintaan') ? now() : null;
                 
@@ -200,8 +206,9 @@ class PermintaanController extends Controller
                 Stock::where('idbarang', $permintaan->idbarang)
                     ->decrement('stock', $permintaan->qty);
                 
-                // Update status kondisi jika aset sewa
-                if ($permintaan->stock->kategori === 'barang_sewa' && $tipeKeluar === 'peminjaman') {
+                // Update status kondisi HANYA untuk Aset Sewa (barang_sewa)
+                // Material Umum (barang_pinjam) TIDAK pakai status_kondisi
+                if ($tipeKeluar === 'peminjaman' && $permintaan->stock->kategori === 'barang_sewa') {
                     Stock::where('idbarang', $permintaan->idbarang)->update([
                         'status_kondisi' => 'digunakan',
                         'keterangan_kondisi' => 'Sedang dipinjam oleh ' . ($permintaan->penerima ?? $permintaan->user->name),
@@ -230,9 +237,9 @@ class PermintaanController extends Controller
                 ]);
                 
                 
-                // Update request status:
-                // - Aset SEWA: tetap 'approved' karena user perlu tandai selesai nanti
-                // - Material UMUM: langsung 'completed' karena sudah selesai (barang habis)
+                // Update RequestBarang status:
+                // - peminjaman (pinjam_sewa/pinjam_material): 'approved' karena barang harus dikembalikan
+                // - permintaan (pakai_habis_pakai): 'completed' karena barang tidak dikembalikan
                 $finalStatus = ($tipeKeluar === 'peminjaman') ? 'approved' : 'completed';
                 
                 $permintaan->update([
@@ -369,37 +376,61 @@ class PermintaanController extends Controller
 
     /**
      * Mark request as completed (admin can mark approved requests as completed)
+     * Used for marking rental items (pinjam_sewa & pinjam_material) as returned
      */
     public function markComplete($id)
     {
-        $permintaan = RequestBarang::findOrFail($id);
+        $permintaan = RequestBarang::with('stock')->findOrFail($id);
         
         if ($permintaan->status !== 'approved') {
             return back()->with('error', 'Hanya request yang sudah disetujui yang bisa ditandai selesai!');
         }
         
-        // Auto-reject semua pending change requests untuk request ini
-        RequestBarang::where('parent_request_id', $id)
-            ->where('status', 'pending')
-            ->update([
-                'status' => 'rejected',
-                'catatan_admin' => 'Request ditolak otomatis karena request asli sudah selesai.',
-                'diproses_oleh' => 'System',
-                'tanggal_diproses' => now(),
+        DB::beginTransaction();
+        try {
+            // Auto-reject semua pending change requests untuk request ini
+            RequestBarang::where('parent_request_id', $id)
+                ->where('status', 'pending')
+                ->update([
+                    'status' => 'rejected',
+                    'catatan_admin' => 'Request ditolak otomatis karena request asli sudah selesai.',
+                    'diproses_oleh' => 'System',
+                    'tanggal_diproses' => now(),
+                ]);
+            
+            // Update OutgoingTransaction status ke 'selesai' dan set tanggal_selesai
+            OutgoingTransaction::where('id_request', $id)
+                ->update([
+                    'status' => 'selesai',
+                    'tanggal_selesai' => now(),
+                ]);
+            
+            // Kembalikan stok HANYA untuk Barang Pinjam (pinjam_material)
+            // Aset Sewa (pinjam_sewa) TIDAK dikembalikan, tetap di barang keluar
+            if ($permintaan->tipe_request === 'pinjam_material') {
+                Stock::where('idbarang', $permintaan->idbarang)
+                    ->increment('stock', $permintaan->qty);
+            }
+            
+            // Update status kondisi HANYA untuk Aset Sewa (barang_sewa) yang selesai
+            if ($permintaan->stock->kategori === 'barang_sewa') {
+                Stock::where('idbarang', $permintaan->idbarang)->update([
+                    'status_kondisi' => 'digunakan',
+                    'keterangan_kondisi' => 'Selesai digunakan oleh ' . ($permintaan->penerima ?? $permintaan->user->name),
+                    'tanggal_update_kondisi' => now(),
+                ]);
+            }
+            
+            $permintaan->update([
+                'status' => 'completed',
             ]);
-        
-        // Update OutgoingTransaction status ke 'selesai' dan set tanggal_selesai
-        OutgoingTransaction::where('id_request', $id)
-            ->update([
-                'status' => 'selesai',
-                'tanggal_selesai' => now(),
-            ]);
-        
-        $permintaan->update([
-            'status' => 'completed',
-        ]);
-        
-        return redirect()->route('admin.permintaan.index')
-            ->with('success', 'Request berhasil ditandai selesai dan masuk ke history!');
+            
+            DB::commit();
+            return redirect()->route('admin.permintaan.index')
+                ->with('success', 'Barang telah dikembalikan dan request masuk ke history!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menandai selesai: ' . $e->getMessage());
+        }
     }
 }

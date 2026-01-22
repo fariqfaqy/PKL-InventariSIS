@@ -36,11 +36,19 @@ class RequestBarangController extends Controller
 
     /**
      * Show form to create new request
+     * 
+     * User hanya bisa request Material Umum (kategori: habis_pakai)
+     * dengan 2 sub-kategori:
+     * - barang_habis_pakai (tidak dikembalikan)
+     * - barang_pinjam (harus dikembalikan)
+     * 
+     * Aset Sewa hanya bisa dikelola oleh Admin
      */
     public function create()
     {
-        // Only show aset sewa dan material umum (exclude aset tetap)
-        $stocks = Stock::whereIn('kategori', ['barang_sewa', 'habis_pakai'])
+        // User HANYA bisa request Material Umum (habis_pakai)
+        // Barang lain (Aset Sewa, Aset Tetap) hanya untuk admin
+        $stocks = Stock::where('kategori', 'habis_pakai')
             ->where('stock', '>', 0)
             ->orderBy('namabarang')
             ->get();
@@ -50,6 +58,9 @@ class RequestBarangController extends Controller
 
     /**
      * Store new request
+     * 
+     * User hanya bisa request Material Umum (habis_pakai)
+     * Validasi ketat: Block Aset Sewa & Aset Tetap
      */
     public function store(Request $request)
     {
@@ -65,26 +76,33 @@ class RequestBarangController extends Controller
         // Get stock
         $stock = Stock::findOrFail($validated['idbarang']);
         
+        // VALIDASI KETAT: User hanya bisa request Material Umum (habis_pakai)
+        if ($stock->kategori !== 'habis_pakai') {
+            return back()->with('error', 'Anda hanya dapat request Material Umum! Aset Sewa dan Aset Tetap hanya dapat dikelola oleh Admin.')->withInput();
+        }
+        
         // Validate qty tidak melebihi stok
         if ($validated['qty'] > $stock->stock) {
             return back()->with('error', 'Jumlah permintaan melebihi stok yang tersedia!')->withInput();
         }
         
-        // Determine tipe request berdasarkan kategori
-        $tipeRequest = match($stock->kategori) {
-            'barang_sewa' => 'pinjam_sewa',
-            'habis_pakai' => 'pakai_habis_pakai',
+        // Determine tipe request berdasarkan sub_kategori
+        // barang_habis_pakai -> pakai_habis_pakai (tidak dikembalikan)
+        // barang_pinjam -> pinjam_material (harus dikembalikan)
+        $tipeRequest = match($stock->sub_kategori) {
+            'barang_habis_pakai' => 'pakai_habis_pakai',
+            'barang_pinjam' => 'pinjam_material',
             default => null,
         };
         
         if (!$tipeRequest) {
-            return back()->with('error', 'Kategori barang tidak valid untuk request!')->withInput();
+            return back()->with('error', 'Sub-kategori barang tidak valid! Pastikan barang memiliki sub-kategori yang tepat.')->withInput();
         }
         
-        // Validate rental dates untuk aset sewa
-        if ($tipeRequest === 'pinjam_sewa') {
+        // Validate rental dates untuk barang pinjam
+        if ($tipeRequest === 'pinjam_material') {
             if (!$request->filled('tanggal_mulai_sewa') || !$request->filled('tanggal_akhir_sewa')) {
-                return back()->with('error', 'Tanggal sewa harus diisi untuk aset sewa!')->withInput();
+                return back()->with('error', 'Tanggal pinjam dan kembali harus diisi untuk barang pinjam!')->withInput();
             }
         }
         
@@ -234,11 +252,22 @@ class RequestBarangController extends Controller
                 return back()->with('error', "Jumlah melebihi stok tersedia! Stok tersedia: {$availableStock} (stok saat ini: {$stock->stock} + qty request Anda: {$requestBarang->qty})")->withInput();
             }
             
+            // Determine tipe request based on kategori & sub_kategori
+            // Material Umum (habis_pakai) -> gunakan sub_kategori
+            // Aset Sewa (barang_sewa) -> pinjam_sewa
             $tipeRequest = match($stock->kategori) {
                 'barang_sewa' => 'pinjam_sewa',
-                'habis_pakai' => 'pakai_habis_pakai',
+                'habis_pakai' => match($stock->sub_kategori) {
+                    'barang_habis_pakai' => 'pakai_habis_pakai',
+                    'barang_pinjam' => 'pinjam_material',
+                    default => null,
+                },
                 default => null,
             };
+            
+            if (!$tipeRequest) {
+                return back()->with('error', 'Kategori atau sub-kategori barang tidak valid!')->withInput();
+            }
             
             RequestBarang::create([
                 'user_id' => Auth::id(),
@@ -321,45 +350,61 @@ class RequestBarangController extends Controller
 
     /**
      * Mark request as completed (move to history)
+     * Used when user returns borrowed items (pinjam_sewa & pinjam_material)
      */
     public function complete($id)
     {
-        $request = RequestBarang::where('id_request', $id)
+        $request = RequestBarang::with('stock')
+            ->where('id_request', $id)
             ->where('user_id', Auth::id())
             ->where('status', 'approved')
             ->firstOrFail();
 
-        // Auto-reject semua pending change requests untuk request ini
-        RequestBarang::where('parent_request_id', $id)
-            ->where('status', 'pending')
-            ->update([
-                'status' => 'rejected',
-                'catatan_admin' => 'Request ditolak otomatis karena request asli sudah selesai.',
-                'diproses_oleh' => 'System',
-                'tanggal_diproses' => now(),
+        DB::beginTransaction();
+        try {
+            // Auto-reject semua pending change requests untuk request ini
+            RequestBarang::where('parent_request_id', $id)
+                ->where('status', 'pending')
+                ->update([
+                    'status' => 'rejected',
+                    'catatan_admin' => 'Request ditolak otomatis karena request asli sudah selesai.',
+                    'diproses_oleh' => 'System',
+                    'tanggal_diproses' => now(),
+                ]);
+
+            // Update OutgoingTransaction status ke 'selesai' dan set tanggal_selesai
+            OutgoingTransaction::where('id_request', $id)
+                ->update([
+                    'status' => 'selesai',
+                    'tanggal_selesai' => now(),
+                ]);
+
+            // Kembalikan stok HANYA untuk Barang Pinjam (pinjam_material)
+            // Aset Sewa (pinjam_sewa) TIDAK dikembalikan, tetap di barang keluar
+            if ($request->tipe_request === 'pinjam_material') {
+                Stock::where('idbarang', $request->idbarang)
+                    ->increment('stock', $request->qty);
+            }
+            
+            // Update status kondisi HANYA untuk Aset Sewa (barang_sewa) yang selesai
+            if ($request->stock->kategori === 'barang_sewa') {
+                Stock::where('idbarang', $request->idbarang)->update([
+                    'status_kondisi' => 'digunakan',
+                    'keterangan_kondisi' => 'Selesai digunakan oleh ' . $request->user->name,
+                    'tanggal_update_kondisi' => now(),
+                ]);
+            }
+
+            $request->update([
+                'status' => 'completed',
             ]);
 
-        // Update OutgoingTransaction status ke 'selesai' dan set tanggal_selesai
-        OutgoingTransaction::where('id_request', $id)
-            ->update([
-                'status' => 'selesai',
-                'tanggal_selesai' => now(),
-            ]);
-
-        $request->update([
-            'status' => 'completed',
-        ]);
-        
-        // Update status kondisi barang sewa menjadi tersedia
-        if ($request->stock->kategori === 'barang_sewa') {
-            Stock::where('idbarang', $request->idbarang)->update([
-                'status_kondisi' => 'tersedia',
-                'keterangan_kondisi' => null,
-                'tanggal_update_kondisi' => now(),
-            ]);
+            DB::commit();
+            return redirect()->route('user.pemakaian.index')
+                ->with('success', 'Barang telah dikembalikan dan request masuk ke history.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menandai selesai: ' . $e->getMessage());
         }
-
-        return redirect()->route('user.pemakaian.index')
-            ->with('success', 'Request berhasil ditandai selesai dan masuk ke history.');
     }
 }

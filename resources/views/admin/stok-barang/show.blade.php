@@ -98,7 +98,7 @@
                 @elseif($stock->kategori === 'habis_pakai')
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
                         <x-heroicon-o-shopping-bag class="w-4 h-4 mr-1.5" />
-                        Barang Habis Pakai
+                        Material Umum
                     </span>
                 @else
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">

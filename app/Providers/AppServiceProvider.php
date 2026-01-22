@@ -38,13 +38,11 @@ class AppServiceProvider extends ServiceProvider
                     })
                     ->count();
 
-                // Tab "History Pemakaian" - barang yang sedang dipakai atau baru selesai
-                $historyCount = \App\Models\OutgoingTransaction::where('penginput', auth()->user()->name)
-                    ->whereIn('status', ['sedang_dipakai', 'selesai'])
-                    ->count();
-
-                // Total notifikasi untuk badge sidebar
-                $userNotificationCount = $requestCount + $changeRequestCount + $historyCount;
+                // History tidak dihitung sebagai notifikasi
+                // User hanya perlu notif untuk pending/approved requests, bukan history
+                
+                // Total notifikasi untuk badge sidebar (hanya actionable items)
+                $userNotificationCount = $requestCount + $changeRequestCount;
 
                 $view->with('userNotificationCount', $userNotificationCount);
             }

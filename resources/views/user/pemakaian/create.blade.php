@@ -13,7 +13,7 @@
             </div>
             <div>
                 <h2 class="text-2xl font-bold text-gray-800">Ajukan Request Material Umum</h2>
-                <p class="text-sm text-gray-500 mt-1">Pegawai dapat request material umum untuk barang habis pakai atau barang pinjam</p>
+                <p class="text-sm text-gray-500 mt-1">Pegawai dapat request material umum atau barang pinjam</p>
             </div>
         </div>
         <a href="{{ route('user.pemakaian.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300">
@@ -69,8 +69,8 @@
                 <label for="sub_kategori" class="block text-sm font-medium text-gray-700 mb-2">Sub-Kategori Material Umum *</label>
                 <select name="sub_kategori" id="sub_kategori" required onchange="updateBarangList()" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('sub_kategori') border-red-500 @enderror">
                     <option value="">-- Pilih Sub-Kategori --</option>
-                    <option value="barang_habis_pakai" {{ old('sub_kategori') == 'barang_habis_pakai' ? 'selected' : '' }}>Barang Habis Pakai (Permintaan)</option>
-                    <option value="barang_pinjam" {{ old('sub_kategori') == 'barang_pinjam' ? 'selected' : '' }}>Barang Pinjam (Peminjaman)</option>
+                    <option value="barang_habis_pakai" {{ old('sub_kategori') == 'barang_habis_pakai' ? 'selected' : '' }}>Barang Habis Pakai</option>
+                    <option value="barang_pinjam" {{ old('sub_kategori') == 'barang_pinjam' ? 'selected' : '' }}>Barang Pinjam</option>
                 </select>
                 <p class="mt-1 text-xs text-gray-500">
                     Pilih apakah Anda membutuhkan barang habis pakai atau barang pinjam
@@ -90,7 +90,7 @@
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
                 
-                <!-- Hidden data untuk barang habis pakai -->
+                <!-- Hidden data untuk material umum -->
                 <div id="barangHabisPakaiData" style="display: none;">
                     @foreach($barangHabisPakai as $barang)
                     <div class="barang-item" 
@@ -290,10 +290,10 @@ function updateBarangList() {
     
     // Update placeholder dan section tanggal
     if (count === 0) {
-        const labelText = subKategori === 'barang_habis_pakai' ? 'barang habis pakai' : 'barang pinjam';
+        const labelText = subKategori === 'barang_habis_pakai' ? 'Barang Habis Pakai' : 'Barang Pinjam';
         barangSelect.innerHTML = `<option value="">-- Tidak ada ${labelText} tersedia --</option>`;
     } else {
-        const labelText = subKategori === 'barang_habis_pakai' ? 'barang habis pakai' : 'barang pinjam';
+        const labelText = subKategori === 'barang_habis_pakai' ? 'Barang Habis Pakai' : 'Barang Pinjam';
         barangSelect.options[0].text = `-- Pilih ${labelText} --`;
     }
     

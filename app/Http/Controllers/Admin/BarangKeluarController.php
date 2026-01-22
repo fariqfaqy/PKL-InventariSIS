@@ -18,9 +18,26 @@ class BarangKeluarController extends Controller
     {
         $query = OutgoingTransaction::with('stock');
         
-        // Filter by tipe_request if provided
-        if ($request->filled('tipe') && in_array($request->tipe, ['pinjam_sewa', 'pakai_habis_pakai'])) {
-            $query->where('tipe_request', $request->tipe);
+        // Filter by kategori if provided
+        if ($request->filled('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
+            $query->where('kategori', $request->kategori);
+            
+            // For Aset Sewa: exclude 'ditarik' status by default (kecuali explicitly filtered)
+            if ($request->kategori === 'barang_sewa' && !$request->filled('status_filter')) {
+                $query->whereNotIn('status', ['ditarik']);
+            }
+        }
+
+        // Filter by sub_kategori (khusus untuk Material Umum)
+        if ($request->filled('sub_kategori') && in_array($request->sub_kategori, ['barang_habis_pakai', 'barang_pinjam'])) {
+            $query->whereHas('stock', function($q) use ($request) {
+                $q->where('sub_kategori', $request->sub_kategori);
+            });
+        }
+        
+        // Filter by status (khusus untuk Aset Sewa)
+        if ($request->filled('status_filter') && $request->kategori === 'barang_sewa') {
+            $query->where('status', $request->status_filter);
         }
         
         // Search by kode, nama barang, or penerima
@@ -67,8 +84,8 @@ class BarangKeluarController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'kategori' => 'required|in:barang_sewa,material_umum',
-            'sub_kategori' => 'nullable|required_if:kategori,material_umum|in:habis_pakai,barang_pinjam',
+            'kategori' => 'required|in:barang_sewa,habis_pakai',
+            'sub_kategori' => 'nullable|required_if:kategori,habis_pakai|in:barang_habis_pakai,barang_pinjam',
             'idbarang' => 'required|exists:stock,idbarang',
             'tanggal' => 'required|date',
             'penerima' => 'required|string',
@@ -194,13 +211,27 @@ class BarangKeluarController extends Controller
     /**
      * Export outgoing transactions to PDF.
      */
-    public function exportPdf()
+    public function exportPdf(Request $request)
     {
-        $transactions = OutgoingTransaction::with('stock')
-            ->orderBy('tanggal', 'desc')
-            ->get();
+        $query = OutgoingTransaction::with('stock');
+
+        // Filter by kategori if provided
+        $kategori = $request->get('kategori');
+        if ($kategori && in_array($kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
+            $query->where('kategori', $kategori);
+        }
+
+        // Filter by sub_kategori if provided
+        $subKategori = $request->get('sub_kategori');
+        if ($subKategori && in_array($subKategori, ['barang_habis_pakai', 'barang_pinjam'])) {
+            $query->whereHas('stock', function($q) use ($subKategori) {
+                $q->where('sub_kategori', $subKategori);
+            });
+        }
+
+        $transactions = $query->orderBy('tanggal', 'desc')->get();
         
-        $pdf = Pdf::loadView('admin.pdf.barang-keluar', compact('transactions'))
+        $pdf = Pdf::loadView('admin.pdf.barang-keluar', compact('transactions', 'kategori', 'subKategori'))
             ->setPaper('a4', 'landscape');
         
         $filename = 'Laporan_Barang_Keluar_' . now()->format('Y-m-d_His') . '.pdf';

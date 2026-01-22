@@ -44,11 +44,13 @@
                 @foreach($stocks as $stock)
                     <option value="{{ $stock->idbarang }}" 
                             data-kategori="{{ $stock->kategori }}"
+                            data-sub-kategori="{{ $stock->sub_kategori }}"
                             data-stock="{{ $stock->stock }}"
                             data-nama="{{ $stock->namabarang }}"
                             data-kode="{{ $stock->kodebarang }}"
                             {{ old('idbarang') == $stock->idbarang ? 'selected' : '' }}>
-                        {{ $stock->namabarang }} ({{ $stock->kodebarang }}) - Stok: {{ $stock->stock }} - {{ ucwords(str_replace('_', ' ', $stock->kategori)) }}
+                        {{ $stock->namabarang }} ({{ $stock->kodebarang }}) - Stok: {{ $stock->stock }} 
+                        - {{ $stock->sub_kategori == 'barang_habis_pakai' ? 'Barang Habis Pakai' : 'Barang Pinjam' }}
                     </option>
                 @endforeach
             </select>
@@ -65,8 +67,8 @@
                         <span id="infoKode" class="font-medium ml-2"></span>
                     </div>
                     <div>
-                        <span class="text-gray-600">Kategori:</span>
-                        <span id="infoKategori" class="font-medium ml-2"></span>
+                        <span class="text-gray-600">Sub-Kategori:</span>
+                        <span id="infoSubKategori" class="font-medium ml-2"></span>
                     </div>
                     <div>
                         <span class="text-gray-600">Stok Tersedia:</span>
@@ -86,18 +88,30 @@
             <p class="text-xs text-gray-500 mt-1">Maksimal sesuai stok yang tersedia</p>
         </div>
 
-        <!-- Rental Dates Section (Hidden by default, shown for barang_sewa) -->
-        <div id="rentalSection" class="hidden mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-            <h3 class="text-sm font-medium text-gray-700 mb-3">Periode Sewa</h3>
+        <!-- Rental Dates Section (Hidden by default, shown for barang_pinjam) -->
+        <div id="rentalSection" class="hidden mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h3 class="text-sm font-medium text-gray-700 mb-3">Periode Peminjaman</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label for="tanggal_mulai_sewa" class="block text-sm font-medium text-gray-700 mb-2">
-                        Tanggal Mulai Sewa<span class="text-red-500">*</span>
+                        Tanggal Pinjam<span class="text-red-500">*</span>
                     </label>
                     <input type="date" id="tanggal_mulai_sewa" name="tanggal_mulai_sewa" value="{{ old('tanggal_mulai_sewa') }}"
                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
                 <div>
+                    <label for="tanggal_akhir_sewa" class="block text-sm font-medium text-gray-700 mb-2">
+                        Tanggal Kembali<span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" id="tanggal_akhir_sewa" name="tanggal_akhir_sewa" value="{{ old('tanggal_akhir_sewa') }}"
+                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+            </div>
+            <p class="text-xs text-gray-600 mt-2">
+                <x-heroicon-o-information-circle class="w-4 h-4 inline" />
+                Barang pinjam harus dikembalikan sesuai tanggal yang ditentukan
+            </p>
+        </div>
                     <label for="tanggal_akhir_sewa" class="block text-sm font-medium text-gray-700 mb-2">
                         Tanggal Akhir Sewa<span class="text-red-500">*</span>
                     </label>
@@ -155,14 +169,16 @@ function updateBarangInfo() {
         barangInfo.classList.remove('hidden');
         document.getElementById('infoNama').textContent = selectedOption.dataset.nama;
         document.getElementById('infoKode').textContent = selectedOption.dataset.kode;
-        document.getElementById('infoKategori').textContent = selectedOption.dataset.kategori.replace('_', ' ');
+        const subKategori = selectedOption.dataset.subKategori;
+        document.getElementById('infoSubKategori').textContent = subKategori === 'barang_habis_pakai' ? 'Barang Habis Pakai' : 'Barang Pinjam';
         document.getElementById('infoStok').textContent = selectedOption.dataset.stock;
         
         // Set max qty
         qtyInput.max = selectedOption.dataset.stock;
         
-        // Show/hide rental section based on kategori
-        if (selectedOption.dataset.kategori === 'barang_sewa') {
+        // Show/hide rental section based on sub_kategori
+        // Barang Pinjam (barang_pinjam) butuh tanggal peminjaman
+        if (subKategori === 'barang_pinjam') {
             rentalSection.classList.remove('hidden');
             tanggalMulaiInput.required = true;
             tanggalAkhirInput.required = true;
@@ -172,6 +188,7 @@ function updateBarangInfo() {
             tanggalMulaiInput.min = today;
             tanggalAkhirInput.min = today;
         } else {
+            // Material Umum (barang_habis_pakai) tidak butuh tanggal
             rentalSection.classList.add('hidden');
             tanggalMulaiInput.required = false;
             tanggalAkhirInput.required = false;

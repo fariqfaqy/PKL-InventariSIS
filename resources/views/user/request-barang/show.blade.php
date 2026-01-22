@@ -74,7 +74,13 @@
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-600">Kategori:</span>
-                        <span class="font-medium capitalize">{{ str_replace('_', ' ', $request->stock->kategori) }}</span>
+                        <span class="font-medium">Material Umum</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Sub-Kategori:</span>
+                        <span class="font-medium">
+                            {{ $request->stock->sub_kategori == 'barang_habis_pakai' ? 'Barang Habis Pakai' : 'Barang Pinjam' }}
+                        </span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-600">Jumlah:</span>
@@ -89,17 +95,19 @@
                 </div>
             </div>
 
-            <!-- Rental Dates (if applicable) -->
-            @if($request->tipe_request === 'pinjam_sewa')
+            <!-- Rental/Loan Dates (if applicable) -->
+            @if(in_array($request->tipe_request, ['pinjam_sewa', 'pinjam_material']))
                 <div class="bg-blue-50 rounded-lg shadow p-6">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">Periode Sewa</h2>
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">
+                        {{ $request->tipe_request === 'pinjam_sewa' ? 'Periode Sewa' : 'Periode Peminjaman' }}
+                    </h2>
                     <div class="space-y-3">
                         <div class="flex justify-between">
-                            <span class="text-gray-600">Tanggal Mulai:</span>
+                            <span class="text-gray-600">Tanggal {{ $request->tipe_request === 'pinjam_sewa' ? 'Mulai' : 'Pinjam' }}:</span>
                             <span class="font-medium">{{ $request->tanggal_mulai_sewa?->format('d/m/Y') }}</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-gray-600">Tanggal Akhir:</span>
+                            <span class="text-gray-600">Tanggal {{ $request->tipe_request === 'pinjam_sewa' ? 'Akhir' : 'Kembali' }}:</span>
                             <span class="font-medium">{{ $request->tanggal_akhir_sewa?->format('d/m/Y') }}</span>
                         </div>
                         @if($request->tanggal_mulai_sewa && $request->tanggal_akhir_sewa)

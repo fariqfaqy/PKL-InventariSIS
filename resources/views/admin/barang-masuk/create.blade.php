@@ -28,23 +28,59 @@
         <form action="{{ route('admin.barang-masuk.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
             @csrf
 
-            <!-- 1. Kode Barang -->
+            <!-- 1. Kategori (dipindah ke paling atas) -->
+            <div>
+                <label for="kategori" class="block text-sm font-medium text-gray-700 mb-2">
+                    Kategori <span class="text-red-500">*</span>
+                </label>
+                <select name="kategori" id="kategori" required
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('kategori') border-red-500 @enderror"
+                    onchange="toggleSewaFields(); toggleSubKategori(); toggleRackField(); updatePrefixOptions()">
+                    <option value="">-- Pilih Kategori --</option>
+                    <option value="barang_sewa" {{ old('kategori') == 'barang_sewa' ? 'selected' : '' }}>Aset Sewa</option>
+                    <option value="aset_tetap" {{ old('kategori') == 'aset_tetap' ? 'selected' : '' }}>Aset Tetap</option>
+                    <option value="habis_pakai" {{ old('kategori') == 'habis_pakai' ? 'selected' : '' }}>Material Umum</option>
+                </select>
+                <p class="mt-1 text-xs text-gray-500">
+                    <span class="font-medium">Catatan:</span> Aset Sewa dapat dipinjam dengan tanggal sewa. Aset Tetap tidak dapat dipinjam.
+                </p>
+                @error('kategori')
+                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Sub-Kategori untuk Material Umum -->
+            <div id="subKategoriField" class="hidden">
+                <label for="sub_kategori" class="block text-sm font-medium text-gray-700 mb-2">
+                    Sub-Kategori <span class="text-red-500">*</span>
+                </label>
+                <select name="sub_kategori" id="sub_kategori"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('sub_kategori') border-red-500 @enderror">
+                    <option value="">-- Pilih Sub-Kategori --</option>
+                    <option value="barang_habis_pakai" {{ old('sub_kategori') == 'barang_habis_pakai' ? 'selected' : '' }}>Barang Habis Pakai</option>
+                    <option value="barang_pinjam" {{ old('sub_kategori') == 'barang_pinjam' ? 'selected' : '' }}>Barang Pinjam</option>
+                </select>
+                <p class="mt-1 text-xs text-gray-500">
+                    <span class="font-medium">Barang Habis Pakai:</span> Tidak perlu dikembalikan. 
+                    <span class="font-medium">Barang Pinjam:</span> Harus dikembalikan setelah dipakai.
+                </p>
+                @error('sub_kategori')
+                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- 2. Kode Barang -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                     Kode Barang <span class="text-red-500">*</span>
                 </label>
                 <div class="flex gap-2">
-                    <!-- Dropdown Rak (2 digit) -->
+                    <!-- Dropdown Rak/SIS - Dinamis based on kategori -->
                     <select name="rack_prefix" id="rack_prefix" required
                         class="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('kodebarang') border-red-500 @enderror"
-                        onchange="updateKodeBarang()">
-                        <option value="">Rak</option>
-                        <option value="1A" {{ old('rack_prefix') == '1A' ? 'selected' : '' }}>1A</option>
-                        <option value="1B" {{ old('rack_prefix') == '1B' ? 'selected' : '' }}>1B</option>
-                        <option value="1C" {{ old('rack_prefix') == '1C' ? 'selected' : '' }}>1C</option>
-                        <option value="2A" {{ old('rack_prefix') == '2A' ? 'selected' : '' }}>2A</option>
-                        <option value="2B" {{ old('rack_prefix') == '2B' ? 'selected' : '' }}>2B</option>
-                        <option value="2C" {{ old('rack_prefix') == '2C' ? 'selected' : '' }}>2C</option>
+                        onchange="updateKodeBarang(); syncRackField();">
+                        <option value="">Pilih</option>
+                        <!-- Options will be updated by JS based on kategori -->
                     </select>
                     
                     <!-- Input 3 digit angka -->
@@ -59,7 +95,7 @@
                     <!-- Hidden input untuk full kode barang -->
                     <input type="hidden" name="kodebarang" id="kodebarang" value="{{ old('kodebarang') }}">
                 </div>
-                <p class="mt-1 text-xs text-gray-500">Format: [Rak 2 digit][Nomor 3 digit]. Contoh: 1A001, 2B050</p>
+                <p class="mt-1 text-xs text-gray-500" id="kodebarang-hint">Pilih kategori terlebih dahulu</p>
                 @error('kodebarang')
                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                 @enderror
@@ -124,43 +160,6 @@
                 </div>
             </div>
 
-            <!-- 4. Kategori -->
-            <div>
-                <label for="kategori" class="block text-sm font-medium text-gray-700 mb-2">
-                    Kategori <span class="text-red-500">*</span>
-                </label>
-                <select name="kategori" id="kategori" required
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('kategori') border-red-500 @enderror"
-                    onchange="toggleSewaFields(); toggleSubKategori()">
-                    <option value="">-- Pilih Kategori --</option>
-                    <option value="barang_sewa" {{ old('kategori') == 'barang_sewa' ? 'selected' : '' }}>Aset Sewa</option>
-                    <option value="aset_tetap" {{ old('kategori') == 'aset_tetap' ? 'selected' : '' }}>Aset Tetap</option>
-                    <option value="material_umum" {{ old('kategori') == 'material_umum' ? 'selected' : '' }}>Material Umum</option>
-                </select>
-                <p class="mt-1 text-xs text-gray-500">
-                    <span class="font-medium">Catatan:</span> Aset Sewa dapat dipinjam dengan tanggal sewa. Aset Tetap tidak dapat dipinjam.
-                </p>
-                @error('kategori')
-                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <!-- Sub-Kategori untuk Material Umum -->
-            <div id="subKategoriField" class="hidden">
-                <label for="sub_kategori" class="block text-sm font-medium text-gray-700 mb-2">
-                    Sub-Kategori Material Umum <span class="text-red-500">*</span>
-                </label>
-                <select name="sub_kategori" id="sub_kategori"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('sub_kategori') border-red-500 @enderror">
-                    <option value="">-- Pilih Sub-Kategori --</option>
-                    <option value="barang_habis_pakai" {{ old('sub_kategori') == 'barang_habis_pakai' ? 'selected' : '' }}>Barang Habis Pakai</option>
-                    <option value="barang_pinjam" {{ old('sub_kategori') == 'barang_pinjam' ? 'selected' : '' }}>Barang Pinjam</option>
-                </select>
-                @error('sub_kategori')
-                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                @enderror
-            </div>
-
             <!-- Fields untuk Aset Sewa -->
             <div id="sewaFields" class="hidden space-y-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <h3 class="text-sm font-semibold text-blue-800 flex items-center gap-2">
@@ -170,15 +169,20 @@
 
                 <!-- Pengguna -->
                 <div>
-                    <label for="nama_pengguna" class="block text-sm font-medium text-gray-700 mb-2">
-                        Nama Pengguna
+                    <label for="user_id" class="block text-sm font-medium text-gray-700 mb-2">
+                        Pilih Pengguna
                     </label>
-                    <input type="text" name="nama_pengguna" id="nama_pengguna"
-                        value="{{ old('nama_pengguna') }}"
-                        placeholder="Masukkan nama pengguna yang menggunakan aset"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('nama_pengguna') border-red-500 @enderror">
-                    <p class="mt-1 text-xs text-gray-500">Kosongkan jika aset belum digunakan.</p>
-                    @error('nama_pengguna')
+                    <select name="user_id" id="user_id"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('user_id') border-red-500 @enderror">
+                        <option value="">-- Pilih Pengguna (Opsional) --</option>
+                        @foreach($users as $user)
+                            <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>
+                                {{ $user->name }} ({{ $user->email }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">Pilih user yang akan menggunakan aset ini. Kosongkan jika aset belum digunakan.</p>
+                    @error('user_id')
                     <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
@@ -224,8 +228,8 @@
                 @enderror
             </div>
 
-            <!-- 6. Rak -->
-            <div>
+            <!-- 6. Rak (Hidden for Aset Sewa & Aset Tetap) -->
+            <div id="rack-field">
                 <label for="rack" class="block text-sm font-medium text-gray-700 mb-2">
                     Rak <span class="text-red-500">*</span>
                 </label>
@@ -278,30 +282,24 @@
 </div>
 
 <script>
+// Flag to prevent circular event triggering
+let isUpdatingFields = false;
+
 // Update kode barang from dropdown and input
 function updateKodeBarang() {
     const prefix = document.getElementById('rack_prefix').value;
     const suffix = document.getElementById('kode_suffix').value;
     const kodebarangInput = document.getElementById('kodebarang');
-    const rackSelect = document.getElementById('rack');
     
     // Combine prefix and suffix
     if (prefix && suffix && suffix.length === 3) {
         const fullKode = prefix + suffix;
         kodebarangInput.value = fullKode;
         
-        // Auto-fill rack based on prefix
-        if (rackSelect) {
-            rackSelect.value = prefix.toLowerCase();
-        }
-        
         // Check if stock exists via AJAX
         checkStockExists(fullKode);
     } else {
         kodebarangInput.value = '';
-        if (rackSelect) {
-            rackSelect.value = '';
-        }
         hideExistingStockAlert();
     }
 }
@@ -507,10 +505,14 @@ function toggleSewaFields() {
         sewaFields.classList.remove('hidden');
     } else {
         sewaFields.classList.add('hidden');
-        // Reset sewa fields
-        document.getElementById('nama_pengguna').value = '';
-        document.getElementById('tanggal_mulai_pakai').value = '';
-        document.getElementById('tanggal_akhir_pakai').value = '';
+        // Reset sewa fields (null check untuk avoid error)
+        const namaPengguna = document.getElementById('nama_pengguna');
+        const tanggalMulai = document.getElementById('tanggal_mulai_pakai');
+        const tanggalAkhir = document.getElementById('tanggal_akhir_pakai');
+        
+        if (namaPengguna) namaPengguna.value = '';
+        if (tanggalMulai) tanggalMulai.value = '';
+        if (tanggalAkhir) tanggalAkhir.value = '';
     }
 }
 
@@ -520,7 +522,7 @@ function toggleSubKategori() {
     const subKategoriField = document.getElementById('subKategoriField');
     const subKategoriSelect = document.getElementById('sub_kategori');
     
-    if (kategori === 'material_umum') {
+    if (kategori === 'habis_pakai') {
         subKategoriField.classList.remove('hidden');
         subKategoriSelect.required = true;
     } else {
@@ -528,6 +530,85 @@ function toggleSubKategori() {
         subKategoriSelect.required = false;
         subKategoriSelect.value = '';
     }
+}
+
+// Toggle rack field for Aset Sewa & Aset Tetap
+function toggleRackField() {
+    const kategori = document.getElementById('kategori').value;
+    const rackField = document.getElementById('rack-field');
+    const rackSelect = document.getElementById('rack');
+    const rackPrefix = document.getElementById('rack_prefix');
+    
+    // Aset Sewa & Aset Tetap: hide rack field (bawah)
+    if (kategori === 'barang_sewa' || kategori === 'aset_tetap') {
+        rackField.classList.add('hidden');
+        rackSelect.required = false;
+        rackPrefix.required = true; // Prefix tetap required untuk kode barang
+    } else {
+        rackField.classList.remove('hidden');
+        rackSelect.required = true;
+        rackPrefix.required = true;
+    }
+}
+
+// Sync rack field with rack_prefix (only when prefix changes)
+function syncRackField() {
+    const prefix = document.getElementById('rack_prefix').value;
+    const rackSelect = document.getElementById('rack');
+    
+    if (rackSelect && prefix && prefix !== 'SIS') {
+        rackSelect.value = prefix.toLowerCase();
+    }
+}
+
+// Update prefix options based on kategori
+function updatePrefixOptions() {
+    if (isUpdatingFields) return; // Prevent circular events
+    
+    const kategori = document.getElementById('kategori').value;
+    const rackPrefix = document.getElementById('rack_prefix');
+    const kodeHint = document.getElementById('kodebarang-hint');
+    
+    console.log('updatePrefixOptions called, kategori:', kategori);
+    
+    isUpdatingFields = true;
+    
+    // Clear current options
+    rackPrefix.innerHTML = '';
+    
+    if (kategori === 'barang_sewa' || kategori === 'aset_tetap') {
+        // Aset Sewa & Aset Tetap: Fixed "SIS" (disabled, auto-selected)
+        rackPrefix.innerHTML = '<option value="SIS" selected>SIS</option>';
+        rackPrefix.disabled = true;
+        rackPrefix.classList.add('bg-gray-100', 'cursor-not-allowed');
+        kodeHint.textContent = 'Format: SIS + 3 digit. Contoh: SIS001, SIS042';
+        console.log('Set to SIS (Aset Sewa/Tetap)');
+    } else if (kategori === 'habis_pakai') {
+        // Material Umum: Pilihan Rak
+        rackPrefix.innerHTML = `
+            <option value="">-- Pilih Rak --</option>
+            <option value="1A">1A</option>
+            <option value="1B">1B</option>
+            <option value="1C">1C</option>
+            <option value="2A">2A</option>
+            <option value="2B">2B</option>
+            <option value="2C">2C</option>
+        `;
+        rackPrefix.disabled = false;
+        rackPrefix.classList.remove('bg-gray-100', 'cursor-not-allowed');
+        kodeHint.textContent = 'Format: [Rak] + 3 digit. Contoh: 1A001, 2B050';
+        console.log('Set to Rak options (Material Umum)');
+    } else {
+        rackPrefix.innerHTML = '<option value="">-- Pilih Kategori Dulu --</option>';
+        rackPrefix.disabled = true;
+        kodeHint.textContent = 'Pilih kategori terlebih dahulu';
+        console.log('No kategori selected');
+    }
+    
+    isUpdatingFields = false;
+    
+    // DON'T call updateKodeBarang here to prevent reset
+    // User akan isi manual setelah pilih prefix
 }
 
 // On page load
@@ -538,6 +619,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Toggle sewa fields based on initial kategori
     toggleSewaFields();
     toggleSubKategori();
+    toggleRackField();
+    updatePrefixOptions();
     
     // Add event listeners to prevent changes on locked select fields
     const kategoriSelect = document.getElementById('kategori');

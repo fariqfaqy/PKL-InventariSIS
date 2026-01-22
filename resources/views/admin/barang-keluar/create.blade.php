@@ -30,7 +30,7 @@
                     onchange="toggleSubKategoriKeluar()">
                     <option value="">-- Pilih Kategori --</option>
                     <option value="barang_sewa" {{ old('kategori') == 'barang_sewa' ? 'selected' : '' }}>Aset Sewa</option>
-                    <option value="material_umum" {{ old('kategori') == 'material_umum' ? 'selected' : '' }}>Material Umum</option>
+                    <option value="habis_pakai" {{ old('kategori') == 'habis_pakai' ? 'selected' : '' }}>Material Umum</option>
                 </select>
                 @error('kategori')
                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
@@ -45,7 +45,7 @@
                 <select name="sub_kategori" id="sub_kategori_keluar"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('sub_kategori') border-red-500 @enderror">
                     <option value="">-- Pilih Sub-Kategori --</option>
-                    <option value="habis_pakai" {{ old('sub_kategori') == 'habis_pakai' ? 'selected' : '' }}>Barang Habis Pakai</option>
+                    <option value="barang_habis_pakai" {{ old('sub_kategori') == 'barang_habis_pakai' ? 'selected' : '' }}>Barang Habis Pakai</option>
                     <option value="barang_pinjam" {{ old('sub_kategori') == 'barang_pinjam' ? 'selected' : '' }}>Barang Pinjam</option>
                 </select>
                 @error('sub_kategori')
@@ -172,7 +172,7 @@ function toggleSubKategoriKeluar() {
     const kategori = kategoriSelect.value;
     const subKategoriField = document.getElementById('subKategoriFieldKeluar');
     
-    if (kategori === 'material_umum') {
+    if (kategori === 'habis_pakai') {
         subKategoriField.classList.remove('hidden');
         subKategoriSelect.required = true;
         // Reset barang selection
@@ -198,8 +198,8 @@ function updateBarangOptions() {
     
     let filterKategori = kategori;
     
-    // Untuk Material Umum, gunakan sub-kategori sebagai filter
-    if (kategori === 'material_umum') {
+    // Untuk Material Umum (habis_pakai), gunakan sub-kategori sebagai filter
+    if (kategori === 'habis_pakai') {
         if (!subKategori) {
             barangSelect.innerHTML = '<option value="">-- Pilih Sub-Kategori Terlebih Dahulu --</option>';
             barangSelect.disabled = true;

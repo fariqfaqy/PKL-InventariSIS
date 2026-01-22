@@ -12,10 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('stock', function (Blueprint $table) {
-            // Drop foreign key first
-            $table->dropForeign(['current_user_id']);
-            // Then drop column
-            $table->dropColumn('current_user_id');
+            // Check if foreign key exists before dropping
+            if (Schema::hasColumn('stock', 'current_user_id')) {
+                $table->dropForeign(['current_user_id']);
+                $table->dropColumn('current_user_id');
+            }
         });
     }
 

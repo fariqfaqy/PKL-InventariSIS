@@ -18,15 +18,16 @@ class BarangMasukController extends Controller
     {
         $query = IncomingTransaction::with('stock')
             ->join('stock', 'masuk.idbarang', '=', 'stock.idbarang')
-            ->select('masuk.*', 'stock.kategori');
+            ->select('masuk.*', 'stock.kategori', 'stock.sub_kategori');
         
         // Filter by kategori if provided
-        if ($request->filled('kategori')) {
-            if ($request->kategori === 'material_umum') {
-                $query->whereIn('stock.kategori', ['habis_pakai', 'barang_pinjam']);
-            } elseif (in_array($request->kategori, ['barang_sewa', 'aset_tetap'])) {
-                $query->where('stock.kategori', $request->kategori);
-            }
+        if ($request->filled('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
+            $query->where('stock.kategori', $request->kategori);
+        }
+
+        // Filter by sub_kategori (khusus untuk Material Umum)
+        if ($request->filled('sub_kategori') && in_array($request->sub_kategori, ['barang_habis_pakai', 'barang_pinjam'])) {
+            $query->where('stock.sub_kategori', $request->sub_kategori);
         }
         
         // Search by kode or nama barang
@@ -56,7 +57,8 @@ class BarangMasukController extends Controller
     public function create()
     {
         $stocks = Stock::orderBy('kodebarang')->get(['kodebarang', 'namabarang', 'deskripsi', 'rack', 'stock', 'kategori', 'jenis', 'merek', 'tipe']);
-        return view('admin.barang-masuk.create', compact('stocks'));
+        $users = \App\Models\User::where('role', 'user')->orderBy('name')->get(['id', 'name', 'email']);
+        return view('admin.barang-masuk.create', compact('stocks', 'users'));
     }
 
     /**
@@ -68,10 +70,10 @@ class BarangMasukController extends Controller
             'kodebarang' => 'required|string|max:255',
             'namabarang' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'kategori' => 'required|in:barang_sewa,material_umum,aset_tetap',
-            'sub_kategori' => 'nullable|required_if:kategori,material_umum|in:barang_habis_pakai,barang_pinjam',
+            'kategori' => 'required|in:barang_sewa,habis_pakai,aset_tetap',
+            'sub_kategori' => 'nullable|required_if:kategori,habis_pakai|in:barang_habis_pakai,barang_pinjam',
             'qty' => 'required|integer|min:1',
-            'rack' => 'required|in:1a,1b,1c,2a,2b,2c',
+            'rack' => 'nullable|required_if:kategori,habis_pakai|in:1a,1b,1c,2a,2b,2c',
             'deskripsi' => 'nullable|string',
             'tanggal' => 'required|date',
             'keterangan' => 'required|string',
@@ -80,7 +82,8 @@ class BarangMasukController extends Controller
             'tanggal_akhir_pakai' => 'nullable|date|after_or_equal:tanggal_mulai_pakai',
         ], [
             'sub_kategori.required_if' => 'Sub-kategori wajib diisi untuk Material Umum',
-            'sub_kategori.in' => 'Sub-kategori harus berupa Barang Habis Pakai atau Barang Pinjam',
+            'sub_kategori.in' => 'Sub-kategori harus berupa Material Umum atau Barang Pinjam',
+            'rack.required_if' => 'Rak wajib diisi untuk Material Umum',
         ]);
 
         // Handle image upload with security
@@ -110,10 +113,11 @@ class BarangMasukController extends Controller
         // Check if stock exists by kodebarang
         $stock = Stock::where('kodebarang', $validated['kodebarang'])->first();
 
-        // Determine actual kategori for database storage
-        // material_umum -> habis_pakai (kategori), with sub_kategori (barang_habis_pakai/barang_pinjam)
-        $actualKategori = $validated['kategori'] === 'material_umum' ? 'habis_pakai' : $validated['kategori'];
-        $actualSubKategori = $validated['kategori'] === 'material_umum' ? $validated['sub_kategori'] : null;
+        // For Material Umum (habis_pakai), ensure sub_kategori is set
+        $actualKategori = $validated['kategori'];
+        $actualSubKategori = ($validated['kategori'] === 'habis_pakai' && isset($validated['sub_kategori'])) 
+            ? $validated['sub_kategori'] 
+            : null;
 
         if ($stock) {
             // If stock exists, update the quantity and other fields
@@ -160,24 +164,15 @@ class BarangMasukController extends Controller
                 'stock' => $validated['qty'],
                 'deskripsi' => $validated['deskripsi'] ?? 'Barang baru',
                 'image' => $imagePath,
-                'rack' => $validated['rack'],
+                'rack' => $validated['rack'] ?? null, // Nullable untuk Aset Sewa & Aset Tetap
                 'kategori' => $actualKategori,
                 'sub_kategori' => $actualSubKategori,
                 'penginput' => auth()->user()->name,
             ];
             
-            // Add user and rental info for barang_sewa
+            // Set default status kondisi for barang_sewa
             if ($actualKategori === 'barang_sewa') {
-                $stockData['nama_pengguna'] = $validated['nama_pengguna'] ?? null;
-                $stockData['tanggal_mulai_pakai'] = $validated['tanggal_mulai_pakai'] ?? null;
-                $stockData['tanggal_akhir_pakai'] = $validated['tanggal_akhir_pakai'] ?? null;
-                
-                // Set status kondisi based on user assignment
-                if ($validated['nama_pengguna']) {
-                    $stockData['status_kondisi'] = 'digunakan';
-                } else {
-                    $stockData['status_kondisi'] = 'tersedia';
-                }
+                $stockData['status_kondisi'] = 'digunakan'; // Default status
             }
             
             $stock = Stock::create($stockData);
@@ -312,13 +307,27 @@ class BarangMasukController extends Controller
     /**
      * Export incoming transactions to PDF.
      */
-    public function exportPdf()
+    public function exportPdf(Request $request)
     {
-        $transactions = IncomingTransaction::with('stock')
-            ->orderBy('tanggal', 'desc')
-            ->get();
+        $query = IncomingTransaction::with('stock')
+            ->join('stock', 'masuk.idbarang', '=', 'stock.idbarang')
+            ->select('masuk.*', 'stock.kategori', 'stock.sub_kategori');
+
+        // Filter by kategori if provided
+        $kategori = $request->get('kategori');
+        if ($kategori && in_array($kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
+            $query->where('stock.kategori', $kategori);
+        }
+
+        // Filter by sub_kategori if provided
+        $subKategori = $request->get('sub_kategori');
+        if ($subKategori && in_array($subKategori, ['barang_habis_pakai', 'barang_pinjam'])) {
+            $query->where('stock.sub_kategori', $subKategori);
+        }
+
+        $transactions = $query->orderBy('masuk.tanggal', 'desc')->get();
         
-        $pdf = Pdf::loadView('admin.pdf.barang-masuk', compact('transactions'))
+        $pdf = Pdf::loadView('admin.pdf.barang-masuk', compact('transactions', 'kategori', 'subKategori'))
             ->setPaper('a4', 'landscape');
         
         $filename = 'Laporan_Barang_Masuk_' . now()->format('Y-m-d_His') . '.pdf';

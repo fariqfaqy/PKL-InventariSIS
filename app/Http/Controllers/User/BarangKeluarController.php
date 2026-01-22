@@ -10,21 +10,24 @@ class BarangKeluarController extends Controller
 {
     /**
      * Display a listing of all outgoing transactions (read-only for user).
+     * Hanya tampilkan barang yang masih keluar (status: sedang_dipakai)
+     * Barang pinjam yang sudah selesai (stock sudah balik) TIDAK ditampilkan
      */
     public function index(Request $request)
     {
-        $query = OutgoingTransaction::with('stock');
+        $query = OutgoingTransaction::with('stock')
+            ->where('status', 'sedang_dipakai'); // Hanya barang yang masih keluar
 
-        // Filter berdasarkan tipe (peminjaman=sewa, permintaan=habis_pakai)
-        // Hanya filter jika ada tipe yang dipilih (bukan "semua")
-        if ($request->filled('tipe') && in_array($request->tipe, ['peminjaman', 'permintaan'])) {
-            if ($request->tipe == 'peminjaman') {
-                // Peminjaman = Aset Sewa
-                $query->where('kategori', 'barang_sewa');
-            } else {
-                // Permintaan = Material Umum
-                $query->where('kategori', 'habis_pakai');
-            }
+        // Filter berdasarkan kategori
+        if ($request->filled('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
+            $query->where('kategori', $request->kategori);
+        }
+
+        // Filter berdasarkan sub_kategori (khusus untuk Material Umum)
+        if ($request->filled('sub_kategori') && in_array($request->sub_kategori, ['barang_habis_pakai', 'barang_pinjam'])) {
+            $query->whereHas('stock', function($q) use ($request) {
+                $q->where('sub_kategori', $request->sub_kategori);
+            });
         }
 
         // Filter berdasarkan pencarian
@@ -43,9 +46,8 @@ class BarangKeluarController extends Controller
         }
 
         $barangKeluar = $query->orderBy('tanggal', 'desc')->paginate(15)->withQueryString();
-        $tipe = $request->tipe;
 
-        return view('user.barang-keluar.index', compact('barangKeluar', 'tipe'));
+        return view('user.barang-keluar.index', compact('barangKeluar'));
     }
 
     /**

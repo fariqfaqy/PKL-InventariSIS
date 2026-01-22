@@ -39,7 +39,7 @@
                         @if($pemakaian->kategori == 'barang_sewa')
                             <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Aset Sewa</span>
                         @else
-                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">Habis Pakai</span>
+                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">Material Umum</span>
                         @endif
                     @endif
                 </div>

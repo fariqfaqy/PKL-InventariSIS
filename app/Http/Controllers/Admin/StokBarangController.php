@@ -17,13 +17,13 @@ class StokBarangController extends Controller
         $query = Stock::query();
         
         // Filter by kategori if provided
-        if ($request->has('kategori')) {
-            if ($request->kategori === 'material_umum') {
-                // Material Umum includes both habis_pakai and barang_pinjam
-                $query->whereIn('kategori', ['habis_pakai', 'barang_pinjam']);
-            } elseif (in_array($request->kategori, ['barang_sewa', 'habis_pakai', 'barang_pinjam', 'aset_tetap'])) {
-                $query->where('kategori', $request->kategori);
-            }
+        if ($request->filled('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
+            $query->where('kategori', $request->kategori);
+        }
+
+        // Filter by sub_kategori (khusus untuk Material Umum)
+        if ($request->filled('sub_kategori') && in_array($request->sub_kategori, ['barang_habis_pakai', 'barang_pinjam'])) {
+            $query->where('sub_kategori', $request->sub_kategori);
         }
         
         // Search by kode or nama barang
@@ -254,13 +254,19 @@ class StokBarangController extends Controller
         
         // Filter by kategori if provided
         $kategori = $request->get('kategori');
-        if ($kategori && in_array($kategori, ['barang_sewa', 'habis_pakai'])) {
+        if ($kategori && in_array($kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
             $query->where('kategori', $kategori);
+        }
+
+        // Filter by sub_kategori if provided
+        $subKategori = $request->get('sub_kategori');
+        if ($subKategori && in_array($subKategori, ['barang_habis_pakai', 'barang_pinjam'])) {
+            $query->where('sub_kategori', $subKategori);
         }
         
         $stocks = $query->orderBy('namabarang')->get();
         
-        $pdf = Pdf::loadView('admin.pdf.stok-barang', compact('stocks', 'kategori'))
+        $pdf = Pdf::loadView('admin.pdf.stok-barang', compact('stocks', 'kategori', 'subKategori'))
             ->setPaper('a4', 'landscape');
         
         $filename = 'Laporan_Stok_Barang_' . now()->format('Y-m-d_His') . '.pdf';

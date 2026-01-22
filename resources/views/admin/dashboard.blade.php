@@ -120,11 +120,11 @@
             </div>
         </div>
 
-        <!-- Habis Pakai -->
+        <!-- Material Umum -->
         <div class="bg-white rounded-xl shadow-lg p-5 border-t-4 border-pink-500 hover:shadow-xl transition-shadow duration-300">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-500 text-xs font-medium uppercase mb-1">Habis Pakai</p>
+                    <p class="text-gray-500 text-xs font-medium uppercase mb-1">Material Umum</p>
                     <p class="text-2xl font-bold text-pink-600">{{ $categoryStats['habis_pakai'] }}</p>
                 </div>
                 <x-heroicon-o-shopping-bag class="w-10 h-10 text-pink-500 opacity-50" />
@@ -240,7 +240,7 @@
                     <div class="flex items-center justify-between text-sm">
                         <div class="flex items-center gap-2">
                             <div class="w-3 h-3 bg-pink-500 rounded-full"></div>
-                            <span class="text-gray-700">Habis Pakai</span>
+                            <span class="text-gray-700">Material Umum</span>
                         </div>
                         <span class="font-semibold text-gray-900">{{ $categoryStats['habis_pakai'] }}</span>
                     </div>
@@ -604,7 +604,7 @@
                             <td class="px-4 py-3 text-sm text-gray-900">{{ $item->namabarang }}</td>
                             <td class="px-4 py-3 text-sm">
                                 <span class="px-2 py-1 {{ $item->kategori == 'barang_sewa' ? 'bg-purple-100 text-purple-800' : ($item->kategori == 'aset_tetap' ? 'bg-teal-100 text-teal-800' : 'bg-pink-100 text-pink-800') }} rounded-full text-xs font-semibold">
-                                    {{ $item->kategori == 'barang_sewa' ? 'Sewa' : ($item->kategori == 'aset_tetap' ? 'Aset Tetap' : 'Habis Pakai') }}
+                                    {{ $item->kategori == 'barang_sewa' ? 'Sewa' : ($item->kategori == 'aset_tetap' ? 'Aset Tetap' : 'Material Umum') }}
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-sm">

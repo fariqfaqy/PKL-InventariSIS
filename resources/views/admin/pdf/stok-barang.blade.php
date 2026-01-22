@@ -164,7 +164,7 @@
                     @elseif($item->kategori == 'aset_tetap')
                         <span class="badge" style="background-color: #dbeafe; color: #1e40af;">Aset</span>
                     @else
-                        <span class="badge badge-pakai">Habis Pakai</span>
+                        <span class="badge badge-pakai">Material Umum</span>
                     @endif
                 </td>
                 <td style="text-align: center; font-weight: bold; font-size: 11px;">{{ $item->stock }}</td>

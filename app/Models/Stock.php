@@ -25,16 +25,9 @@ class Stock extends Model
         'jenis',
         'merek',
         'tipe',
-        'durasi_sewa',
-        'tanggal_mulai_sewa',
-        'tanggal_akhir_sewa',
         'status_kondisi',
         'keterangan_kondisi',
         'tanggal_update_kondisi',
-        'nama_pengguna',
-        'durasi_pakai',
-        'tanggal_mulai_pakai',
-        'tanggal_akhir_pakai',
     ];
 
     /**

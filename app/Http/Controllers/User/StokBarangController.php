@@ -22,6 +22,11 @@ class StokBarangController extends Controller
             $query->where('kategori', $request->kategori);
         }
 
+        // Filter berdasarkan sub_kategori (khusus untuk Material Umum)
+        if ($request->filled('sub_kategori') && in_array($request->sub_kategori, ['barang_habis_pakai', 'barang_pinjam'])) {
+            $query->where('sub_kategori', $request->sub_kategori);
+        }
+
         // Filter berdasarkan pencarian
         if ($request->filled('search')) {
             $search = $request->search;

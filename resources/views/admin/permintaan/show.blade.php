@@ -154,17 +154,19 @@
                 </div>
             </div>
 
-            <!-- Rental Dates (if applicable) -->
-            @if($permintaan->tipe_request === 'pinjam_sewa')
+            <!-- Rental/Loan Dates (for Aset Sewa & Barang Pinjam) -->
+            @if(in_array($permintaan->tipe_request, ['pinjam_sewa', 'pinjam_material']) && $permintaan->tanggal_mulai_sewa && $permintaan->tanggal_akhir_sewa)
                 <div class="bg-blue-50 rounded-lg shadow p-6">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">Periode Sewa</h2>
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">
+                        {{ $permintaan->tipe_request === 'pinjam_sewa' ? 'Periode Sewa' : 'Periode Peminjaman' }}
+                    </h2>
                     <div class="space-y-3">
                         <div class="flex justify-between">
-                            <span class="text-gray-600">Tanggal Mulai:</span>
+                            <span class="text-gray-600">Tanggal {{ $permintaan->tipe_request === 'pinjam_sewa' ? 'Mulai' : 'Pinjam' }}:</span>
                             <span class="font-medium">{{ $permintaan->tanggal_mulai_sewa?->format('d/m/Y') }}</span>
                         </div>
                         <div class="flex justify-between">
-                            <span class="text-gray-600">Tanggal Akhir:</span>
+                            <span class="text-gray-600">Tanggal {{ $permintaan->tipe_request === 'pinjam_sewa' ? 'Akhir' : 'Kembali' }}:</span>
                             <span class="font-medium">{{ $permintaan->tanggal_akhir_sewa?->format('d/m/Y') }}</span>
                         </div>
                         @if($permintaan->tanggal_mulai_sewa && $permintaan->tanggal_akhir_sewa)

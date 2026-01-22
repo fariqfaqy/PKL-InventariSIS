@@ -51,7 +51,7 @@
                         </a>
                         
                         <!-- Material Umum -->
-                        <a href="{{ route('admin.stok-barang.index', ['kategori' => 'material_umum']) }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('admin.stok-barang.*') && request('kategori') == 'material_umum' ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
+                        <a href="{{ route('admin.stok-barang.index', ['kategori' => 'habis_pakai']) }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('admin.stok-barang.*') && request('kategori') == 'habis_pakai' ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
                             <x-heroicon-o-shopping-bag class="w-4 h-4" />
                             <span class="text-sm font-medium">Material Umum</span>
                         </a>

@@ -87,22 +87,42 @@ class PemakaianController extends Controller
             ->whereIn('status', ['rejected', 'cancelled'])
             ->orderBy('tanggal_request', 'desc')
             ->get();
+        
+        // 4. Aset Sewa yang di-assign admin ke user ini (BUKAN dari request user sendiri)
+        // Ambil dari OutgoingTransaction yang:
+        // - tipe_keluar = 'peminjaman' DAN kategori stock = 'barang_sewa'
+        // - penerima = nama user ini
+        // - TIDAK ada id_request (karena di-assign langsung admin, bukan dari request)
+        $asetSewaAssigned = OutgoingTransaction::with('stock')
+            ->where('penerima', Auth::user()->name)
+            ->whereNull('id_request') // Tidak dari request user
+            ->whereHas('stock', function($query) {
+                $query->where('kategori', 'barang_sewa');
+            })
+            ->orderBy('tanggal', 'desc')
+            ->get();
 
-        // Hitung notifikasi untuk badge
+        // Hitung notifikasi untuk badge (hanya yang butuh action/attention)
+        // - Pending requests: perlu menunggu admin approve
+        // - Approved requests: barang siap diambil/dipakai
+        // - Pending change requests: menunggu admin approve perubahan
+        // - Sedang dipakai: reminder barang yang masih dipinjam (TIDAK dihitung sebagai notif)
+        // - Selesai: history (TIDAK dihitung sebagai notif)
         $requestNotifCount = $requests->where('status', 'pending')->count() + 
                             $requests->where('status', 'approved')->count();
         $changeRequestNotifCount = $changeRequests->where('status', 'pending')->count();
-        $historyNotifCount = $sedangDipakai->count() + $selesai->count();
+        $historyNotifCount = 0; // History tidak dihitung sebagai notif
         
-        // Total notifikasi untuk badge sidebar (hanya muncul jika ada yang belum dilihat)
-        $userNotificationCount = $requestNotifCount + $changeRequestNotifCount + $historyNotifCount;
+        // Total notifikasi untuk badge sidebar (hanya yang perlu action)
+        $userNotificationCount = $requestNotifCount + $changeRequestNotifCount;
 
         return view('user.pemakaian.index', compact(
             'requests', 
             'changeRequests', 
             'sedangDipakai', 
             'selesai', 
-            'ditolakDibatalkan', 
+            'ditolakDibatalkan',
+            'asetSewaAssigned',
             'outgoingTransactions',
             'requestNotifCount',
             'changeRequestNotifCount',
@@ -145,7 +165,7 @@ class PemakaianController extends Controller
      * - Pegawai hanya bisa request Material Umum (kategori: habis_pakai)
      * - Sub-kategori: barang_habis_pakai atau barang_pinjam
      * - Barang pinjam butuh tanggal pinjam & kembali
-     * - Barang habis pakai tidak perlu tanggal
+     * - Material umum tidak perlu tanggal
      */
     public function store(Request $request)
     {
@@ -158,7 +178,7 @@ class PemakaianController extends Controller
             'qty' => 'required|integer|min:1',
             'keperluan' => 'required|string',
             'penerima' => 'required|string|max:255',
-            'tanggal_pinjam' => 'nullable|required_if:sub_kategori,barang_pinjam|date|after_or_equal:today',
+            'tanggal_pinjam' => 'nullable|required_if:sub_kategori,barang_pinjam|date',
             'tanggal_kembali' => 'nullable|required_if:sub_kategori,barang_pinjam|date|after:tanggal_pinjam',
             'catatan_user' => 'nullable|string',
         ], [
@@ -237,7 +257,7 @@ class PemakaianController extends Controller
             DB::commit();
             
             $message = $request->sub_kategori === 'barang_habis_pakai' 
-                ? 'Permintaan barang habis pakai berhasil diajukan! Menunggu persetujuan admin.' 
+                ? 'Permintaan material umum berhasil diajukan! Menunggu persetujuan admin.' 
                 : 'Peminjaman barang berhasil diajukan! Menunggu persetujuan admin.';
                 
             return redirect()->route('user.pemakaian.index')->with('success', $message);

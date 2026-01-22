@@ -24,7 +24,7 @@
         </div>
         
         <div class="flex items-center gap-3">
-            <a href="{{ route('admin.stok-barang.export-pdf', ['kategori' => request('kategori')]) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-md hover:shadow-lg">
+            <a href="{{ route('admin.stok-barang.export-pdf', array_filter(['kategori' => request('kategori'), 'sub_kategori' => request('sub_kategori')])) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-md hover:shadow-lg">
                 <x-heroicon-o-document-arrow-down class="w-5 h-5" />
                 <span class="font-medium">Export PDF</span>
             </a>
@@ -45,10 +45,64 @@
     </div>
     @endif
 
+    <!-- Tabs Kategori -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="border-b border-gray-200">
+            <nav class="flex -mb-px">
+                <a href="{{ route('admin.stok-barang.index') }}" class="flex-1 px-6 py-4 text-center font-medium transition-all {{ !request('kategori') ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50' }}">
+                    Semua
+                </a>
+                <a href="{{ route('admin.stok-barang.index', ['kategori' => 'barang_sewa']) }}" class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 {{ request('kategori') == 'barang_sewa' ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50' }}">
+                    <x-heroicon-o-computer-desktop class="w-5 h-5" />
+                    Aset Sewa
+                </a>
+                <a href="{{ route('admin.stok-barang.index', ['kategori' => 'habis_pakai']) }}" class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 {{ request('kategori') == 'habis_pakai' ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50' }}">
+                    <x-heroicon-o-shopping-bag class="w-5 h-5" />
+                    Material Umum
+                </a>
+                <a href="{{ route('admin.stok-barang.index', ['kategori' => 'aset_tetap']) }}" class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 {{ request('kategori') == 'aset_tetap' ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50' }}">
+                    <x-heroicon-o-building-office class="w-5 h-5" />
+                    Aset Tetap
+                </a>
+            </nav>
+        </div>
+
+        <!-- Sub-tabs untuk Material Umum -->
+        @if(request('kategori') == 'habis_pakai')
+            <div class="bg-blue-50 border-b border-blue-200">
+                <nav class="flex -mb-px">
+                    <a href="{{ route('admin.stok-barang.index', ['kategori' => 'habis_pakai']) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ !request('sub_kategori') ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                        <span class="inline-flex items-center gap-1">
+                            <x-heroicon-o-squares-2x2 class="w-3 h-3" />
+                            Semua Material
+                        </span>
+                    </a>
+                    <a href="{{ route('admin.stok-barang.index', ['kategori' => 'habis_pakai', 'sub_kategori' => 'barang_habis_pakai']) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_habis_pakai' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                        <span class="inline-flex items-center gap-1">
+                            <x-heroicon-o-archive-box class="w-3 h-3" />
+                            Barang Habis Pakai
+                        </span>
+                    </a>
+                    <a href="{{ route('admin.stok-barang.index', ['kategori' => 'habis_pakai', 'sub_kategori' => 'barang_pinjam']) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_pinjam' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                        <span class="inline-flex items-center gap-1">
+                            <x-heroicon-o-arrow-path class="w-3 h-3" />
+                            Barang Pinjam
+                        </span>
+                    </a>
+                </nav>
+            </div>
+        @endif
+    </div>
+
     <!-- Filter Section -->
     <div class="bg-white rounded-xl shadow-md p-6">
         <form action="{{ route('admin.stok-barang.index') }}" method="GET">
-            <input type="hidden" name="kategori" value="{{ request('kategori') }}">
+            @if(request('kategori'))
+                <input type="hidden" name="kategori" value="{{ request('kategori') }}">
+            @endif
+            @if(request('sub_kategori'))
+                <input type="hidden" name="sub_kategori" value="{{ request('sub_kategori') }}">
+            @endif
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <!-- Cari Barang -->
@@ -105,7 +159,7 @@
                 </button>
                 
                 <a 
-                    href="{{ route('admin.stok-barang.index', ['kategori' => request('kategori')]) }}" 
+                    href="{{ route('admin.stok-barang.index', array_filter(['kategori' => request('kategori'), 'sub_kategori' => request('sub_kategori')])) }}" 
                     class="inline-flex items-center gap-2 px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                 >
                     <x-heroicon-o-x-mark class="w-5 h-5" />
@@ -182,7 +236,7 @@
                             @elseif($stock->kategori === 'habis_pakai')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                                     <x-heroicon-o-shopping-bag class="w-3 h-3 mr-1" />
-                                    Barang Habis Pakai
+                                    Material Umum
                                 </span>
                             @else
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">

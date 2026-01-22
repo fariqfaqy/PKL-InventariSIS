@@ -18,11 +18,69 @@
         </div>
     </div>
 
+    <!-- Tabs Kategori -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="border-b border-gray-200">
+            <nav class="flex -mb-px">
+                <button onclick="window.location.href='{{ route('user.stok-barang.index') }}'" class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ !request('kategori') ? 'border-[#14a2ba] text-[#14a2ba]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    Semua
+                </button>
+                <button onclick="window.location.href='{{ route('user.stok-barang.index', ['kategori' => 'barang_sewa']) }}'" class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ request('kategori') == 'barang_sewa' ? 'border-[#14a2ba] text-[#14a2ba]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    <span class="inline-flex items-center gap-2">
+                        <x-heroicon-o-computer-desktop class="w-4 h-4" />
+                        Aset Sewa
+                    </span>
+                </button>
+                <button onclick="window.location.href='{{ route('user.stok-barang.index', ['kategori' => 'habis_pakai']) }}'" class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ request('kategori') == 'habis_pakai' ? 'border-[#14a2ba] text-[#14a2ba]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    <span class="inline-flex items-center gap-2">
+                        <x-heroicon-o-shopping-bag class="w-4 h-4" />
+                        Material Umum
+                    </span>
+                </button>
+                <button onclick="window.location.href='{{ route('user.stok-barang.index', ['kategori' => 'aset_tetap']) }}'" class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ request('kategori') == 'aset_tetap' ? 'border-[#14a2ba] text-[#14a2ba]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    <span class="inline-flex items-center gap-2">
+                        <x-heroicon-o-building-office class="w-4 h-4" />
+                        Aset Tetap
+                    </span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Sub-tabs untuk Material Umum -->
+        @if(request('kategori') == 'habis_pakai')
+            <div class="bg-blue-50 border-b border-blue-200">
+                <nav class="flex -mb-px">
+                    <button onclick="window.location.href='{{ route('user.stok-barang.index', ['kategori' => 'habis_pakai']) }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ !request('sub_kategori') ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                        <span class="inline-flex items-center gap-1">
+                            <x-heroicon-o-squares-2x2 class="w-3 h-3" />
+                            Semua Material
+                        </span>
+                    </button>
+                    <button onclick="window.location.href='{{ route('user.stok-barang.index', ['kategori' => 'habis_pakai', 'sub_kategori' => 'barang_habis_pakai']) }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_habis_pakai' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                        <span class="inline-flex items-center gap-1">
+                            <x-heroicon-o-archive-box class="w-3 h-3" />
+                            Barang Habis Pakai
+                        </span>
+                    </button>
+                    <button onclick="window.location.href='{{ route('user.stok-barang.index', ['kategori' => 'habis_pakai', 'sub_kategori' => 'barang_pinjam']) }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_pinjam' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                        <span class="inline-flex items-center gap-1">
+                            <x-heroicon-o-arrow-path class="w-3 h-3" />
+                            Barang Pinjam
+                        </span>
+                    </button>
+                </nav>
+            </div>
+        @endif
+    </div>
+
     <!-- Filter Section -->
     <div class="bg-white rounded-xl shadow-md p-4">
         <form method="GET" action="{{ route('user.stok-barang.index') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            @if(isset($kategori))
-                <input type="hidden" name="kategori" value="{{ $kategori }}">
+            @if(request('kategori'))
+                <input type="hidden" name="kategori" value="{{ request('kategori') }}">
+            @endif
+            @if(request('sub_kategori'))
+                <input type="hidden" name="sub_kategori" value="{{ request('sub_kategori') }}">
             @endif
             <!-- Search -->
             <div>
@@ -58,7 +116,7 @@
                     <x-heroicon-o-magnifying-glass class="w-4 h-4" />
                     <span class="font-medium">Filter</span>
                 </button>
-                <a href="{{ route('user.stok-barang.index', isset($kategori) ? ['kategori' => $kategori] : []) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300">
+                <a href="{{ route('user.stok-barang.index', array_filter(['kategori' => request('kategori'), 'sub_kategori' => request('sub_kategori')])) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300">
                     <x-heroicon-o-x-mark class="w-4 h-4" />
                     <span class="font-medium">Reset</span>
                 </a>

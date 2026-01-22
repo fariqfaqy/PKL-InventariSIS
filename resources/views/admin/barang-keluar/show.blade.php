@@ -100,7 +100,7 @@
                     </span>
                 @else
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
-                        Habis Pakai
+                        Material Umum
                     </span>
                 @endif
             </div>

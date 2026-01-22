@@ -67,6 +67,12 @@
                     <span class="ml-2 bg-orange-500 text-white rounded-full px-2 py-0.5 text-xs font-semibold">{{ $changeRequestNotifCount }}</span>
                 @endif
             </button>
+            <button onclick="switchTab('aset-sewa')" id="tab-aset-sewa" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm tab-button">
+                Aset Sewa Saya
+                @if($asetSewaAssigned->where('status', 'sedang_dipakai')->count() > 0)
+                    <span class="ml-2 bg-purple-500 text-white rounded-full px-2 py-0.5 text-xs font-semibold">{{ $asetSewaAssigned->where('status', 'sedang_dipakai')->count() }}</span>
+                @endif
+            </button>
             <button onclick="switchTab('history')" id="tab-history" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm tab-button">
                 History Pemakaian
                 @if($historyNotifCount > 0)
@@ -226,7 +232,7 @@
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $item->sub_kategori_badge_color == 'green' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }}">
                                             @if($item->stock->sub_kategori == 'barang_habis_pakai')
                                                 <x-heroicon-o-archive-box class="w-3 h-3 mr-1" />
-                                                Barang Habis Pakai
+                                                Material Umum
                                             @else
                                                 <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
                                                 Barang Pinjam
@@ -415,6 +421,169 @@
                 </table>
             </div>
         </div>
+    </div>
+    
+    <!-- Aset Sewa Tab Content -->
+    <div id="content-aset-sewa" class="tab-content hidden">
+        @php
+            $asetSedangDigunakan = $asetSewaAssigned->where('status', 'sedang_dipakai');
+            $asetSelesai = $asetSewaAssigned->where('status', 'selesai');
+        @endphp
+
+        @if($asetSewaAssigned->count() > 0)
+            <!-- Sub-tabs untuk Aset Sewa -->
+            <div class="mb-4">
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-6" aria-label="Aset Sewa Sub tabs">
+                        <button onclick="switchAsetSewaTab('sedang-digunakan')" id="aset-subtab-sedang-digunakan" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm aset-subtab-button active-aset-subtab">
+                            <span class="flex items-center gap-2">
+                                <x-heroicon-o-computer-desktop class="w-4 h-4" />
+                                Sedang Digunakan
+                                @if($asetSedangDigunakan->count() > 0)
+                                    <span class="bg-purple-500 text-white rounded-full px-2 py-0.5 text-xs">{{ $asetSedangDigunakan->count() }}</span>
+                                @endif
+                            </span>
+                        </button>
+                        <button onclick="switchAsetSewaTab('selesai')" id="aset-subtab-selesai" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm aset-subtab-button">
+                            <span class="flex items-center gap-2">
+                                <x-heroicon-o-check-circle class="w-4 h-4" />
+                                Selesai
+                                @if($asetSelesai->count() > 0)
+                                    <span class="bg-gray-500 text-white rounded-full px-2 py-0.5 text-xs">{{ $asetSelesai->count() }}</span>
+                                @endif
+                            </span>
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Sedang Digunakan Content -->
+            <div id="aset-content-sedang-digunakan" class="aset-subtab-content">
+                @if($asetSedangDigunakan->count() > 0)
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-purple-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kode</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Aset</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal Mulai</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal Akhir</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kondisi</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Di-assign oleh</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @foreach($asetSedangDigunakan as $aset)
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="text-sm font-mono font-semibold text-gray-900">{{ $aset->stock->kodebarang }}</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-gray-900">{{ $aset->stock->namabarang }}</div>
+                                            <div class="text-xs text-gray-500">{{ $aset->stock->deskripsi }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                            {{ \Carbon\Carbon::parse($aset->tanggal)->format('d M Y') }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                            {{ $aset->tanggal_kembali ? \Carbon\Carbon::parse($aset->tanggal_kembali)->format('d M Y') : '-' }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            @php
+                                                $kondisi = $aset->stock->status_kondisi ?? 'digunakan';
+                                                $badgeColor = match($kondisi) {
+                                                    'digunakan' => 'bg-green-100 text-green-800',
+                                                    'diperbaiki' => 'bg-yellow-100 text-yellow-800',
+                                                    'rusak' => 'bg-red-100 text-red-800',
+                                                    default => 'bg-gray-100 text-gray-800'
+                                                };
+                                            @endphp
+                                            <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $badgeColor }}">
+                                                {{ ucfirst($kondisi) }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                            {{ $aset->diproses_oleh ?? 'Admin' }}
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @else
+                    <div class="text-center py-12 bg-white rounded-xl shadow-md">
+                        <x-heroicon-o-computer-desktop class="mx-auto h-12 w-12 text-gray-400" />
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">Tidak ada aset yang sedang digunakan</h3>
+                        <p class="mt-1 text-sm text-gray-500">Aset sewa yang sedang Anda gunakan akan muncul di sini</p>
+                    </div>
+                @endif
+            </div>
+
+            <!-- Selesai Content -->
+            <div id="aset-content-selesai" class="aset-subtab-content hidden">
+                @if($asetSelesai->count() > 0)
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kode</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Aset</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal Mulai</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal Selesai</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Durasi</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Di-assign oleh</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @foreach($asetSelesai as $aset)
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="text-sm font-mono font-semibold text-gray-900">{{ $aset->stock->kodebarang }}</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-gray-900">{{ $aset->stock->namabarang }}</div>
+                                            <div class="text-xs text-gray-500">{{ $aset->stock->deskripsi }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                            {{ \Carbon\Carbon::parse($aset->tanggal)->format('d M Y') }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                            {{ $aset->tanggal_selesai ? \Carbon\Carbon::parse($aset->tanggal_selesai)->format('d M Y') : '-' }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                            @if($aset->tanggal && $aset->tanggal_selesai)
+                                                {{ \Carbon\Carbon::parse($aset->tanggal)->diffInDays(\Carbon\Carbon::parse($aset->tanggal_selesai)) }} hari
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                            {{ $aset->diproses_oleh ?? 'Admin' }}
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @else
+                    <div class="text-center py-12 bg-white rounded-xl shadow-md">
+                        <x-heroicon-o-archive-box class="mx-auto h-12 w-12 text-gray-400" />
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada aset yang selesai</h3>
+                        <p class="mt-1 text-sm text-gray-500">Riwayat pemakaian aset sewa akan muncul di sini</p>
+                    </div>
+                @endif
+            </div>
+        @else
+            <div class="text-center py-12 bg-white rounded-xl shadow-md">
+                <x-heroicon-o-computer-desktop class="mx-auto h-12 w-12 text-gray-400" />
+                <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada aset sewa</h3>
+                <p class="mt-1 text-sm text-gray-500">Aset sewa yang di-assign admin ke Anda akan muncul di sini</p>
+            </div>
+        @endif
     </div>
     
     <!-- History Tab Content -->
@@ -727,6 +896,27 @@ function switchHistoryTab(subtab) {
     // Add active class to selected subtab
     const activeSubtab = document.getElementById('subtab-' + subtab);
     activeSubtab.classList.add('active-subtab', 'border-[#14a2ba]', 'text-[#14a2ba]');
+    activeSubtab.classList.remove('border-transparent', 'text-gray-500');
+}
+
+function switchAsetSewaTab(subtab) {
+    // Hide all aset sewa subtab contents
+    document.querySelectorAll('.aset-subtab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    // Remove active class from all aset sewa subtabs
+    document.querySelectorAll('.aset-subtab-button').forEach(button => {
+        button.classList.remove('active-aset-subtab', 'border-[#14a2ba]', 'text-[#14a2ba]');
+        button.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    // Show selected subtab content
+    document.getElementById('aset-content-' + subtab).classList.remove('hidden');
+    
+    // Add active class to selected subtab
+    const activeSubtab = document.getElementById('aset-subtab-' + subtab);
+    activeSubtab.classList.add('active-aset-subtab', 'border-[#14a2ba]', 'text-[#14a2ba]');
     activeSubtab.classList.remove('border-transparent', 'text-gray-500');
 }
 </script>

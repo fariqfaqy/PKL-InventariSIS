@@ -69,8 +69,10 @@
                         <span id="infoKode" class="font-medium ml-2">{{ $requestBarang->stock->kodebarang }}</span>
                     </div>
                     <div>
-                        <span class="text-gray-600">Kategori:</span>
-                        <span id="infoKategori" class="font-medium ml-2">{{ ucwords(str_replace('_', ' ', $requestBarang->stock->kategori)) }}</span>
+                        <span class="text-gray-600">Sub-Kategori:</span>
+                        <span id="infoSubKategori" class="font-medium ml-2">
+                            {{ $requestBarang->stock->sub_kategori == 'barang_habis_pakai' ? 'Barang Habis Pakai' : 'Barang Pinjam' }}
+                        </span>
                     </div>
                     <div>
                         <span class="text-gray-600">Stok Tersedia:</span>
@@ -95,9 +97,9 @@
             <p class="text-xs text-gray-500 mt-1">Maksimal sesuai stok yang tersedia ({{ $availableStock }})</p>
         </div>
 
-        <!-- Rental Dates Section (Hidden by default, shown for barang_sewa) -->
-        <div id="rentalSection" class="hidden mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-            <h3 class="text-sm font-medium text-gray-700 mb-3">Periode Sewa</h3>
+        <!-- Rental Dates Section (Hidden by default, shown for barang_pinjam) -->
+        <div id="rentalSection" class="{{ $requestBarang->stock->sub_kategori == 'barang_pinjam' ? '' : 'hidden' }} mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h3 class="text-sm font-medium text-gray-700 mb-3">Periode Peminjaman</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label for="tanggal_mulai_sewa" class="block text-sm font-medium text-gray-700 mb-2">
