@@ -117,8 +117,8 @@ class RequestBarang extends Model
     public function getTipeRequestLabelAttribute()
     {
         return match($this->tipe_request) {
-            // Material Umum - Sub: Material Umum
-            'pakai_habis_pakai' => 'Material Umum',
+            // Material Umum - Sub: Barang Habis Pakai
+            'pakai_habis_pakai' => 'Barang Habis Pakai',
             
             // Material Umum - Sub: Barang Pinjam
             'pinjam_material' => 'Barang Pinjam',

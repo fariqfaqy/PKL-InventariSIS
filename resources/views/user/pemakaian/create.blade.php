@@ -180,17 +180,6 @@
                 @enderror
             </div>
 
-            <!-- Penerima -->
-            <div>
-                <label for="penerima" class="block text-sm font-medium text-gray-700 mb-2">Penerima *</label>
-                <input type="text" name="penerima" id="penerima" required
-                       placeholder="Nama penerima barang" value="{{ old('penerima') }}"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
-                @error('penerima')
-                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
             <!-- Keperluan -->
             <div>
                 <label for="keperluan" class="block text-sm font-medium text-gray-700 mb-2">Keperluan *</label>

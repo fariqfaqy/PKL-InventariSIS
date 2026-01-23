@@ -25,16 +25,10 @@
                 <button onclick="window.location.href='{{ route('user.barang-keluar.index') }}'" class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ !request('kategori') ? 'border-[#14a2ba] text-[#14a2ba]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                     Semua
                 </button>
-                <button onclick="window.location.href='{{ route('user.barang-keluar.index', ['kategori' => 'barang_sewa']) }}'" class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ request('kategori') == 'barang_sewa' ? 'border-[#14a2ba] text-[#14a2ba]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                    <span class="inline-flex items-center gap-2">
-                        <x-heroicon-o-computer-desktop class="w-4 h-4" />
-                        Aset Sewa
-                    </span>
-                </button>
                 <button onclick="window.location.href='{{ route('user.barang-keluar.index', ['kategori' => 'habis_pakai']) }}'" class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ request('kategori') == 'habis_pakai' ? 'border-[#14a2ba] text-[#14a2ba]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                     <span class="inline-flex items-center gap-2">
                         <x-heroicon-o-shopping-bag class="w-4 h-4" />
-                        Material Umum
+                        Pemakaian Saya
                     </span>
                 </button>
                 <button onclick="window.location.href='{{ route('user.barang-keluar.index', ['kategori' => 'aset_tetap']) }}'" class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ request('kategori') == 'aset_tetap' ? 'border-[#14a2ba] text-[#14a2ba]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
@@ -46,14 +40,14 @@
             </nav>
         </div>
 
-        <!-- Sub-tabs untuk Material Umum -->
+        <!-- Sub-tabs untuk Pemakaian Saya -->
         @if(request('kategori') == 'habis_pakai')
             <div class="bg-blue-50 border-b border-blue-200">
                 <nav class="flex -mb-px">
                     <button onclick="window.location.href='{{ route('user.barang-keluar.index', ['kategori' => 'habis_pakai']) }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ !request('sub_kategori') ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
                         <span class="inline-flex items-center gap-1">
                             <x-heroicon-o-squares-2x2 class="w-3 h-3" />
-                            Semua Material
+                            Semua Pemakaian
                         </span>
                     </button>
                     <button onclick="window.location.href='{{ route('user.barang-keluar.index', ['kategori' => 'habis_pakai', 'sub_kategori' => 'barang_habis_pakai']) }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_habis_pakai' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
@@ -66,6 +60,12 @@
                         <span class="inline-flex items-center gap-1">
                             <x-heroicon-o-arrow-path class="w-3 h-3" />
                             Barang Pinjam
+                        </span>
+                    </button>
+                    <button onclick="window.location.href='{{ route('user.barang-keluar.index', ['kategori' => 'habis_pakai', 'sub_kategori' => 'aset_sewa']) }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'aset_sewa' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                        <span class="inline-flex items-center gap-1">
+                            <x-heroicon-o-computer-desktop class="w-3 h-3" />
+                            Aset Sewa
                         </span>
                     </button>
                 </nav>
@@ -116,14 +116,13 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode Barang</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Barang</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Periode Sewa</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penerima</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penginput</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Periode Pemakaian</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durasi</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -133,90 +132,113 @@
                             {{ $barangKeluar->firstItem() + $index }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $item->tanggal->format('d/m/Y H:i') }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            @if($item->kategori == 'barang_sewa')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                    <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
-                                    Peminjaman
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    <x-heroicon-o-document-text class="w-3 h-3 mr-1" />
-                                    Permintaan
-                                </span>
-                            @endif
+                            {{ $item->tanggal->format('d/m/Y') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ $item->kodebarang_k }}
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-900">
-                            {{ $item->namabarang_k }}
+                            <div>
+                                <p class="font-medium">{{ $item->namabarang_k }}</p>
+                                @if($item->stock && $item->stock->kategori === 'barang_sewa')
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 mt-1">
+                                    <x-heroicon-o-computer-desktop class="w-3 h-3 mr-1" />
+                                    Aset Sewa
+                                </span>
+                                @endif
+                            </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                -{{ $item->qty }}
+                                {{ $item->qty }} unit
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-900">
-                            @if($item->kategori == 'barang_sewa' && ($item->tanggal_mulai_sewa || $item->tanggal_akhir_sewa))
+                        <td class="px-6 py-4 text-sm">
+                            @if($item->tanggal_mulai_pakai && $item->tanggal_akhir_pakai)
                                 <div class="space-y-1">
-                                    @if($item->tanggal_mulai_sewa)
-                                        <div class="flex items-center gap-1 text-xs">
-                                            <span class="text-gray-500">Mulai:</span>
-                                            <span class="font-medium text-blue-600">{{ $item->tanggal_mulai_sewa->format('d/m/Y') }}</span>
-                                        </div>
-                                    @endif
-                                    @if($item->tanggal_akhir_sewa)
-                                        <div class="flex items-center gap-1 text-xs">
-                                            <span class="text-gray-500">Kembali:</span>
-                                            <span class="font-medium text-orange-600">{{ $item->tanggal_akhir_sewa->format('d/m/Y') }}</span>
-                                        </div>
-                                    @endif
-                                    @if($item->tanggal_mulai_sewa && $item->tanggal_akhir_sewa)
-                                        <div class="text-xs text-gray-500">
-                                            ({{ $item->tanggal_mulai_sewa->diffInDays($item->tanggal_akhir_sewa) }} hari)
-                                        </div>
+                                    <div class="flex items-center gap-1 text-xs">
+                                        <x-heroicon-o-calendar class="w-3 h-3 text-gray-400" />
+                                        <span class="text-gray-600">{{ \Carbon\Carbon::parse($item->tanggal_mulai_pakai)->format('d M Y') }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-1 text-xs">
+                                        <x-heroicon-o-calendar class="w-3 h-3 text-gray-400" />
+                                        <span class="text-gray-600">{{ \Carbon\Carbon::parse($item->tanggal_akhir_pakai)->format('d M Y') }}</span>
+                                    </div>
+                                </div>
+                            @else
+                                <span class="text-xs text-gray-400">-</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            @if($item->tanggal_mulai_pakai && $item->tanggal_akhir_pakai)
+                                @php
+                                    $now = \Carbon\Carbon::now();
+                                    $startDate = \Carbon\Carbon::parse($item->tanggal_mulai_pakai);
+                                    $endDate = \Carbon\Carbon::parse($item->tanggal_akhir_pakai);
+                                    $totalDays = $startDate->diffInDays($endDate);
+                                    $daysLeft = $now->diffInDays($endDate, false);
+                                    $isExpired = $daysLeft < 0;
+                                @endphp
+                                <div class="space-y-1">
+                                    <p class="text-xs text-gray-600">{{ $totalDays }} hari total</p>
+                                    @if($isExpired)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                            <x-heroicon-o-exclamation-circle class="w-3 h-3 mr-1" />
+                                            Lewat {{ abs(floor($daysLeft)) }} hari
+                                        </span>
+                                    @elseif($daysLeft <= 3)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            <x-heroicon-o-clock class="w-3 h-3 mr-1" />
+                                            {{ ceil($daysLeft) }} hari lagi
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
+                                            <x-heroicon-o-check class="w-3 h-3 mr-1" />
+                                            {{ ceil($daysLeft) }} hari lagi
+                                        </span>
                                     @endif
                                 </div>
                             @else
                                 <span class="text-xs text-gray-400">-</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-900">
-                            {{ $item->penerima }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <span class="inline-flex items-center gap-1">
-                                {{ $item->penginput }}
-                                @if($item->penginput == auth()->user()->email)
-                                <span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">Anda</span>
-                                @endif
-                            </span>
-                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            @if($item->status == 'selesai')
+                            @if($item->status === 'sedang_dipakai')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
+                                    Aktif
+                                </span>
+                            @elseif($item->status === 'selesai')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <x-heroicon-o-check-circle class="w-3 h-3 mr-1" />
                                     Selesai
                                 </span>
-                                @if($item->tanggal_selesai)
-                                    <div class="text-xs text-gray-500 mt-1">{{ $item->tanggal_selesai->format('d/m/Y') }}</div>
-                                @endif
+                            @elseif($item->status === 'ditarik')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    <x-heroicon-o-x-circle class="w-3 h-3 mr-1" />
+                                    Ditarik
+                                </span>
                             @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    Sedang Dipakai
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    {{ ucfirst($item->status) }}
                                 </span>
                             @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                            <a href="{{ route('user.barang-keluar.show', $item->idkeluar) }}" 
+                               class="text-[#14a2ba] hover:text-[#0d7a8f] transition-colors" 
+                               title="Detail">
+                                <x-heroicon-o-eye class="w-5 h-5 inline" />
+                            </a>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10" class="px-6 py-12 text-center">
+                        <td colspan="9" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center justify-center text-gray-500">
                                 <x-heroicon-o-inbox class="w-16 h-16 mb-4 opacity-30" />
-                                <p class="text-lg font-medium">Belum ada data barang keluar</p>
-                                <p class="text-sm mt-1">Data barang keluar akan muncul saat ada pemakaian barang</p>
+                                <p class="text-lg font-medium">Belum ada pemakaian barang</p>
+                                <p class="text-sm mt-1">Pemakaian barang Anda akan muncul di sini</p>
                             </div>
                         </td>
                     </tr>

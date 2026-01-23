@@ -43,6 +43,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::resource('barang-masuk', BarangMasukController::class);
     
     Route::get('barang-keluar/export-pdf', [BarangKeluarController::class, 'exportPdf'])->name('barang-keluar.export-pdf');
+    Route::post('barang-keluar/{idkeluar}/extend-rental', [BarangKeluarController::class, 'extendRental'])->name('barang-keluar.extend-rental');
+    Route::post('barang-keluar/{idkeluar}/complete-rental', [BarangKeluarController::class, 'completeRental'])->name('barang-keluar.complete-rental');
     Route::resource('barang-keluar', BarangKeluarController::class);
     
     // Kelola User

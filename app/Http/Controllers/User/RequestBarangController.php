@@ -113,6 +113,7 @@ class RequestBarangController extends Controller
             'tipe_request' => $tipeRequest,
             'request_type' => 'normal',
             'keperluan' => $validated['keperluan'],
+            'penerima' => Auth::user()->name, // Auto-detect from logged in user
             'catatan_user' => $validated['catatan_user'] ?? null,
             'tanggal_mulai_sewa' => $validated['tanggal_mulai_sewa'] ?? null,
             'tanggal_akhir_sewa' => $validated['tanggal_akhir_sewa'] ?? null,

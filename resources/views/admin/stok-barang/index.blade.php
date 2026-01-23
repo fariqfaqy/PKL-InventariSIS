@@ -45,27 +45,48 @@
     </div>
     @endif
 
-    <!-- Tabs Kategori -->
+    <!-- Tabs Kategori (only show when accessed from "Semua" or directly, hide when from sidebar specific category) -->
     <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        @if(!request('kategori'))
+        <!-- Show all tabs when no filter -->
         <div class="border-b border-gray-200">
             <nav class="flex -mb-px">
-                <a href="{{ route('admin.stok-barang.index') }}" class="flex-1 px-6 py-4 text-center font-medium transition-all {{ !request('kategori') ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50' }}">
+                <a href="{{ route('admin.stok-barang.index') }}" class="flex-1 px-6 py-4 text-center font-medium transition-all text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50">
                     Semua
                 </a>
-                <a href="{{ route('admin.stok-barang.index', ['kategori' => 'barang_sewa']) }}" class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 {{ request('kategori') == 'barang_sewa' ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50' }}">
+                <a href="{{ route('admin.stok-barang.index', ['kategori' => 'barang_sewa']) }}" class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50">
                     <x-heroicon-o-computer-desktop class="w-5 h-5" />
                     Aset Sewa
                 </a>
-                <a href="{{ route('admin.stok-barang.index', ['kategori' => 'habis_pakai']) }}" class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 {{ request('kategori') == 'habis_pakai' ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50' }}">
+                <a href="{{ route('admin.stok-barang.index', ['kategori' => 'habis_pakai']) }}" class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50">
                     <x-heroicon-o-shopping-bag class="w-5 h-5" />
                     Material Umum
                 </a>
-                <a href="{{ route('admin.stok-barang.index', ['kategori' => 'aset_tetap']) }}" class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 {{ request('kategori') == 'aset_tetap' ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50' }}">
+                <a href="{{ route('admin.stok-barang.index', ['kategori' => 'aset_tetap']) }}" class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50">
                     <x-heroicon-o-building-office class="w-5 h-5" />
                     Aset Tetap
                 </a>
             </nav>
         </div>
+        @else
+        <!-- Show only active category header when filtered -->
+        <div class="border-b border-gray-200 bg-cyan-50 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    @if(request('kategori') == 'barang_sewa')
+                        <x-heroicon-o-computer-desktop class="w-6 h-6 text-cyan-600" />
+                        <h2 class="text-lg font-semibold text-cyan-900">Aset Sewa</h2>
+                    @elseif(request('kategori') == 'habis_pakai')
+                        <x-heroicon-o-shopping-bag class="w-6 h-6 text-cyan-600" />
+                        <h2 class="text-lg font-semibold text-cyan-900">Material Umum</h2>
+                    @elseif(request('kategori') == 'aset_tetap')
+                        <x-heroicon-o-building-office class="w-6 h-6 text-cyan-600" />
+                        <h2 class="text-lg font-semibold text-cyan-900">Aset Tetap</h2>
+                    @endif
+                </div>
+            </div>
+        </div>
+        @endif
 
         <!-- Sub-tabs untuk Material Umum -->
         @if(request('kategori') == 'habis_pakai')
@@ -262,25 +283,51 @@
                             </div>
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                            @if($stock->nama_pengguna)
+                            @php
+                                // Get active OutgoingTransaction for current user info
+                                $activeTransaction = $stock->outgoingTransactions->first();
+                            @endphp
+                            @if($activeTransaction)
                                 <div class="flex flex-col">
-                                    <span class="font-medium text-gray-800">{{ $stock->nama_pengguna }}</span>
-                                    @if($stock->tanggal_mulai_pakai && $stock->tanggal_akhir_pakai)
-                                    <span class="text-xs text-gray-500">
-                                        {{ \Carbon\Carbon::parse($stock->tanggal_mulai_pakai)->format('d/m/Y') }} - 
-                                        {{ \Carbon\Carbon::parse($stock->tanggal_akhir_pakai)->format('d/m/Y') }}
+                                    <span class="font-medium text-gray-800">{{ $activeTransaction->penerima }}</span>
+                                    <span class="text-xs text-gray-500">{{ $activeTransaction->divisi }}</span>
+                                    @if($activeTransaction->tanggal_mulai_pakai && $activeTransaction->tanggal_akhir_pakai)
+                                    <span class="text-xs text-gray-400 mt-1">
+                                        {{ \Carbon\Carbon::parse($activeTransaction->tanggal_mulai_pakai)->format('d/m/Y') }} - 
+                                        {{ \Carbon\Carbon::parse($activeTransaction->tanggal_akhir_pakai)->format('d/m/Y') }}
                                     </span>
                                     @endif
                                 </div>
                             @else
-                                <span class="text-gray-400 text-xs">-</span>
+                                <span class="text-gray-400 text-xs">Tidak ada pengguna</span>
                             @endif
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                            @if($stock->durasi_pakai)
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                                    {{ $stock->durasi_pakai }} hari
-                                </span>
+                            @php
+                                $activeTransaction = $stock->outgoingTransactions->first();
+                            @endphp
+                            @if($activeTransaction && $activeTransaction->tanggal_mulai_pakai && $activeTransaction->tanggal_akhir_pakai)
+                                @php
+                                    $start = \Carbon\Carbon::parse($activeTransaction->tanggal_mulai_pakai);
+                                    $end = \Carbon\Carbon::parse($activeTransaction->tanggal_akhir_pakai);
+                                    $daysTotal = $start->diffInDays($end);
+                                    $daysRemaining = now()->diffInDays($end, false);
+                                    $isExpired = $daysRemaining < 0;
+                                @endphp
+                                <div class="flex flex-col">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $isExpired ? 'bg-red-100 text-red-800' : 'bg-indigo-100 text-indigo-800' }}">
+                                        {{ $daysTotal }} hari
+                                    </span>
+                                    @if($isExpired)
+                                        <span class="text-xs text-red-600 font-medium mt-1">
+                                            Lewat {{ abs($daysRemaining) }} hari
+                                        </span>
+                                    @elseif($daysRemaining >= 0)
+                                        <span class="text-xs text-gray-500 mt-1">
+                                            Sisa {{ $daysRemaining }} hari
+                                        </span>
+                                    @endif
+                                </div>
                             @else
                                 <span class="text-gray-400 text-xs">-</span>
                             @endif

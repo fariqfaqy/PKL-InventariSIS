@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- Header -->
+    <!-- Header dengan conditional title -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
             <div class="flex items-center gap-3">
@@ -18,6 +18,8 @@
         </div>
     </div>
 
+    <!-- Conditional: Show tabs only when no kategori filter from sidebar -->
+    @if(!request('kategori'))
     <!-- Tabs Kategori -->
     <div class="bg-white rounded-xl shadow-md overflow-hidden">
         <div class="border-b border-gray-200">
@@ -72,6 +74,27 @@
             </div>
         @endif
     </div>
+    @else
+    <!-- Show single category header when filtered from sidebar -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    @if(request('kategori') == 'barang_sewa')
+                        <x-heroicon-o-computer-desktop class="w-6 h-6 text-cyan-600" />
+                        <h2 class="text-lg font-semibold text-cyan-900">Aset Sewa</h2>
+                    @elseif(request('kategori') == 'habis_pakai')
+                        <x-heroicon-o-shopping-bag class="w-6 h-6 text-cyan-600" />
+                        <h2 class="text-lg font-semibold text-cyan-900">Material Umum</h2>
+                    @elseif(request('kategori') == 'aset_tetap')
+                        <x-heroicon-o-building-office class="w-6 h-6 text-cyan-600" />
+                        <h2 class="text-lg font-semibold text-cyan-900">Aset Tetap</h2>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <!-- Filter Section -->
     <div class="bg-white rounded-xl shadow-md p-4">

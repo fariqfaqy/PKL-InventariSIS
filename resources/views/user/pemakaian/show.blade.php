@@ -99,14 +99,14 @@
                 </div>
 
                 <div>
-                    <label class="text-sm font-medium text-gray-500 block mb-1">Kategori</label>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $request->stock->kategori == 'barang_sewa' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800' }}">
-                        @if($request->stock->kategori == 'barang_sewa')
-                            <x-heroicon-o-calendar class="w-4 h-4 mr-1" />
-                            Aset Sewa
+                    <label class="text-sm font-medium text-gray-500 block mb-1">Sub-Kategori</label>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $request->stock->sub_kategori == 'barang_habis_pakai' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }}">
+                        @if($request->stock->sub_kategori == 'barang_habis_pakai')
+                            <x-heroicon-o-archive-box class="w-4 h-4 mr-1" />
+                            Barang Habis Pakai
                         @else
-                            <x-heroicon-o-shopping-cart class="w-4 h-4 mr-1" />
-                            Material Umum
+                            <x-heroicon-o-arrow-path class="w-4 h-4 mr-1" />
+                            Barang Pinjam
                         @endif
                     </span>
                 </div>

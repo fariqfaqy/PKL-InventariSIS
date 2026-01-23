@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\OutgoingTransaction;
 use App\Models\Stock;
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -59,7 +60,10 @@ class BarangKeluarController extends Controller
             ->paginate(10)
             ->withQueryString();
         
-        return view('admin.barang-keluar.index', compact('barangKeluar'));
+        // Get selected kategori for view conditional rendering
+        $selectedKategori = $request->get('kategori', null);
+        
+        return view('admin.barang-keluar.index', compact('barangKeluar', 'selectedKategori'));
     }
 
     /**
@@ -131,7 +135,7 @@ class BarangKeluarController extends Controller
      */
     public function show($idkeluar)
     {
-        $barangKeluar = OutgoingTransaction::with('stock')->findOrFail($idkeluar);
+        $barangKeluar = OutgoingTransaction::with(['stock', 'user.division'])->findOrFail($idkeluar);
         return view('admin.barang-keluar.show', compact('barangKeluar'));
     }
 
@@ -206,6 +210,76 @@ class BarangKeluarController extends Controller
 
         return redirect()->route('admin.barang-keluar.index')
             ->with('success', 'Barang keluar berhasil dihapus!');
+    }
+
+    /**
+     * Extend the rental period for Aset Sewa.
+     */
+    public function extendRental(Request $request, $idkeluar)
+    {
+        $barangKeluar = OutgoingTransaction::findOrFail($idkeluar);
+        
+        // Validate only for Aset Sewa
+        if ($barangKeluar->kategori !== 'barang_sewa') {
+            return redirect()->back()->with('error', 'Hanya Aset Sewa yang bisa diperpanjang!');
+        }
+        
+        // Validate new end date
+        $validated = $request->validate([
+            'tanggal_akhir_pakai' => [
+                'required',
+                'date',
+                'after:' . $barangKeluar->tanggal_akhir_pakai,
+            ],
+        ], [
+            'tanggal_akhir_pakai.required' => 'Tanggal akhir baru harus diisi',
+            'tanggal_akhir_pakai.date' => 'Format tanggal tidak valid',
+            'tanggal_akhir_pakai.after' => 'Tanggal akhir baru harus setelah tanggal akhir sekarang (' . \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai)->format('d M Y') . ')',
+        ]);
+        
+        // Update end date
+        $barangKeluar->update([
+            'tanggal_akhir_pakai' => $validated['tanggal_akhir_pakai'],
+        ]);
+        
+        return redirect()->back()->with('success', 'Masa sewa berhasil diperpanjang!');
+    }
+    
+    /**
+     * Mark rental as completed.
+     */
+    public function completeRental($idkeluar)
+    {
+        $barangKeluar = OutgoingTransaction::findOrFail($idkeluar);
+        
+        // Validate only for Aset Sewa with active status
+        if ($barangKeluar->kategori !== 'barang_sewa') {
+            return redirect()->back()->with('error', 'Hanya Aset Sewa yang bisa diselesaikan!');
+        }
+        
+        if ($barangKeluar->status !== 'sedang_dipakai') {
+            return redirect()->back()->with('error', 'Pemakaian sudah selesai atau ditarik!');
+        }
+        
+        // Update status
+        $barangKeluar->update([
+            'status' => 'selesai',
+            'tanggal_selesai' => now(),
+        ]);
+        
+        // KURANGI STOK ketika rental selesai
+        // Untuk Aset Sewa: stok berkurang jadi 0 setelah rental selesai
+        if ($barangKeluar->stock) {
+            $barangKeluar->stock->decrement('stock');
+            
+            $barangKeluar->stock->update([
+                'status_kondisi' => 'digunakan',
+                'keterangan_kondisi' => 'Pemakaian selesai - Stok berkurang',
+                'tanggal_update_kondisi' => now(),
+            ]);
+        }
+        
+        return redirect()->back()->with('success', 'Pemakaian berhasil diselesaikan! Aset siap untuk di-assign lagi.');
     }
 
     /**

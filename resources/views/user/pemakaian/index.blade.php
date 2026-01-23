@@ -229,10 +229,10 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     @if($item->stock && $item->stock->sub_kategori)
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $item->sub_kategori_badge_color == 'green' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }}">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $item->stock->sub_kategori == 'barang_habis_pakai' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }}">
                                             @if($item->stock->sub_kategori == 'barang_habis_pakai')
                                                 <x-heroicon-o-archive-box class="w-3 h-3 mr-1" />
-                                                Material Umum
+                                                Barang Habis Pakai
                                             @else
                                                 <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
                                                 Barang Pinjam
@@ -484,10 +484,14 @@
                                             <div class="text-xs text-gray-500">{{ $aset->stock->deskripsi }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                            {{ \Carbon\Carbon::parse($aset->tanggal)->format('d M Y') }}
+                                            {{ \Carbon\Carbon::parse($aset->tanggal_mulai_pakai)->format('d M Y') }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                                            {{ $aset->tanggal_kembali ? \Carbon\Carbon::parse($aset->tanggal_kembali)->format('d M Y') : '-' }}
+                                            @if($aset->tanggal_akhir_pakai)
+                                                {{ \Carbon\Carbon::parse($aset->tanggal_akhir_pakai)->format('d M Y') }}
+                                            @else
+                                                -
+                                            @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             @php

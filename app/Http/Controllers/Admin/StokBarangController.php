@@ -19,6 +19,14 @@ class StokBarangController extends Controller
         // Filter by kategori if provided
         if ($request->filled('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
             $query->where('kategori', $request->kategori);
+            
+            // For Aset Sewa: Load latest OutgoingTransaction (active or completed)
+            if ($request->kategori === 'barang_sewa') {
+                $query->with(['outgoingTransactions' => function($q) {
+                    $q->whereNull('id_request')
+                      ->latest();
+                }]);
+            }
         }
 
         // Filter by sub_kategori (khusus untuk Material Umum)
@@ -155,8 +163,25 @@ class StokBarangController extends Controller
      */
     public function show($idbarang)
     {
-        $stock = Stock::with(['incomingTransactions', 'outgoingTransactions'])->findOrFail($idbarang);
-        return view('admin.stok-barang.show', compact('stock'));
+        $stock = Stock::with([
+            'incomingTransactions', 
+            'outgoingTransactions' => function($query) {
+                $query->with('user.division')
+                      ->orderBy('created_at', 'desc');
+            }
+        ])->findOrFail($idbarang);
+        
+        // Get active rental for Aset Sewa
+        $activeRental = null;
+        if ($stock->kategori === 'barang_sewa') {
+            $activeRental = $stock->outgoingTransactions()
+                ->where('status', 'sedang_dipakai')
+                ->whereNull('id_request')
+                ->with('user.division')
+                ->first();
+        }
+        
+        return view('admin.stok-barang.show', compact('stock', 'activeRental'));
     }
 
     /**

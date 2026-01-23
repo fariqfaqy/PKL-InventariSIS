@@ -51,7 +51,7 @@ class StatusKondisiController extends Controller
                 ->first();
 
             // CASE 1: Status berubah DARI digunakan KE rusak/diperbaiki
-            // → Tarik barang dari user, stock kembali
+            // → Tarik barang dari user untuk maintenance (stock tetap 1, barang masih ada)
             if ($statusLama === 'digunakan' && in_array($statusBaru, ['rusak', 'diperbaiki'])) {
                 if ($activeTransaction) {
                     // Mark transaction as "ditarik" (pulled back)
@@ -60,18 +60,17 @@ class StatusKondisiController extends Controller
                     $activeTransaction->save();
                 }
 
-                // Stock kembali (barang ditarik ke inventory)
-                $barang->stock += 1;
+                // Stock TIDAK berubah (barang fisik masih ada, hanya kondisi berubah)
                 
                 Log::info("Aset sewa ditarik untuk maintenance", [
                     'kode' => $barang->kodebarang,
                     'status_baru' => $statusBaru,
-                    'stock_after' => $barang->stock
+                    'stock' => $barang->stock // Stock tetap
                 ]);
             }
             
             // CASE 2: Status berubah DARI rusak/diperbaiki KE digunakan
-            // → Re-assign barang ke user (jika ada user sebelumnya), stock berkurang
+            // → Re-assign barang ke user (jika ada user sebelumnya), stock tetap
             elseif (in_array($statusLama, ['rusak', 'diperbaiki']) && $statusBaru === 'digunakan') {
                 // Cek apakah ada user yang sebelumnya assigned
                 $lastTransaction = OutgoingTransaction::where('kodebarang_k', $barang->kodebarang)
@@ -96,8 +95,7 @@ class StatusKondisiController extends Controller
                         'tanggal_kembali' => $lastTransaction->tanggal_kembali, // Keep same return date if any
                     ]);
 
-                    // Stock berkurang (assigned kembali)
-                    $barang->stock -= 1;
+                    // Stock TIDAK berubah (barang fisik masih ada)
 
                     Log::info("Aset sewa re-assigned setelah maintenance", [
                         'kode' => $barang->kodebarang,

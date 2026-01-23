@@ -86,10 +86,36 @@ class Stock extends Model
     }
 
     /**
-     * Get status kondisi label
+     * Get status kondisi label (real-time based on rental status)
      */
     public function getStatusKondisiLabelAttribute()
     {
+        // Untuk Aset Sewa: cek status rental real-time
+        if ($this->kategori === 'barang_sewa') {
+            $activeRental = $this->outgoingTransactions()
+                ->whereNull('id_request')
+                ->where('status', 'sedang_dipakai')
+                ->first();
+            
+            if ($activeRental) {
+                return 'Sedang Digunakan';
+            }
+            
+            // Jika tidak ada rental aktif
+            // Cek stock: jika 0 = selesai (dikembalikan ke distributor)
+            if ($this->stock == 0) {
+                return 'Selesai';
+            }
+            
+            // Jika stock > 0, cek status_kondisi
+            return match($this->status_kondisi) {
+                'diperbaiki' => 'Diperbaiki',
+                'rusak' => 'Rusak',
+                default => 'Tersedia'
+            };
+        }
+        
+        // Default untuk kategori lain
         return match($this->status_kondisi) {
             'digunakan' => 'Digunakan',
             'diperbaiki' => 'Diperbaiki',
@@ -99,10 +125,36 @@ class Stock extends Model
     }
 
     /**
-     * Get status kondisi badge color
+     * Get status kondisi badge color (real-time based on rental status)
      */
     public function getStatusKondisiBadgeAttribute()
     {
+        // Untuk Aset Sewa: cek status rental real-time
+        if ($this->kategori === 'barang_sewa') {
+            $activeRental = $this->outgoingTransactions()
+                ->whereNull('id_request')
+                ->where('status', 'sedang_dipakai')
+                ->first();
+            
+            if ($activeRental) {
+                return 'bg-blue-100 text-blue-800'; // Sedang Digunakan
+            }
+            
+            // Jika tidak ada rental aktif
+            // Cek stock: jika 0 = selesai (dikembalikan ke distributor)
+            if ($this->stock == 0) {
+                return 'bg-gray-100 text-gray-800'; // Selesai
+            }
+            
+            // Jika stock > 0, cek status_kondisi
+            return match($this->status_kondisi) {
+                'diperbaiki' => 'bg-yellow-100 text-yellow-800',
+                'rusak' => 'bg-red-100 text-red-800',
+                default => 'bg-green-100 text-green-800' // Tersedia
+            };
+        }
+        
+        // Default untuk kategori lain
         return match($this->status_kondisi) {
             'digunakan' => 'bg-blue-100 text-blue-800',
             'diperbaiki' => 'bg-yellow-100 text-yellow-800',

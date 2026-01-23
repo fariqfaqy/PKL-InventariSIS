@@ -177,6 +177,10 @@
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Barang</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Jumlah</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penerima</th>
+                        @if($selectedKategori === 'barang_sewa')
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">Durasi</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Status</th>
+                        @endif
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Penginput</th>
                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Aksi</th>
                     </tr>
@@ -204,6 +208,60 @@
                         <td class="px-4 py-3 text-sm text-gray-900">
                             {{ $item->penerima }}
                         </td>
+                        @if($selectedKategori === 'barang_sewa')
+                        <td class="px-4 py-3 whitespace-nowrap text-sm">
+                            @if($item->tanggal_mulai_pakai && $item->tanggal_akhir_pakai)
+                                @php
+                                    $now = \Carbon\Carbon::now();
+                                    $startDate = \Carbon\Carbon::parse($item->tanggal_mulai_pakai);
+                                    $endDate = \Carbon\Carbon::parse($item->tanggal_akhir_pakai);
+                                    $totalDays = $startDate->diffInDays($endDate);
+                                    $daysLeft = $now->diffInDays($endDate, false);
+                                    $isExpired = $daysLeft < 0;
+                                @endphp
+                                <div class="space-y-1">
+                                    <p class="text-xs text-gray-600">{{ $totalDays }} hari total</p>
+                                    @if($isExpired)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                            <x-heroicon-o-exclamation-circle class="w-3 h-3 mr-1" />
+                                            Lewat {{ abs(floor($daysLeft)) }} hari
+                                        </span>
+                                    @elseif($daysLeft <= 3)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            <x-heroicon-o-clock class="w-3 h-3 mr-1" />
+                                            {{ ceil($daysLeft) }} hari lagi
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
+                                            <x-heroicon-o-check class="w-3 h-3 mr-1" />
+                                            {{ ceil($daysLeft) }} hari lagi
+                                        </span>
+                                    @endif
+                                </div>
+                            @else
+                                <span class="text-xs text-gray-400">-</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm">
+                            @if($item->status === 'sedang_dipakai')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    Aktif
+                                </span>
+                            @elseif($item->status === 'selesai')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Selesai
+                                </span>
+                            @elseif($item->status === 'ditarik')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    Ditarik
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    {{ ucfirst($item->status) }}
+                                </span>
+                            @endif
+                        </td>
+                        @endif
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                             {{ $item->penginput }}
                         </td>

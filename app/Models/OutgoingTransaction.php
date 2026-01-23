@@ -17,6 +17,7 @@ class OutgoingTransaction extends Model
         'idbarang',
         'tanggal',
         'penerima',
+        'user_id',
         'qty',
         'namabarang_k',
         'penginput',
@@ -35,6 +36,8 @@ class OutgoingTransaction extends Model
         'tanggal_diproses',
         'tanggal_mulai_sewa',
         'tanggal_akhir_sewa',
+        'tanggal_mulai_pakai',
+        'tanggal_akhir_pakai',
     ];
 
     protected $casts = [
@@ -45,6 +48,8 @@ class OutgoingTransaction extends Model
         'tanggal_diproses' => 'datetime',
         'tanggal_mulai_sewa' => 'date',
         'tanggal_akhir_sewa' => 'date',
+        'tanggal_mulai_pakai' => 'date',
+        'tanggal_akhir_pakai' => 'date',
     ];
 
     /**
@@ -56,11 +61,11 @@ class OutgoingTransaction extends Model
     }
 
     /**
-     * Relationship: Belongs to User (penginput = user yang request)
+     * Relationship: Belongs to User (user_id = user yang pakai/minta)
      */
     public function user()
     {
-        return $this->belongsTo(User::class, 'penginput', 'name');
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     /**

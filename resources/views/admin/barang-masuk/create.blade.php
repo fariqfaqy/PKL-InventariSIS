@@ -25,7 +25,8 @@
 
     <!-- Form Card -->
     <div class="bg-white rounded-xl shadow-md p-6">
-        <form action="{{ route('admin.barang-masuk.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+        <form action="{{ route('admin.barang-masuk.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6" 
+            onsubmit="return validateForm()">
             @csrf
 
             <!-- 1. Kategori (dipindah ke paling atas) -->
@@ -170,18 +171,18 @@
                 <!-- Pengguna -->
                 <div>
                     <label for="user_id" class="block text-sm font-medium text-gray-700 mb-2">
-                        Pilih Pengguna
+                        Pilih Pengguna <span class="text-red-500">*</span>
                     </label>
                     <select name="user_id" id="user_id"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('user_id') border-red-500 @enderror">
-                        <option value="">-- Pilih Pengguna (Opsional) --</option>
+                        <option value="">-- Pilih Pengguna --</option>
                         @foreach($users as $user)
                             <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>
                                 {{ $user->name }} ({{ $user->email }})
                             </option>
                         @endforeach
                     </select>
-                    <p class="mt-1 text-xs text-gray-500">Pilih user yang akan menggunakan aset ini. Kosongkan jika aset belum digunakan.</p>
+                    <p class="mt-1 text-xs text-gray-500">Wajib pilih user yang akan menggunakan aset sewa ini.</p>
                     @error('user_id')
                     <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
@@ -223,6 +224,7 @@
                     value="{{ old('qty', 1) }}"
                     placeholder="Masukkan jumlah stok"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('qty') border-red-500 @enderror">
+                <p id="qty-hint" class="mt-1 text-xs text-gray-500"></p>
                 @error('qty')
                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                 @enderror
@@ -284,6 +286,219 @@
 <script>
 // Flag to prevent circular event triggering
 let isUpdatingFields = false;
+
+// ========== FUNCTIONS USED BY INLINE ONCHANGE (MUST BE AT TOP) ==========
+
+// Toggle sewa fields visibility
+function toggleSewaFields() {
+    const kategori = document.getElementById('kategori')?.value;
+    const sewaFields = document.getElementById('sewaFields');
+    const userId = document.getElementById('user_id');
+    
+    if (!sewaFields) return;
+    
+    if (kategori === 'barang_sewa') {
+        sewaFields.classList.remove('hidden');
+        // Make user_id required when visible
+        if (userId) userId.required = true;
+    } else {
+        sewaFields.classList.add('hidden');
+        // Remove required when hidden to prevent validation error
+        if (userId) userId.required = false;
+        
+        // Reset sewa fields (null check untuk avoid error)
+        const namaPengguna = document.getElementById('nama_pengguna');
+        const tanggalMulai = document.getElementById('tanggal_mulai_pakai');
+        const tanggalAkhir = document.getElementById('tanggal_akhir_pakai');
+        
+        if (userId) userId.value = '';
+        if (namaPengguna) namaPengguna.value = '';
+        if (tanggalMulai) tanggalMulai.value = '';
+        if (tanggalAkhir) tanggalAkhir.value = '';
+    }
+}
+
+// Toggle sub-kategori field for Material Umum
+function toggleSubKategori() {
+    const kategori = document.getElementById('kategori')?.value;
+    const subKategoriField = document.getElementById('subKategoriField');
+    const subKategoriSelect = document.getElementById('sub_kategori');
+    
+    if (!subKategoriField || !subKategoriSelect) return;
+    
+    if (kategori === 'habis_pakai') {
+        subKategoriField.classList.remove('hidden');
+        subKategoriSelect.required = true;
+    } else {
+        subKategoriField.classList.add('hidden');
+        subKategoriSelect.required = false;
+        subKategoriSelect.value = '';
+    }
+}
+
+// Toggle rack field for Aset Sewa & Aset Tetap
+function toggleRackField() {
+    const kategori = document.getElementById('kategori')?.value;
+    const rackField = document.getElementById('rack-field');
+    const rackSelect = document.getElementById('rack');
+    const rackPrefix = document.getElementById('rack_prefix');
+    
+    if (!rackField || !rackSelect || !rackPrefix) return;
+    
+    // Aset Sewa & Aset Tetap: hide rack field (bawah)
+    if (kategori === 'barang_sewa' || kategori === 'aset_tetap') {
+        rackField.classList.add('hidden');
+        rackSelect.required = false;
+        rackPrefix.required = true; // Prefix tetap required untuk kode barang
+    } else {
+        rackField.classList.remove('hidden');
+        rackSelect.required = true;
+        rackPrefix.required = true;
+    }
+    
+    // Handle qty field for Aset Sewa (always 1)
+    toggleQtyField();
+}
+
+// Toggle qty field for Aset Sewa (forced to 1)
+function toggleQtyField() {
+    const kategori = document.getElementById('kategori')?.value;
+    const qtyInput = document.getElementById('qty');
+    const qtyHint = document.getElementById('qty-hint');
+    
+    if (!qtyInput || !qtyHint) return;
+    
+    if (kategori === 'barang_sewa') {
+        qtyInput.value = 1;
+        qtyInput.readOnly = true;
+        qtyInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+        qtyHint.textContent = 'Aset sewa selalu 1 barang per kode (tidak bisa diubah)';
+        qtyHint.classList.add('text-blue-600', 'font-medium');
+    } else {
+        qtyInput.readOnly = false;
+        qtyInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+        qtyHint.textContent = '';
+        qtyHint.classList.remove('text-blue-600', 'font-medium');
+    }
+}
+
+// Update prefix options based on kategori
+function updatePrefixOptions() {
+    if (isUpdatingFields) return; // Prevent circular events
+    
+    const kategori = document.getElementById('kategori')?.value;
+    const rackPrefix = document.getElementById('rack_prefix');
+    const kodeHint = document.getElementById('kodebarang-hint');
+    
+    if (!rackPrefix || !kodeHint) return;
+    
+    console.log('updatePrefixOptions called, kategori:', kategori);
+    
+    isUpdatingFields = true;
+    
+    // Clear current options
+    rackPrefix.innerHTML = '';
+    
+    if (kategori === 'barang_sewa' || kategori === 'aset_tetap') {
+        // Aset Sewa & Aset Tetap: Fixed "SIS" (disabled, auto-selected)
+        rackPrefix.innerHTML = '<option value="SIS" selected>SIS</option>';
+        rackPrefix.disabled = true;
+        rackPrefix.classList.add('bg-gray-100', 'cursor-not-allowed');
+        kodeHint.textContent = 'Format: SIS + 3 digit. Contoh: SIS001, SIS042';
+        console.log('Set to SIS (Aset Sewa/Tetap)');
+    } else if (kategori === 'habis_pakai') {
+        // Material Umum: Pilihan Rak
+        rackPrefix.innerHTML = `
+            <option value="">-- Pilih Rak --</option>
+            <option value="1A">1A</option>
+            <option value="1B">1B</option>
+            <option value="1C">1C</option>
+            <option value="2A">2A</option>
+            <option value="2B">2B</option>
+            <option value="2C">2C</option>
+        `;
+        rackPrefix.disabled = false;
+        rackPrefix.classList.remove('bg-gray-100', 'cursor-not-allowed');
+        kodeHint.textContent = 'Format: [Rak] + 3 digit. Contoh: 1A001, 2B050';
+        console.log('Set to Rak options (Material Umum)');
+    } else {
+        rackPrefix.innerHTML = '<option value="">-- Pilih Kategori Dulu --</option>';
+        rackPrefix.disabled = true;
+        kodeHint.textContent = 'Pilih kategori terlebih dahulu';
+        console.log('No kategori selected');
+    }
+    
+    isUpdatingFields = false;
+    
+    // DON'T call updateKodeBarang here to prevent reset
+    // User akan isi manual setelah pilih prefix
+}
+
+// Sync rack field with rack_prefix (only when prefix changes)
+function syncRackField() {
+    const prefix = document.getElementById('rack_prefix')?.value;
+    const rackSelect = document.getElementById('rack');
+    
+    if (rackSelect && prefix && prefix !== 'SIS') {
+        rackSelect.value = prefix.toLowerCase();
+    }
+}
+
+// ========== OTHER FUNCTIONS ==========
+
+// Validate form before submit
+function validateForm() {
+    const kodebarang = document.getElementById('kodebarang').value;
+    const kategori = document.getElementById('kategori').value;
+    const prefix = document.getElementById('rack_prefix').value;
+    const suffix = document.getElementById('kode_suffix').value;
+    const namabarang = document.getElementById('namabarang').value;
+    const userId = document.getElementById('user_id')?.value;
+    
+    console.log('Form submit validation:', {
+        kodebarang,
+        kategori,
+        prefix,
+        suffix,
+        namabarang,
+        userId
+    });
+    
+    // Validate required fields
+    if (!kategori) {
+        alert('Kategori harus dipilih!');
+        return false;
+    }
+    
+    if (!prefix) {
+        alert('Prefix kode barang harus dipilih!');
+        return false;
+    }
+    
+    if (!suffix || suffix.length !== 3) {
+        alert('Kode barang harus 3 digit angka!');
+        return false;
+    }
+    
+    if (!kodebarang) {
+        alert('Kode barang belum terisi! Prefix: ' + prefix + ', Suffix: ' + suffix);
+        return false;
+    }
+    
+    if (!namabarang) {
+        alert('Nama barang harus diisi!');
+        return false;
+    }
+    
+    // Validate user_id for Aset Sewa
+    if (kategori === 'barang_sewa' && !userId) {
+        alert('Pengguna harus dipilih untuk Aset Sewa!');
+        return false;
+    }
+    
+    console.log('Form validation passed, submitting...');
+    return true;
+}
 
 // Update kode barang from dropdown and input
 function updateKodeBarang() {
@@ -424,10 +639,10 @@ function enableFields() {
         namabarangInput.removeAttribute('data-locked');
     }
     
-    // Enable kategori
+    // Enable kategori (DON'T RESET if already has value)
     const kategoriSelect = document.getElementById('kategori');
     if (kategoriSelect && kategoriSelect.getAttribute('data-locked') !== 'permanent') {
-        kategoriSelect.value = '';
+        // DON'T reset value - keep user's selection!
         kategoriSelect.classList.remove('bg-gray-100', 'cursor-not-allowed', 'pointer-events-none');
         kategoriSelect.removeAttribute('data-locked');
         kategoriSelect.removeAttribute('tabindex');
@@ -496,121 +711,6 @@ function previewImage(event) {
     }
 }
 
-// Toggle sewa fields visibility
-function toggleSewaFields() {
-    const kategori = document.getElementById('kategori').value;
-    const sewaFields = document.getElementById('sewaFields');
-    
-    if (kategori === 'barang_sewa') {
-        sewaFields.classList.remove('hidden');
-    } else {
-        sewaFields.classList.add('hidden');
-        // Reset sewa fields (null check untuk avoid error)
-        const namaPengguna = document.getElementById('nama_pengguna');
-        const tanggalMulai = document.getElementById('tanggal_mulai_pakai');
-        const tanggalAkhir = document.getElementById('tanggal_akhir_pakai');
-        
-        if (namaPengguna) namaPengguna.value = '';
-        if (tanggalMulai) tanggalMulai.value = '';
-        if (tanggalAkhir) tanggalAkhir.value = '';
-    }
-}
-
-// Toggle sub-kategori field for Material Umum
-function toggleSubKategori() {
-    const kategori = document.getElementById('kategori').value;
-    const subKategoriField = document.getElementById('subKategoriField');
-    const subKategoriSelect = document.getElementById('sub_kategori');
-    
-    if (kategori === 'habis_pakai') {
-        subKategoriField.classList.remove('hidden');
-        subKategoriSelect.required = true;
-    } else {
-        subKategoriField.classList.add('hidden');
-        subKategoriSelect.required = false;
-        subKategoriSelect.value = '';
-    }
-}
-
-// Toggle rack field for Aset Sewa & Aset Tetap
-function toggleRackField() {
-    const kategori = document.getElementById('kategori').value;
-    const rackField = document.getElementById('rack-field');
-    const rackSelect = document.getElementById('rack');
-    const rackPrefix = document.getElementById('rack_prefix');
-    
-    // Aset Sewa & Aset Tetap: hide rack field (bawah)
-    if (kategori === 'barang_sewa' || kategori === 'aset_tetap') {
-        rackField.classList.add('hidden');
-        rackSelect.required = false;
-        rackPrefix.required = true; // Prefix tetap required untuk kode barang
-    } else {
-        rackField.classList.remove('hidden');
-        rackSelect.required = true;
-        rackPrefix.required = true;
-    }
-}
-
-// Sync rack field with rack_prefix (only when prefix changes)
-function syncRackField() {
-    const prefix = document.getElementById('rack_prefix').value;
-    const rackSelect = document.getElementById('rack');
-    
-    if (rackSelect && prefix && prefix !== 'SIS') {
-        rackSelect.value = prefix.toLowerCase();
-    }
-}
-
-// Update prefix options based on kategori
-function updatePrefixOptions() {
-    if (isUpdatingFields) return; // Prevent circular events
-    
-    const kategori = document.getElementById('kategori').value;
-    const rackPrefix = document.getElementById('rack_prefix');
-    const kodeHint = document.getElementById('kodebarang-hint');
-    
-    console.log('updatePrefixOptions called, kategori:', kategori);
-    
-    isUpdatingFields = true;
-    
-    // Clear current options
-    rackPrefix.innerHTML = '';
-    
-    if (kategori === 'barang_sewa' || kategori === 'aset_tetap') {
-        // Aset Sewa & Aset Tetap: Fixed "SIS" (disabled, auto-selected)
-        rackPrefix.innerHTML = '<option value="SIS" selected>SIS</option>';
-        rackPrefix.disabled = true;
-        rackPrefix.classList.add('bg-gray-100', 'cursor-not-allowed');
-        kodeHint.textContent = 'Format: SIS + 3 digit. Contoh: SIS001, SIS042';
-        console.log('Set to SIS (Aset Sewa/Tetap)');
-    } else if (kategori === 'habis_pakai') {
-        // Material Umum: Pilihan Rak
-        rackPrefix.innerHTML = `
-            <option value="">-- Pilih Rak --</option>
-            <option value="1A">1A</option>
-            <option value="1B">1B</option>
-            <option value="1C">1C</option>
-            <option value="2A">2A</option>
-            <option value="2B">2B</option>
-            <option value="2C">2C</option>
-        `;
-        rackPrefix.disabled = false;
-        rackPrefix.classList.remove('bg-gray-100', 'cursor-not-allowed');
-        kodeHint.textContent = 'Format: [Rak] + 3 digit. Contoh: 1A001, 2B050';
-        console.log('Set to Rak options (Material Umum)');
-    } else {
-        rackPrefix.innerHTML = '<option value="">-- Pilih Kategori Dulu --</option>';
-        rackPrefix.disabled = true;
-        kodeHint.textContent = 'Pilih kategori terlebih dahulu';
-        console.log('No kategori selected');
-    }
-    
-    isUpdatingFields = false;
-    
-    // DON'T call updateKodeBarang here to prevent reset
-    // User akan isi manual setelah pilih prefix
-}
-
 // On page load
 document.addEventListener('DOMContentLoaded', function() {
     // Pastikan semua field enabled saat pertama kali load
@@ -622,11 +722,46 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleRackField();
     updatePrefixOptions();
     
-    // Add event listeners to prevent changes on locked select fields
+    // DEBUG: Track kategori changes
     const kategoriSelect = document.getElementById('kategori');
     const rackSelect = document.getElementById('rack');
     
     if (kategoriSelect) {
+        // Track actual value changes
+        let lastKategori = kategoriSelect.value;
+        setInterval(() => {
+            if (kategoriSelect.value !== lastKategori) {
+                console.error('KATEGORI CHANGED! From:', lastKategori, 'To:', kategoriSelect.value);
+                console.trace('Change stack trace');
+                lastKategori = kategoriSelect.value;
+            }
+        }, 100);
+        
+        // Intercept setAttribute and value setter
+        const originalSetAttribute = kategoriSelect.setAttribute.bind(kategoriSelect);
+        kategoriSelect.setAttribute = function(name, value) {
+            if (name === 'value') {
+                console.error('setAttribute value on kategori:', value);
+                console.trace();
+            }
+            return originalSetAttribute(name, value);
+        };
+        
+        // Intercept direct value setter
+        const descriptor = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
+        const originalSetter = descriptor.set;
+        Object.defineProperty(kategoriSelect, 'value', {
+            set: function(newValue) {
+                if (newValue !== this.value) {
+                    console.error('Direct value set on kategori:', this.value, '→', newValue);
+                    console.trace();
+                }
+                return originalSetter.call(this, newValue);
+            },
+            get: descriptor.get
+        });
+        
+        // Add event listener to prevent changes on locked select field
         kategoriSelect.addEventListener('mousedown', function(e) {
             if (this.getAttribute('data-locked') === 'true') {
                 e.preventDefault();

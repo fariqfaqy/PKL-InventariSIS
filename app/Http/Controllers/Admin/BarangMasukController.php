@@ -77,13 +77,16 @@ class BarangMasukController extends Controller
             'deskripsi' => 'nullable|string',
             'tanggal' => 'required|date',
             'keterangan' => 'required|string',
-            'nama_pengguna' => 'nullable|string|max:255',
+            'user_id' => 'nullable|required_if:kategori,barang_sewa|exists:users,id',
             'tanggal_mulai_pakai' => 'nullable|date',
             'tanggal_akhir_pakai' => 'nullable|date|after_or_equal:tanggal_mulai_pakai',
         ], [
             'sub_kategori.required_if' => 'Sub-kategori wajib diisi untuk Material Umum',
             'sub_kategori.in' => 'Sub-kategori harus berupa Material Umum atau Barang Pinjam',
             'rack.required_if' => 'Rak wajib diisi untuk Material Umum',
+            'user_id.required_if' => 'User wajib dipilih untuk Aset Sewa',
+            'user_id.exists' => 'User yang dipilih tidak valid',
+            'tanggal_akhir_pakai.after_or_equal' => 'Tanggal akhir pakai harus sama dengan atau setelah tanggal mulai pakai',
         ]);
 
         // Handle image upload with security
@@ -110,14 +113,21 @@ class BarangMasukController extends Controller
             $imagePath = $imageName; // Simpan hanya nama file
         }
 
-        // Check if stock exists by kodebarang
-        $stock = Stock::where('kodebarang', $validated['kodebarang'])->first();
-
         // For Material Umum (habis_pakai), ensure sub_kategori is set
         $actualKategori = $validated['kategori'];
         $actualSubKategori = ($validated['kategori'] === 'habis_pakai' && isset($validated['sub_kategori'])) 
             ? $validated['sub_kategori'] 
             : null;
+
+        // For Aset Sewa: ALWAYS create new stock (1 kode = 1 physical item, no merging)
+        // Skip stock checking for barang_sewa
+        if ($actualKategori === 'barang_sewa') {
+            $stock = null; // Force create new
+            $validated['qty'] = 1; // Force qty = 1
+        } else {
+            // Check if stock exists by kodebarang (for other categories)
+            $stock = Stock::where('kodebarang', $validated['kodebarang'])->first();
+        }
 
         if ($stock) {
             // If stock exists, update the quantity and other fields
@@ -141,17 +151,28 @@ class BarangMasukController extends Controller
             }
             
             // Update user and rental dates for barang_sewa
-            if ($validated['kategori'] === 'barang_sewa') {
-                $stock->nama_pengguna = $validated['nama_pengguna'] ?? null;
-                $stock->tanggal_mulai_pakai = $validated['tanggal_mulai_pakai'] ?? null;
-                $stock->tanggal_akhir_pakai = $validated['tanggal_akhir_pakai'] ?? null;
+            if ($validated['kategori'] === 'barang_sewa' && $request->filled('user_id')) {
+                $user = \App\Models\User::findOrFail($validated['user_id']);
                 
-                // Set status kondisi based on user assignment
-                if ($validated['nama_pengguna']) {
-                    $stock->status_kondisi = 'digunakan';
-                } else {
-                    $stock->status_kondisi = 'tersedia';
-                }
+                // Create OutgoingTransaction for assignment
+                \App\Models\OutgoingTransaction::create([
+                    'idbarang' => $stock->idbarang,
+                    'tanggal' => $validated['tanggal'],
+                    'penerima' => $user->name,
+                    'user_id' => $validated['user_id'],
+                    'kategori' => 'barang_sewa',
+                    'qty' => 1, // Aset sewa always 1 item
+                    'keterangan' => 'Admin assignment: ' . ($validated['keterangan'] ?? 'Aset sewa baru'),
+                    'namabarang_k' => $stock->namabarang,
+                    'kodebarang_k' => $stock->kodebarang,
+                    'status' => 'sedang_dipakai',
+                    'penginput' => Auth::user()->name,
+                    'tanggal_mulai_pakai' => $validated['tanggal_mulai_pakai'] ?? now(),
+                    'tanggal_akhir_pakai' => $validated['tanggal_akhir_pakai'] ?? null,
+                ]);
+                
+                // Set status kondisi
+                $stock->status_kondisi = 'digunakan';
             }
             
             $stock->save();
@@ -177,6 +198,27 @@ class BarangMasukController extends Controller
             
             $stock = Stock::create($stockData);
             $idbarang = $stock->idbarang;
+            
+            // Create OutgoingTransaction for barang_sewa assignment
+            if ($actualKategori === 'barang_sewa' && $request->filled('user_id')) {
+                $user = \App\Models\User::findOrFail($validated['user_id']);
+                
+                \App\Models\OutgoingTransaction::create([
+                    'idbarang' => $stock->idbarang,
+                    'tanggal' => $validated['tanggal'],
+                    'penerima' => $user->name,
+                    'user_id' => $validated['user_id'],
+                    'kategori' => 'barang_sewa',
+                    'qty' => 1, // Aset sewa always 1 item
+                    'keterangan' => 'Admin assignment: ' . ($validated['keterangan'] ?? 'Aset sewa baru'),
+                    'namabarang_k' => $stock->namabarang,
+                    'kodebarang_k' => $stock->kodebarang,
+                    'status' => 'sedang_dipakai',
+                    'penginput' => Auth::user()->name,
+                    'tanggal_mulai_pakai' => $validated['tanggal_mulai_pakai'] ?? now(),
+                    'tanggal_akhir_pakai' => $validated['tanggal_akhir_pakai'] ?? null,
+                ]);
+            }
         }
 
         // Create incoming transaction
