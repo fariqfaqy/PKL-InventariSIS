@@ -17,7 +17,7 @@
         </div>
     </div>
 
-    @if($barangKeluar->stock && $barangKeluar->stock->kategori === 'barang_sewa')
+    @if($barangKeluar->stock && $barangKeluar->stock->kategori === 'aset_sewa')
     <!-- Aset Sewa Info Card with Actions -->
     <div class="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl shadow-md p-6 border-2 border-purple-200">
         <div class="flex justify-between items-start mb-4">
@@ -239,7 +239,7 @@
             @if($barangKeluar->stock->kategori)
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Kategori</label>
-                @if($barangKeluar->stock->kategori === 'barang_sewa')
+                @if($barangKeluar->stock->kategori === 'aset_sewa')
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
                         <x-heroicon-o-computer-desktop class="w-4 h-4 mr-1.5" />
                         Aset Sewa
@@ -257,7 +257,7 @@
                 @endif
             </div>
             @endif
-            @if($barangKeluar->stock->kategori === 'habis_pakai' && $barangKeluar->stock->sub_kategori)
+            @if($barangKeluar->stock->kategori === 'material_umum' && $barangKeluar->stock->sub_kategori)
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Sub-Kategori</label>
                 @if($barangKeluar->stock->sub_kategori === 'barang_habis_pakai')
@@ -455,7 +455,7 @@
 </div>
 
 <!-- Extend Rental Modal -->
-@if($barangKeluar->stock && $barangKeluar->stock->kategori === 'barang_sewa' && $barangKeluar->status === 'sedang_dipakai')
+@if($barangKeluar->stock && $barangKeluar->stock->kategori === 'aset_sewa' && $barangKeluar->status === 'sedang_dipakai')
 <div id="extendModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
         <div class="flex justify-between items-start mb-4">
@@ -535,5 +535,5 @@ document.getElementById('extendModal')?.addEventListener('click', function(e) {
 @endif
 </script>
 @endif
-
+</div>
 @endsection

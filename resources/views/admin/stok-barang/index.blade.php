@@ -9,7 +9,7 @@
         <div>
             <h2 class="text-2xl font-bold text-gray-800">
                 @if(isset($kategori))
-                    @if($kategori == 'barang_sewa')
+                    @if($kategori == 'aset_sewa')
                         Aset Sewa
                     @elseif($kategori == 'aset_tetap')
                         Aset Tetap
@@ -54,11 +54,11 @@
                 <a href="{{ route('admin.stok-barang.index') }}" class="flex-1 px-6 py-4 text-center font-medium transition-all text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50">
                     Semua
                 </a>
-                <a href="{{ route('admin.stok-barang.index', ['kategori' => 'barang_sewa']) }}" class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50">
+                <a href="{{ route('admin.stok-barang.index', ['kategori' => 'aset_sewa']) }}" class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50">
                     <x-heroicon-o-computer-desktop class="w-5 h-5" />
                     Aset Sewa
                 </a>
-                <a href="{{ route('admin.stok-barang.index', ['kategori' => 'habis_pakai']) }}" class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50">
+                <a href="{{ route('admin.stok-barang.index', ['kategori' => 'material_umum']) }}" class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50">
                     <x-heroicon-o-shopping-bag class="w-5 h-5" />
                     Material Umum
                 </a>
@@ -73,10 +73,10 @@
         <div class="border-b border-gray-200 bg-cyan-50 px-6 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    @if(request('kategori') == 'barang_sewa')
+                    @if(request('kategori') == 'aset_sewa')
                         <x-heroicon-o-computer-desktop class="w-6 h-6 text-cyan-600" />
                         <h2 class="text-lg font-semibold text-cyan-900">Aset Sewa</h2>
-                    @elseif(request('kategori') == 'habis_pakai')
+                    @elseif(request('kategori') == 'material_umum')
                         <x-heroicon-o-shopping-bag class="w-6 h-6 text-cyan-600" />
                         <h2 class="text-lg font-semibold text-cyan-900">Material Umum</h2>
                     @elseif(request('kategori') == 'aset_tetap')
@@ -89,22 +89,22 @@
         @endif
 
         <!-- Sub-tabs untuk Material Umum -->
-        @if(request('kategori') == 'habis_pakai')
+        @if(request('kategori') == 'material_umum')
             <div class="bg-blue-50 border-b border-blue-200">
                 <nav class="flex -mb-px">
-                    <a href="{{ route('admin.stok-barang.index', ['kategori' => 'habis_pakai']) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ !request('sub_kategori') ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                    <a href="{{ route('admin.stok-barang.index', ['kategori' => 'material_umum']) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ !request('sub_kategori') ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
                         <span class="inline-flex items-center gap-1">
                             <x-heroicon-o-squares-2x2 class="w-3 h-3" />
                             Semua Material
                         </span>
                     </a>
-                    <a href="{{ route('admin.stok-barang.index', ['kategori' => 'habis_pakai', 'sub_kategori' => 'barang_habis_pakai']) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_habis_pakai' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                    <a href="{{ route('admin.stok-barang.index', ['kategori' => 'material_umum', 'sub_kategori' => 'barang_habis_pakai']) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_habis_pakai' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
                         <span class="inline-flex items-center gap-1">
                             <x-heroicon-o-archive-box class="w-3 h-3" />
                             Barang Habis Pakai
                         </span>
                     </a>
-                    <a href="{{ route('admin.stok-barang.index', ['kategori' => 'habis_pakai', 'sub_kategori' => 'barang_pinjam']) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_pinjam' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                    <a href="{{ route('admin.stok-barang.index', ['kategori' => 'material_umum', 'sub_kategori' => 'barang_pinjam']) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_pinjam' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
                         <span class="inline-flex items-center gap-1">
                             <x-heroicon-o-arrow-path class="w-3 h-3" />
                             Barang Pinjam
@@ -190,8 +190,29 @@
         </form>
     </div>
 
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-3">
+                <button 
+                    type="submit" 
+                    class="inline-flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-cyan-600 to-cyan-700 text-white rounded-lg hover:from-cyan-700 hover:to-cyan-800 transition-all duration-300 shadow-md hover:shadow-lg"
+                >
+                    <x-heroicon-o-magnifying-glass class="w-5 h-5" />
+                    <span class="font-medium">Filter</span>
+                </button>
+                
+                <a 
+                    href="{{ route('admin.stok-barang.index', array_filter(['kategori' => request('kategori'), 'sub_kategori' => request('sub_kategori')])) }}" 
+                    class="inline-flex items-center gap-2 px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                    <x-heroicon-o-x-mark class="w-5 h-5" />
+                    <span class="font-medium">Reset</span>
+                </a>
+            </div>
+        </form>
+    </div>
+
     <!-- Table Card -->
-    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <div id="table-container" class="bg-white rounded-xl shadow-md overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full table-auto divide-y divide-gray-200">
                 <thead class="bg-gray-50">
@@ -200,17 +221,17 @@
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Kode Barang</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Gambar</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Barang</th>
-                        @if(request('kategori') != 'barang_sewa')
+                        @if(request('kategori') != 'aset_sewa')
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Kategori</th>
                         @endif
-                        @if(request('kategori') == 'barang_sewa')
+                        @if(request('kategori') == 'aset_sewa')
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Status Kondisi</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Pengguna</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Durasi</th>
                         @endif
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Stok</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Rak</th>
-                        @if(request('kategori') != 'barang_sewa')
+                        @if(request('kategori') != 'aset_sewa')
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Penginput</th>
                         @endif
                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Aksi</th>
@@ -237,9 +258,9 @@
                         <td class="px-4 py-3 text-sm text-gray-900">
                             {{ $stock->namabarang }}
                         </td>
-                        @if(request('kategori') != 'barang_sewa')
+                        @if(request('kategori') != 'aset_sewa')
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                            @if($stock->kategori === 'barang_sewa')
+                            @if($stock->kategori === 'aset_sewa')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                     <x-heroicon-o-computer-desktop class="w-3 h-3 mr-1" />
                                     Aset Sewa
@@ -254,7 +275,7 @@
                                     <x-heroicon-o-building-office class="w-3 h-3 mr-1" />
                                     Aset Tetap
                                 </span>
-                            @elseif($stock->kategori === 'habis_pakai')
+                            @elseif($stock->kategori === 'material_umum')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                                     <x-heroicon-o-shopping-bag class="w-3 h-3 mr-1" />
                                     Material Umum
@@ -267,7 +288,7 @@
                             @endif
                         </td>
                         @endif
-                        @if(request('kategori') == 'barang_sewa')
+                        @if(request('kategori') == 'aset_sewa')
                         <td class="px-4 py-3 whitespace-nowrap text-sm">
                             <div class="flex items-center gap-2">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $stock->status_kondisi_badge ?? 'bg-gray-100 text-gray-800' }}">
@@ -343,7 +364,7 @@
                                 {{ strtoupper($stock->rack) }}
                             </span>
                         </td>
-                        @if(request('kategori') != 'barang_sewa')
+                        @if(request('kategori') != 'aset_sewa')
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                             {{ $stock->penginput }}
                         </td>
@@ -393,7 +414,96 @@
         </div>
         @endif
     </div>
-</div>
+
+    <!-- AJAX Live Search & Pagination Script -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterForm = document.querySelector('form[action="{{ route('admin.stok-barang.index') }}"]');
+        const searchInput = filterForm.querySelector('input[name="search"]');
+        const rackSelect = filterForm.querySelector('select[name="rack"]');
+        const statusSelect = filterForm.querySelector('select[name="status"]');
+        const tableContainer = document.getElementById('table-container');
+        
+        let searchTimeout;
+        let isLoading = false;
+        
+        // AJAX function to fetch and update table
+        function fetchData(url) {
+            if (isLoading) return;
+            isLoading = true;
+            
+            // Show loading state
+            tableContainer.style.opacity = '0.6';
+            tableContainer.style.pointerEvents = 'none';
+            
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newTable = doc.getElementById('table-container');
+                
+                if (newTable) {
+                    tableContainer.innerHTML = newTable.innerHTML;
+                    attachPaginationListeners();
+                }
+                
+                // Update URL
+                window.history.pushState({}, '', url);
+                
+                isLoading = false;
+                tableContainer.style.opacity = '1';
+                tableContainer.style.pointerEvents = 'auto';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                isLoading = false;
+                tableContainer.style.opacity = '1';
+                tableContainer.style.pointerEvents = 'auto';
+            });
+        }
+        
+        // Handle form submit
+        filterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const params = new URLSearchParams(formData);
+            fetchData('{{ route('admin.stok-barang.index') }}?' + params.toString());
+        });
+        
+        // Live search on typing
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                filterForm.dispatchEvent(new Event('submit'));
+            }, 500);
+        });
+        
+        // Live filter on change
+        [rackSelect, statusSelect].forEach(element => {
+            element.addEventListener('change', () => {
+                filterForm.dispatchEvent(new Event('submit'));
+            });
+        });
+        
+        // Attach pagination listeners
+        function attachPaginationListeners() {
+            document.querySelectorAll('#table-container .pagination a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    fetchData(this.href);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            });
+        }
+        
+        attachPaginationListeners();
+    });
+    </script>
 
 <!-- Status Kondisi Modal -->
 <div id="statusModal" class="hidden fixed inset-0 backdrop-blur-sm bg-white/30 z-50 flex items-center justify-center transition-all duration-300 opacity-0" onclick="closeStatusModal()">
@@ -442,7 +552,6 @@
             </div>
         </form>
     </div>
-</div>
 
 <!-- QR Code Modal -->
 <div id="qrModal" class="hidden fixed inset-0 backdrop-blur-sm bg-white/30 z-50 flex items-center justify-center transition-all duration-300 opacity-0" onclick="closeQRModal()">
@@ -526,4 +635,5 @@ document.addEventListener('keydown', function(e) {
     }
 });
 </script>
+</div>
 @endsection

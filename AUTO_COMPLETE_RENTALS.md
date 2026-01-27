@@ -1,11 +1,11 @@
 # Auto Complete Expired Rentals
 
 ## Fitur
-Sistem otomatis menyelesaikan peminjaman (pinjam_sewa & pinjam_material) yang sudah melewati tanggal pengembalian.
+Sistem otomatis menyelesaikan peminjaman (pinjam_material) yang sudah melewati tanggal pengembalian.
 
 ## Cara Kerja
 1. **Scheduled Command**: `rentals:auto-complete` jalan setiap hari jam **00:05** (5 menit setelah midnight)
-2. **Target**: Request dengan status `approved` dan `tipe_request` in `['pinjam_sewa', 'pinjam_material']`
+2. **Target**: Request dengan status `approved` dan `tipe_request` = `pinjam_material`
 3. **Kondisi**: `tanggal_akhir_sewa < today`
 4. **Aksi**:
    - Update status request: `approved` → `completed`

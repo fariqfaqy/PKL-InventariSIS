@@ -28,6 +28,17 @@ class Stock extends Model
         'status_kondisi',
         'keterangan_kondisi',
         'tanggal_update_kondisi',
+        'durasi_sewa',
+        'tanggal_mulai_sewa',
+        'tanggal_akhir_sewa',
+    ];
+
+    protected $casts = [
+        'tanggal_update_kondisi' => 'date',
+        'tanggal_mulai_sewa' => 'date',
+        'tanggal_akhir_sewa' => 'date',
+        'durasi_sewa' => 'integer',
+        'stock' => 'integer',
     ];
 
     /**
@@ -91,7 +102,7 @@ class Stock extends Model
     public function getStatusKondisiLabelAttribute()
     {
         // Untuk Aset Sewa: cek status rental real-time
-        if ($this->kategori === 'barang_sewa') {
+        if ($this->kategori === 'aset_sewa') {
             $activeRental = $this->outgoingTransactions()
                 ->whereNull('id_request')
                 ->where('status', 'sedang_dipakai')
@@ -130,7 +141,7 @@ class Stock extends Model
     public function getStatusKondisiBadgeAttribute()
     {
         // Untuk Aset Sewa: cek status rental real-time
-        if ($this->kategori === 'barang_sewa') {
+        if ($this->kategori === 'aset_sewa') {
             $activeRental = $this->outgoingTransactions()
                 ->whereNull('id_request')
                 ->where('status', 'sedang_dipakai')
@@ -164,17 +175,18 @@ class Stock extends Model
     }
 
     /**
-     * Get durasi pakai (dalam hari)
+     * Get durasi sewa (dalam bulan) - untuk aset_sewa
+     * Calculated from tanggal_mulai_sewa dan tanggal_akhir_sewa
      */
-    public function getDurasiPakaiAttribute()
+    public function getDurasiSewaRealAttribute()
     {
-        if (!$this->tanggal_mulai_pakai || !$this->tanggal_akhir_pakai) {
-            return null;
+        if (!$this->tanggal_mulai_sewa || !$this->tanggal_akhir_sewa) {
+            return $this->durasi_sewa; // return durasi_sewa yang sudah diset
         }
         
-        $mulai = \Carbon\Carbon::parse($this->tanggal_mulai_pakai);
-        $akhir = \Carbon\Carbon::parse($this->tanggal_akhir_pakai);
+        $mulai = \Carbon\Carbon::parse($this->tanggal_mulai_sewa);
+        $akhir = \Carbon\Carbon::parse($this->tanggal_akhir_sewa);
         
-        return $mulai->diffInDays($akhir) + 1; // +1 untuk include hari pertama
+        return $mulai->diffInMonths($akhir);
     }
 }

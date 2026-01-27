@@ -89,8 +89,8 @@
                         onchange="toggleSubKategoriField()"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('kategori') border-red-500 @enderror">
                         <option value="">-- Pilih Kategori --</option>
-                        <option value="barang_sewa" {{ old('kategori') == 'barang_sewa' ? 'selected' : '' }}>Aset Sewa</option>
-                        <option value="habis_pakai" {{ old('kategori') == 'habis_pakai' ? 'selected' : '' }}>Material Umum</option>
+                        <option value="aset_sewa" {{ old('kategori') == 'aset_sewa' ? 'selected' : '' }}>Aset Sewa</option>
+                        <option value="material_umum" {{ old('kategori') == 'material_umum' ? 'selected' : '' }}>Material Umum</option>
                         <option value="aset_tetap" {{ old('kategori') == 'aset_tetap' ? 'selected' : '' }}>Aset Tetap</option>
                     </select>
                     <p class="mt-1 text-xs text-gray-500">Material Umum dapat direquest pegawai</p>
@@ -285,7 +285,7 @@ function toggleSubKategoriField() {
     const subKategoriField = document.getElementById('subKategoriField');
     const subKategoriSelect = document.getElementById('sub_kategori');
     
-    if (kategori === 'habis_pakai') {
+    if (kategori === 'material_umum') {
         // Show sub-kategori field for Material Umum
         subKategoriField.style.display = 'block';
         subKategoriSelect.required = true;
@@ -312,4 +312,5 @@ window.addEventListener('DOMContentLoaded', function() {
     updateKodeBarang();
 });
 </script>
+</div>
 @endsection

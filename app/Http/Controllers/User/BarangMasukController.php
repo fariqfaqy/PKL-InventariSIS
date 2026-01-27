@@ -15,9 +15,9 @@ class BarangMasukController extends Controller
     {
         $query = IncomingTransaction::with('stock');
 
-        // Filter berdasarkan kategori barang (barang_sewa/habis_pakai/aset_tetap)
+        // Filter berdasarkan kategori barang (aset_sewa/material_umum/aset_tetap)
         // Hanya filter jika ada kategori yang dipilih (bukan "semua")
-        if ($request->filled('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
+        if ($request->filled('kategori') && in_array($request->kategori, ['aset_sewa', 'material_umum', 'aset_tetap'])) {
             $query->whereHas('stock', function($q) use ($request) {
                 $q->where('kategori', $request->kategori);
             });

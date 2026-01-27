@@ -143,7 +143,7 @@ function updateBarangInfo() {
         document.getElementById('info-stok').textContent = stok;
         
         const kategoriSpan = document.getElementById('info-kategori');
-        if (kategori === 'barang_sewa') {
+        if (kategori === 'aset_sewa') {
             kategoriSpan.innerHTML = '<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">Aset Sewa</span>';;
         } else {
             kategoriSpan.innerHTML = '<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">Material Umum</span>';
@@ -181,4 +181,5 @@ window.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+</div>
 @endsection

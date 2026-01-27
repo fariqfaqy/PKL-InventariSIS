@@ -10,7 +10,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50 transition-colors duration-300">
-    <div class="flex h-screen overflow-hidden">
+    <div class="flex min-h-screen">
         <!-- Sidebar -->
         <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-300 ease-in-out">
             <!-- Logo -->
@@ -45,13 +45,13 @@
                     <!-- Submenu Stok Barang -->
                     <div id="stok-barang-submenu" class="{{ request()->routeIs('admin.stok-barang.*') ? '' : 'hidden' }} ml-4 space-y-1">
                         <!-- Aset Sewa -->
-                        <a href="{{ route('admin.stok-barang.index', ['kategori' => 'barang_sewa']) }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('admin.stok-barang.*') && request('kategori') == 'barang_sewa' ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
+                        <a href="{{ route('admin.stok-barang.index', ['kategori' => 'aset_sewa']) }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('admin.stok-barang.*') && request('kategori') == 'aset_sewa' ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
                             <x-heroicon-o-computer-desktop class="w-4 h-4" />
                             <span class="text-sm font-medium">Aset Sewa</span>
                         </a>
                         
                         <!-- Material Umum -->
-                        <a href="{{ route('admin.stok-barang.index', ['kategori' => 'habis_pakai']) }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('admin.stok-barang.*') && request('kategori') == 'habis_pakai' ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
+                        <a href="{{ route('admin.stok-barang.index', ['kategori' => 'material_umum']) }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('admin.stok-barang.*') && request('kategori') == 'material_umum' ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
                             <x-heroicon-o-shopping-bag class="w-4 h-4" />
                             <span class="text-sm font-medium">Material Umum</span>
                         </a>
@@ -136,7 +136,7 @@
         </aside>
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="flex-1 flex flex-col">
             <!-- Topbar -->
             <header class="h-20 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm">
                 <!-- Mobile Menu Button & Breadcrumb -->
@@ -166,12 +166,12 @@
             </header>
 
             <!-- Main Content Area -->
-            <main class="flex-1 overflow-y-auto p-6">
+            <main class="flex-1 p-6">
                 @yield('content')
             </main>
 
             <!-- Footer -->
-            <footer class="bg-white border-t border-gray-200 py-4 px-6">
+            <footer class="bg-white border-t border-gray-200 py-4 px-6 mt-auto">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
                     <p class="text-sm text-gray-600 flex items-center gap-2">
                         <x-heroicon-o-heart class="w-4 h-4 text-red-500" />

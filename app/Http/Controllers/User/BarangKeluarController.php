@@ -24,18 +24,18 @@ class BarangKeluarController extends Controller
         // Filter berdasarkan sub_kategori (prioritas lebih tinggi)
         if ($request->filled('sub_kategori')) {
             if ($request->sub_kategori === 'aset_sewa') {
-                // Sub-kategori Aset Sewa (kategori barang_sewa)
-                $query->where('kategori', 'barang_sewa');
+                // Sub-kategori Aset Sewa (kategori aset_sewa)
+                $query->where('kategori', 'aset_sewa');
             } elseif (in_array($request->sub_kategori, ['barang_habis_pakai', 'barang_pinjam'])) {
                 // Sub-kategori Material Umum (barang habis pakai / barang pinjam)
-                $query->where('kategori', 'habis_pakai')
+                $query->where('kategori', 'material_umum')
                       ->whereHas('stock', function($q) use ($request) {
                           $q->where('sub_kategori', $request->sub_kategori);
                       });
             }
         } 
         // Filter berdasarkan kategori (hanya apply jika tidak ada sub_kategori)
-        elseif ($request->filled('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
+        elseif ($request->filled('kategori') && in_array($request->kategori, ['aset_sewa', 'material_umum', 'aset_tetap'])) {
             $query->where('kategori', $request->kategori);
         }
 

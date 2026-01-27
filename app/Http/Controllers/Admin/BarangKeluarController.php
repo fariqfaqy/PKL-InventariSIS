@@ -20,11 +20,11 @@ class BarangKeluarController extends Controller
         $query = OutgoingTransaction::with('stock');
         
         // Filter by kategori if provided
-        if ($request->filled('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
+        if ($request->filled('kategori') && in_array($request->kategori, ['aset_sewa', 'material_umum', 'aset_tetap'])) {
             $query->where('kategori', $request->kategori);
             
             // For Aset Sewa: exclude 'ditarik' status by default (kecuali explicitly filtered)
-            if ($request->kategori === 'barang_sewa' && !$request->filled('status_filter')) {
+            if ($request->kategori === 'aset_sewa' && !$request->filled('status_filter')) {
                 $query->whereNotIn('status', ['ditarik']);
             }
         }
@@ -37,7 +37,7 @@ class BarangKeluarController extends Controller
         }
         
         // Filter by status (khusus untuk Aset Sewa)
-        if ($request->filled('status_filter') && $request->kategori === 'barang_sewa') {
+        if ($request->filled('status_filter') && $request->kategori === 'aset_sewa') {
             $query->where('status', $request->status_filter);
         }
         
@@ -73,7 +73,7 @@ class BarangKeluarController extends Controller
     {
         // Exclude aset_tetap from available stocks
         $stocks = Stock::where('stock', '>', 0)
-            ->whereIn('kategori', ['barang_sewa', 'habis_pakai', 'barang_pinjam'])
+            ->whereIn('kategori', ['aset_sewa', 'material_umum'])
             ->orderBy('kategori')
             ->orderBy('jenis')
             ->orderBy('merek')
@@ -88,8 +88,8 @@ class BarangKeluarController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'kategori' => 'required|in:barang_sewa,habis_pakai',
-            'sub_kategori' => 'nullable|required_if:kategori,habis_pakai|in:barang_habis_pakai,barang_pinjam',
+            'kategori' => 'required|in:aset_sewa,material_umum',
+            'sub_kategori' => 'nullable|required_if:kategori,material_umum|in:barang_habis_pakai,barang_pinjam',
             'idbarang' => 'required|exists:stock,idbarang',
             'tanggal' => 'required|date',
             'penerima' => 'required|string',
@@ -220,7 +220,7 @@ class BarangKeluarController extends Controller
         $barangKeluar = OutgoingTransaction::findOrFail($idkeluar);
         
         // Validate only for Aset Sewa
-        if ($barangKeluar->kategori !== 'barang_sewa') {
+        if ($barangKeluar->kategori !== 'aset_sewa') {
             return redirect()->back()->with('error', 'Hanya Aset Sewa yang bisa diperpanjang!');
         }
         
@@ -253,7 +253,7 @@ class BarangKeluarController extends Controller
         $barangKeluar = OutgoingTransaction::findOrFail($idkeluar);
         
         // Validate only for Aset Sewa with active status
-        if ($barangKeluar->kategori !== 'barang_sewa') {
+        if ($barangKeluar->kategori !== 'aset_sewa') {
             return redirect()->back()->with('error', 'Hanya Aset Sewa yang bisa diselesaikan!');
         }
         
@@ -291,7 +291,7 @@ class BarangKeluarController extends Controller
 
         // Filter by kategori if provided
         $kategori = $request->get('kategori');
-        if ($kategori && in_array($kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
+        if ($kategori && in_array($kategori, ['aset_sewa', 'material_umum', 'aset_tetap'])) {
             $query->where('kategori', $kategori);
         }
 

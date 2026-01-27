@@ -36,13 +36,13 @@
                class="flex-1 px-6 py-4 text-center font-medium transition-all {{ !request('kategori') ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50' }}">
                 Semua
             </a>
-            <a href="{{ route('admin.barang-keluar.index', ['kategori' => 'barang_sewa', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" 
-               class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 {{ request('kategori') == 'barang_sewa' ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50' }}">
+            <a href="{{ route('admin.barang-keluar.index', ['kategori' => 'aset_sewa', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" 
+               class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 {{ request('kategori') == 'aset_sewa' ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50' }}">
                 <x-heroicon-o-computer-desktop class="w-5 h-5" />
                 Aset Sewa
             </a>
-            <a href="{{ route('admin.barang-keluar.index', ['kategori' => 'habis_pakai', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" 
-               class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 {{ request('kategori') == 'habis_pakai' ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50' }}">
+            <a href="{{ route('admin.barang-keluar.index', ['kategori' => 'material_umum', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" 
+               class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 {{ request('kategori') == 'material_umum' ? 'text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50' }}">
                 <x-heroicon-o-shopping-bag class="w-5 h-5" />
                 Material Umum
             </a>
@@ -54,22 +54,22 @@
         </div>
 
         <!-- Sub-tabs untuk Aset Sewa -->
-        @if(request('kategori') == 'barang_sewa')
+        @if(request('kategori') == 'aset_sewa')
             <div class="bg-purple-50 border-b border-purple-200">
                 <nav class="flex -mb-px">
-                    <a href="{{ route('admin.barang-keluar.index', ['kategori' => 'barang_sewa', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ !request('status_filter') ? 'border-purple-500 text-purple-700' : 'border-transparent text-purple-600 hover:text-purple-800 hover:border-purple-300' }}">
+                    <a href="{{ route('admin.barang-keluar.index', ['kategori' => 'aset_sewa', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ !request('status_filter') ? 'border-purple-500 text-purple-700' : 'border-transparent text-purple-600 hover:text-purple-800 hover:border-purple-300' }}">
                         <span class="inline-flex items-center gap-1">
                             <x-heroicon-o-squares-2x2 class="w-3 h-3" />
                             Semua
                         </span>
                     </a>
-                    <a href="{{ route('admin.barang-keluar.index', ['kategori' => 'barang_sewa', 'status_filter' => 'sedang_dipakai', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('status_filter') == 'sedang_dipakai' ? 'border-purple-500 text-purple-700' : 'border-transparent text-purple-600 hover:text-purple-800 hover:border-purple-300' }}">
+                    <a href="{{ route('admin.barang-keluar.index', ['kategori' => 'aset_sewa', 'status_filter' => 'sedang_dipakai', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('status_filter') == 'sedang_dipakai' ? 'border-purple-500 text-purple-700' : 'border-transparent text-purple-600 hover:text-purple-800 hover:border-purple-300' }}">
                         <span class="inline-flex items-center gap-1">
                             <x-heroicon-o-arrow-path class="w-3 h-3" />
                             Sedang Dipakai
                         </span>
                     </a>
-                    <a href="{{ route('admin.barang-keluar.index', ['kategori' => 'barang_sewa', 'status_filter' => 'selesai', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('status_filter') == 'selesai' ? 'border-purple-500 text-purple-700' : 'border-transparent text-purple-600 hover:text-purple-800 hover:border-purple-300' }}">
+                    <a href="{{ route('admin.barang-keluar.index', ['kategori' => 'aset_sewa', 'status_filter' => 'selesai', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('status_filter') == 'selesai' ? 'border-purple-500 text-purple-700' : 'border-transparent text-purple-600 hover:text-purple-800 hover:border-purple-300' }}">
                         <span class="inline-flex items-center gap-1">
                             <x-heroicon-o-check-circle class="w-3 h-3" />
                             Selesai
@@ -80,22 +80,22 @@
         @endif
 
         <!-- Sub-tabs untuk Material Umum -->
-        @if(request('kategori') == 'habis_pakai')
+        @if(request('kategori') == 'material_umum')
             <div class="bg-blue-50 border-b border-blue-200">
                 <nav class="flex -mb-px">
-                    <a href="{{ route('admin.barang-keluar.index', ['kategori' => 'habis_pakai', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ !request('sub_kategori') ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                    <a href="{{ route('admin.barang-keluar.index', ['kategori' => 'material_umum', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ !request('sub_kategori') ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
                         <span class="inline-flex items-center gap-1">
                             <x-heroicon-o-squares-2x2 class="w-3 h-3" />
                             Semua Material
                         </span>
                     </a>
-                    <a href="{{ route('admin.barang-keluar.index', ['kategori' => 'habis_pakai', 'sub_kategori' => 'barang_habis_pakai', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_habis_pakai' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                    <a href="{{ route('admin.barang-keluar.index', ['kategori' => 'material_umum', 'sub_kategori' => 'barang_habis_pakai', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_habis_pakai' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
                         <span class="inline-flex items-center gap-1">
                             <x-heroicon-o-archive-box class="w-3 h-3" />
                             Barang Habis Pakai
                         </span>
                     </a>
-                    <a href="{{ route('admin.barang-keluar.index', ['kategori' => 'habis_pakai', 'sub_kategori' => 'barang_pinjam', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_pinjam' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                    <a href="{{ route('admin.barang-keluar.index', ['kategori' => 'material_umum', 'sub_kategori' => 'barang_pinjam', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_pinjam' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
                         <span class="inline-flex items-center gap-1">
                             <x-heroicon-o-arrow-path class="w-3 h-3" />
                             Barang Pinjam
@@ -166,7 +166,7 @@
     </div>
 
     <!-- Table Card -->
-    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <div id="table-container" class="bg-white rounded-xl shadow-md overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full table-auto divide-y divide-gray-200">
                 <thead class="bg-gray-50">
@@ -177,7 +177,7 @@
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Barang</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Jumlah</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penerima</th>
-                        @if($selectedKategori === 'barang_sewa')
+                        @if($selectedKategori === 'aset_sewa')
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">Durasi</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Status</th>
                         @endif
@@ -208,7 +208,7 @@
                         <td class="px-4 py-3 text-sm text-gray-900">
                             {{ $item->penerima }}
                         </td>
-                        @if($selectedKategori === 'barang_sewa')
+                        @if($selectedKategori === 'aset_sewa')
                         <td class="px-4 py-3 whitespace-nowrap text-sm">
                             @if($item->tanggal_mulai_pakai && $item->tanggal_akhir_pakai)
                                 @php
@@ -301,5 +301,77 @@
         </div>
         @endif
     </div>
+</div>
+
+<!-- AJAX Live Search & Pagination Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterForm = document.querySelector('form[action="{{ route('admin.barang-keluar.index') }}"]');
+    const searchInput = filterForm.querySelector('input[name="search"]');
+    const tanggalInput = filterForm.querySelector('input[name="tanggal"]');
+    const tableContainer = document.getElementById('table-container');
+    
+    let searchTimeout;
+    let isLoading = false;
+    
+    function fetchData(url) {
+        if (isLoading) return;
+        isLoading = true;
+        
+        tableContainer.style.opacity = '0.6';
+        tableContainer.style.pointerEvents = 'none';
+        
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newTable = doc.getElementById('table-container');
+            
+            if (newTable) {
+                tableContainer.innerHTML = newTable.innerHTML;
+                attachPaginationListeners();
+            }
+            
+            window.history.pushState({}, '', url);
+            isLoading = false;
+            tableContainer.style.opacity = '1';
+            tableContainer.style.pointerEvents = 'auto';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            isLoading = false;
+            tableContainer.style.opacity = '1';
+            tableContainer.style.pointerEvents = 'auto';
+        });
+    }
+    
+    filterForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const params = new URLSearchParams(formData);
+        fetchData('{{ route('admin.barang-keluar.index') }}?' + params.toString());
+    });
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => filterForm.dispatchEvent(new Event('submit')), 500);
+    });
+    
+    tanggalInput.addEventListener('change', () => filterForm.dispatchEvent(new Event('submit')));
+    
+    function attachPaginationListeners() {
+        document.querySelectorAll('#table-container .pagination a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                fetchData(this.href);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+    }
+    
+    attachPaginationListeners();
+});
+</script>
 </div>
 @endsection

@@ -52,6 +52,19 @@
         </form>
     </div>
 
+    <!-- Instant Filter Script -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterForm = document.querySelector('form[action="{{ route('user.request-barang.index') }}"]');
+        const statusSelect = filterForm.querySelector('select[name="status"]');
+        
+        // Instant filter on status change
+        statusSelect.addEventListener('change', function() {
+            filterForm.submit();
+        });
+    });
+    </script>
+
     <!-- Requests Table -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
         <div class="overflow-x-auto">
@@ -84,7 +97,7 @@
                                 {{ $item->qty }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_sewa' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                                <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_material' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
                                     {{ $item->tipe_request_label }}
                                 </span>
                             </td>

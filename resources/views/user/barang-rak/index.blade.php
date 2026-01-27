@@ -59,7 +59,7 @@
     </div>
 
     <!-- Table Card -->
-    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <div id="table-container" class="bg-white rounded-xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead class="bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white">
@@ -115,5 +115,34 @@
             </div>
         @endif
     </div>
+</div>
+
+<script>
+(function() {
+    const filterForm = document.querySelector('form[action="{{ route('user.barang-rak.index') }}"]');
+    const searchInput = filterForm.querySelector('input[name="search"]');
+    const rackSelect = filterForm.querySelector('select[name="rack"]');
+    const tableContainer = document.getElementById('table-container');
+    let searchTimeout, isLoading = false;
+    
+    function fetchData(url) {
+        if (isLoading) return;
+        isLoading = true;
+        tableContainer.style.opacity = '0.6';
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(r => r.text()).then(html => {
+            const newTable = new DOMParser().parseFromString(html, 'text/html').getElementById('table-container');
+            if (newTable) { tableContainer.innerHTML = newTable.innerHTML; attachPaginationListeners(); }
+            window.history.pushState({}, '', url);
+            isLoading = false; tableContainer.style.opacity = '1';
+        });
+    }
+    filterForm.addEventListener('submit', function(e) { e.preventDefault(); fetchData('{{ route('user.barang-rak.index') }}?' + new URLSearchParams(new FormData(this))); });
+    searchInput.addEventListener('input', () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => filterForm.dispatchEvent(new Event('submit')), 500); });
+    rackSelect.addEventListener('change', () => filterForm.dispatchEvent(new Event('submit')));
+    function attachPaginationListeners() { document.querySelectorAll('#table-container .pagination a').forEach(l => l.addEventListener('click', function(e) { e.preventDefault(); fetchData(this.href); window.scrollTo({ top: 0, behavior: 'smooth' }); })); }
+    attachPaginationListeners();
+})();
+</script>
 </div>
 @endsection

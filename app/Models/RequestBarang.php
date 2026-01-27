@@ -123,9 +123,6 @@ class RequestBarang extends Model
             // Material Umum - Sub: Barang Pinjam
             'pinjam_material' => 'Barang Pinjam',
             
-            // Legacy: Aset Sewa (admin only)
-            'pinjam_sewa' => 'Pinjam Aset Sewa',
-            
             default => ucwords(str_replace('_', ' ', $this->tipe_request))
         };
     }

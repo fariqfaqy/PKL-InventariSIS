@@ -113,7 +113,7 @@
 
                 <div>
                     <label class="text-sm font-medium text-gray-500 block mb-1">Tipe Request</label>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $request->tipe_request == 'pinjam_sewa' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $request->tipe_request == 'pinjam_material' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
                         {{ $request->tipe_request_label }}
                     </span>
                 </div>
@@ -128,7 +128,7 @@
                     <p class="text-lg font-semibold text-gray-900">{{ $request->penerima ?? '-' }}</p>
                 </div>
 
-                @if($request->stock->kategori == 'barang_sewa' && $request->stock->durasi_sewa)
+                @if($request->stock->kategori == 'aset_sewa' && $request->stock->durasi_sewa)
                 <div>
                     <label class="text-sm font-medium text-gray-500 block mb-1">Durasi Sewa</label>
                     <p class="text-lg font-semibold text-purple-600">{{ $request->stock->durasi_sewa }} Tahun</p>
@@ -136,23 +136,23 @@
                 @endif
             </div>
 
-            <!-- Periode Sewa/Peminjaman untuk Aset Sewa & Barang Pinjam -->
-            @if(in_array($request->tipe_request, ['pinjam_sewa', 'pinjam_material']) && $request->tanggal_mulai_sewa && $request->tanggal_akhir_sewa)
+            <!-- Periode Peminjaman untuk Barang Pinjam -->
+            @if($request->tipe_request === 'pinjam_material' && $request->tanggal_mulai_sewa && $request->tanggal_akhir_sewa)
             <div class="mt-6 pt-6 border-t">
                 <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <x-heroicon-o-calendar-days class="w-5 h-5 {{ $request->tipe_request == 'pinjam_sewa' ? 'text-purple-600' : 'text-blue-600' }}" />
-                    {{ $request->tipe_request == 'pinjam_sewa' ? 'Periode Sewa' : 'Periode Peminjaman' }}
+                    <x-heroicon-o-calendar-days class="w-5 h-5 text-blue-600" />
+                    Periode Peminjaman
                 </h4>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg">
                         <label class="text-xs font-medium text-blue-700 block mb-1">
-                            Tanggal {{ $request->tipe_request == 'pinjam_sewa' ? 'Mulai' : 'Pinjam' }}
+                            Tanggal Pinjam
                         </label>
                         <p class="text-lg font-bold text-blue-900">{{ $request->tanggal_mulai_sewa->format('d/m/Y') }}</p>
                     </div>
                     <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg">
                         <label class="text-xs font-medium text-purple-700 block mb-1">
-                            Tanggal {{ $request->tipe_request == 'pinjam_sewa' ? 'Berakhir' : 'Kembali' }}
+                            Tanggal Kembali
                         </label>
                         <p class="text-lg font-bold text-purple-900">{{ $request->tanggal_akhir_sewa->format('d/m/Y') }}</p>
                     </div>
@@ -174,7 +174,7 @@
                     <div class="mt-4 bg-gray-50 p-4 rounded-lg">
                         <div class="flex justify-between items-center mb-2">
                             <span class="text-sm font-medium text-gray-700">
-                                Progress {{ $request->tipe_request == 'pinjam_sewa' ? 'Sewa' : 'Peminjaman' }}
+                                Progress Peminjaman
                             </span>
                             <span class="text-sm font-semibold {{ $sisaHari < 0 ? 'text-red-600' : ($sisaHari <= 7 ? 'text-yellow-600' : 'text-green-600') }}">
                                 @if($sisaHari >= 0)

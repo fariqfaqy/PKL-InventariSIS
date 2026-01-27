@@ -180,7 +180,7 @@ function updateBarangInfo() {
         }
         
         // Show/hide rental section based on kategori
-        if (selectedOption.dataset.kategori === 'barang_sewa') {
+        if (selectedOption.dataset.kategori === 'aset_sewa') {
             rentalSection.classList.remove('hidden');
             tanggalMulaiInput.required = true;
             tanggalAkhirInput.required = true;
@@ -218,4 +218,5 @@ document.addEventListener('DOMContentLoaded', function() {
     updateBarangInfo();
 });
 </script>
+</div>
 @endsection

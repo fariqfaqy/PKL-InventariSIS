@@ -146,7 +146,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->qty }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->penerima ?? '-' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_sewa' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                                    <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_material' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
                                         {{ $item->tipe_request_label }}
                                     </span>
                                 </td>
@@ -208,7 +208,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->qty }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->penerima ?? '-' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_sewa' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                                    <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_material' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
                                         {{ $item->tipe_request_label }}
                                     </span>
                                 </td>
@@ -284,7 +284,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->qty }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_sewa' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                                    <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_material' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
                                         {{ $item->tipe_request_label }}
                                     </span>
                                 </td>
@@ -370,7 +370,7 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_sewa' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
+                                <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_material' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
                                     {{ $item->tipe_request_label }}
                                 </span>
                             </td>
@@ -755,5 +755,5 @@ function switchHistoryTab(subtab) {
     activeSubtab.classList.remove('border-transparent', 'text-gray-500');
 }
 </script>
-
+</div>
 @endsection

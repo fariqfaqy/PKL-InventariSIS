@@ -74,7 +74,6 @@ getTipeRequestLabelAttribute()
 ```
 - Mapping: `pakai_habis_pakai` → "Barang Habis Pakai"
 - Mapping: `pinjam_material` → "Barang Pinjam"
-- Mapping: `pinjam_sewa` → "Pinjam Aset Sewa" (legacy)
 
 ```php
 getSubKategoriLabelAttribute()
@@ -407,7 +406,6 @@ di halaman master stok.
 |------------------|---------------|
 | `pakai_habis_pakai` | Barang Habis Pakai |
 | `pinjam_material` | Barang Pinjam |
-| `pinjam_sewa` | Pinjam Aset Sewa (legacy) |
 
 ---
 

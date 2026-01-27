@@ -9,7 +9,7 @@ class ActivityLog extends Model
 {
     use HasFactory;
 
-    protected $table = 'log';
+    protected $table = 'activity_logs';
     protected $primaryKey = 'idlog';
     
     public $timestamps = false;

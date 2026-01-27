@@ -17,11 +17,11 @@ class StokBarangController extends Controller
         $query = Stock::query();
         
         // Filter by kategori if provided
-        if ($request->filled('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
+        if ($request->filled('kategori') && in_array($request->kategori, ['aset_sewa', 'material_umum', 'aset_tetap'])) {
             $query->where('kategori', $request->kategori);
             
             // For Aset Sewa: Load latest OutgoingTransaction (active or completed)
-            if ($request->kategori === 'barang_sewa') {
+            if ($request->kategori === 'aset_sewa') {
                 $query->with(['outgoingTransactions' => function($q) {
                     $q->whereNull('id_request')
                       ->latest();
@@ -95,8 +95,8 @@ class StokBarangController extends Controller
             'deskripsi' => 'nullable|string',
             'stock' => 'required|integer|min:0',
             'rack' => 'required|in:1a,1b,1c,2a,2b,2c',
-            'kategori' => 'required|in:barang_sewa,habis_pakai,aset_tetap',
-            'sub_kategori' => 'nullable|required_if:kategori,habis_pakai|in:barang_habis_pakai,barang_pinjam',
+            'kategori' => 'required|in:aset_sewa,material_umum,aset_tetap',
+            'sub_kategori' => 'nullable|required_if:kategori,material_umum|in:barang_habis_pakai,barang_pinjam',
             'jenis' => 'required|string|max:100',
             'merek' => 'required|string|max:100',
             'tipe' => 'required|string|max:255',
@@ -141,7 +141,7 @@ class StokBarangController extends Controller
             'stock' => $validated['stock'],
             'rack' => $validated['rack'],
             'kategori' => $validated['kategori'],
-            'sub_kategori' => $validated['kategori'] === 'habis_pakai' ? $validated['sub_kategori'] : null,
+            'sub_kategori' => $validated['kategori'] === 'material_umum' ? $validated['sub_kategori'] : null,
             'jenis' => $validated['jenis'],
             'merek' => $validated['merek'],
             'tipe' => $validated['tipe'],
@@ -151,7 +151,7 @@ class StokBarangController extends Controller
             'durasi_pakai' => $validated['durasi_pakai'] ?? null,
             'tanggal_mulai_pakai' => $validated['tanggal_mulai_pakai'] ?? null,
             'tanggal_akhir_pakai' => $validated['tanggal_akhir_pakai'] ?? null,
-            'status_kondisi' => $validated['kategori'] === 'barang_sewa' ? 'digunakan' : null,
+            'status_kondisi' => $validated['kategori'] === 'aset_sewa' ? 'digunakan' : null,
         ]);
 
         return redirect()->route('admin.stok-barang.index')
@@ -173,7 +173,7 @@ class StokBarangController extends Controller
         
         // Get active rental for Aset Sewa
         $activeRental = null;
-        if ($stock->kategori === 'barang_sewa') {
+        if ($stock->kategori === 'aset_sewa') {
             $activeRental = $stock->outgoingTransactions()
                 ->where('status', 'sedang_dipakai')
                 ->whereNull('id_request')
@@ -206,8 +206,8 @@ class StokBarangController extends Controller
             'deskripsi' => 'nullable|string',
             'stock' => 'required|integer|min:0',
             'rack' => 'required|in:1a,1b,1c,2a,2b,2c',
-            'kategori' => 'required|in:barang_sewa,habis_pakai,aset_tetap',
-            'sub_kategori' => 'nullable|required_if:kategori,habis_pakai|in:barang_habis_pakai,barang_pinjam',
+            'kategori' => 'required|in:aset_sewa,material_umum,aset_tetap',
+            'sub_kategori' => 'nullable|required_if:kategori,material_umum|in:barang_habis_pakai,barang_pinjam',
             'jenis' => 'required|string|max:100',
             'merek' => 'required|string|max:100',
             'tipe' => 'required|string|max:255',
@@ -246,7 +246,7 @@ class StokBarangController extends Controller
         }
 
         // Set sub_kategori based on kategori
-        if ($validated['kategori'] === 'habis_pakai') {
+        if ($validated['kategori'] === 'material_umum') {
             $validated['sub_kategori'] = $validated['sub_kategori'];
         } else {
             $validated['sub_kategori'] = null;
@@ -279,7 +279,7 @@ class StokBarangController extends Controller
         
         // Filter by kategori if provided
         $kategori = $request->get('kategori');
-        if ($kategori && in_array($kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
+        if ($kategori && in_array($kategori, ['aset_sewa', 'material_umum', 'aset_tetap'])) {
             $query->where('kategori', $kategori);
         }
 

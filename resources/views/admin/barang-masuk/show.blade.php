@@ -80,7 +80,7 @@
             @if($barangMasuk->stock->kategori)
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Kategori</label>
-                @if($barangMasuk->stock->kategori === 'barang_sewa')
+                @if($barangMasuk->stock->kategori === 'aset_sewa')
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
                         <x-heroicon-o-computer-desktop class="w-4 h-4 mr-1" />
                         Aset Sewa

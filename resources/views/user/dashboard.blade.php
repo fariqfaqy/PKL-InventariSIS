@@ -4,6 +4,7 @@
 @section('subtitle', 'Selamat datang kembali!')
 
 @section('content')
+<div class="space-y-6">
 <!-- Welcome Card -->
 <div class="bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] rounded-2xl shadow-lg p-8 mb-6 text-white">
     <div class="flex items-center justify-between">
@@ -137,7 +138,7 @@
                         <td class="px-4 py-3 text-sm">
                             <div>
                                 <div class="text-gray-900">{{ $trans->namabarang_k }}</div>
-                                @if($trans->kategori === 'barang_sewa')
+                                @if($trans->kategori === 'aset_sewa')
                                     <div class="flex items-center gap-2 mt-1">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
                                             <x-heroicon-o-calendar class="w-3 h-3 mr-1" />
@@ -231,7 +232,7 @@ function updatePemakaianTable(data) {
             let kategoriInfo = '';
             let sewaDetails = '';
             
-            if (trans.is_barang_sewa) {
+            if (trans.is_aset_sewa) {
                 let sewaColorClass = 'text-gray-500';
                 if (trans.is_expired) {
                     sewaColorClass = 'text-red-600';
@@ -350,4 +351,5 @@ document.addEventListener('visibilitychange', function() {
     }
 });
 </script>
+</div>
 @endsection

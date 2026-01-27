@@ -30,7 +30,7 @@ class StatusKondisiController extends Controller
         ]);
 
         $barang = Stock::where('idbarang', $idbarang)
-            ->where('kategori', 'barang_sewa') // Ensure it's Aset Sewa
+            ->where('kategori', 'aset_sewa') // Ensure it's Aset Sewa
             ->firstOrFail();
 
         $statusLama = $barang->status_kondisi;
@@ -45,7 +45,7 @@ class StatusKondisiController extends Controller
         try {
             // Get active outgoing transaction for this item
             $activeTransaction = OutgoingTransaction::where('kodebarang_k', $barang->kodebarang)
-                ->where('kategori', 'barang_sewa')
+                ->where('kategori', 'aset_sewa')
                 ->whereIn('status', ['sedang_dipakai', 'ditarik'])
                 ->latest()
                 ->first();
@@ -74,7 +74,7 @@ class StatusKondisiController extends Controller
             elseif (in_array($statusLama, ['rusak', 'diperbaiki']) && $statusBaru === 'digunakan') {
                 // Cek apakah ada user yang sebelumnya assigned
                 $lastTransaction = OutgoingTransaction::where('kodebarang_k', $barang->kodebarang)
-                    ->where('kategori', 'barang_sewa')
+                    ->where('kategori', 'aset_sewa')
                     ->where('status', 'ditarik')
                     ->latest()
                     ->first();
@@ -85,7 +85,7 @@ class StatusKondisiController extends Controller
                         'kodebarang_k' => $barang->kodebarang,
                         'namabarang_k' => $barang->namabarang,
                         'qty' => 1,
-                        'kategori' => 'barang_sewa',
+                        'kategori' => 'aset_sewa',
                         'tipe_keluar' => 'peminjaman',
                         'tanggal' => now(),
                         'penerima' => $lastTransaction->penerima,

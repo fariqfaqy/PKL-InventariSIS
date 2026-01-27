@@ -76,4 +76,34 @@ class OutgoingTransaction extends Model
     {
         return $this->belongsTo(RequestBarang::class, 'id_request', 'id_request');
     }
+
+    /**
+     * Get durasi pakai (dalam hari) - untuk tracking pemakaian
+     */
+    public function getDurasiPakaiAttribute()
+    {
+        if (!$this->tanggal_mulai_pakai || !$this->tanggal_akhir_pakai) {
+            return null;
+        }
+        
+        $mulai = \Carbon\Carbon::parse($this->tanggal_mulai_pakai);
+        $akhir = \Carbon\Carbon::parse($this->tanggal_akhir_pakai);
+        
+        return $mulai->diffInDays($akhir) + 1; // +1 untuk include hari pertama
+    }
+
+    /**
+     * Get durasi peminjaman (dalam hari) - untuk pinjam_material
+     */
+    public function getDurasiPeminjamanAttribute()
+    {
+        if (!$this->tanggal_pinjam || !$this->tanggal_kembali) {
+            return null;
+        }
+        
+        $mulai = \Carbon\Carbon::parse($this->tanggal_pinjam);
+        $akhir = \Carbon\Carbon::parse($this->tanggal_kembali);
+        
+        return $mulai->diffInDays($akhir) + 1;
+    }
 }

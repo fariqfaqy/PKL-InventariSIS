@@ -37,7 +37,7 @@ class RequestBarangController extends Controller
     /**
      * Show form to create new request
      * 
-     * User hanya bisa request Material Umum (kategori: habis_pakai)
+     * User hanya bisa request Material Umum (kategori: material_umum)
      * dengan 2 sub-kategori:
      * - barang_habis_pakai (tidak dikembalikan)
      * - barang_pinjam (harus dikembalikan)
@@ -46,9 +46,9 @@ class RequestBarangController extends Controller
      */
     public function create()
     {
-        // User HANYA bisa request Material Umum (habis_pakai)
+        // User HANYA bisa request Material Umum (material_umum)
         // Barang lain (Aset Sewa, Aset Tetap) hanya untuk admin
-        $stocks = Stock::where('kategori', 'habis_pakai')
+        $stocks = Stock::where('kategori', 'material_umum')
             ->where('stock', '>', 0)
             ->orderBy('namabarang')
             ->get();
@@ -76,8 +76,8 @@ class RequestBarangController extends Controller
         // Get stock
         $stock = Stock::findOrFail($validated['idbarang']);
         
-        // VALIDASI KETAT: User hanya bisa request Material Umum (habis_pakai)
-        if ($stock->kategori !== 'habis_pakai') {
+        // VALIDASI KETAT: User hanya bisa request Material Umum (material_umum)
+        if ($stock->kategori !== 'material_umum') {
             return back()->with('error', 'Anda hanya dapat request Material Umum! Aset Sewa dan Aset Tetap hanya dapat dikelola oleh Admin.')->withInput();
         }
         
@@ -180,8 +180,8 @@ class RequestBarangController extends Controller
             ? $requestBarang->stock->stock + $requestBarang->qty
             : $requestBarang->stock->stock;
         
-        // Get available stocks
-        $stocks = Stock::whereIn('kategori', ['barang_sewa', 'habis_pakai'])
+        // Get available stocks - User hanya bisa request Material Umum
+        $stocks = Stock::where('kategori', 'material_umum')
             ->where('stock', '>', 0)
             ->orderBy('namabarang')
             ->get();
@@ -254,20 +254,20 @@ class RequestBarangController extends Controller
             }
             
             // Determine tipe request based on kategori & sub_kategori
-            // Material Umum (habis_pakai) -> gunakan sub_kategori
-            // Aset Sewa (barang_sewa) -> pinjam_sewa
-            $tipeRequest = match($stock->kategori) {
-                'barang_sewa' => 'pinjam_sewa',
-                'habis_pakai' => match($stock->sub_kategori) {
-                    'barang_habis_pakai' => 'pakai_habis_pakai',
-                    'barang_pinjam' => 'pinjam_material',
-                    default => null,
-                },
+            // User HANYA bisa request Material Umum (material_umum)
+            // Aset Sewa tidak bisa di-request oleh user
+            if ($stock->kategori !== 'material_umum') {
+                return back()->with('error', 'Anda hanya dapat request Material Umum!')->withInput();
+            }
+            
+            $tipeRequest = match($stock->sub_kategori) {
+                'barang_habis_pakai' => 'pakai_habis_pakai',
+                'barang_pinjam' => 'pinjam_material',
                 default => null,
             };
             
             if (!$tipeRequest) {
-                return back()->with('error', 'Kategori atau sub-kategori barang tidak valid!')->withInput();
+                return back()->with('error', 'Sub-kategori barang tidak valid!')->withInput();
             }
             
             RequestBarang::create([
@@ -351,7 +351,7 @@ class RequestBarangController extends Controller
 
     /**
      * Mark request as completed (move to history)
-     * Used when user returns borrowed items (pinjam_sewa & pinjam_material)
+     * Used when user returns borrowed items (pinjam_material only)
      */
     public function complete($id)
     {
@@ -381,14 +381,14 @@ class RequestBarangController extends Controller
                 ]);
 
             // Kembalikan stok HANYA untuk Barang Pinjam (pinjam_material)
-            // Aset Sewa (pinjam_sewa) TIDAK dikembalikan, tetap di barang keluar
+            // Aset Sewa di-assign admin langsung, tidak melalui request user
             if ($request->tipe_request === 'pinjam_material') {
                 Stock::where('idbarang', $request->idbarang)
                     ->increment('stock', $request->qty);
             }
             
-            // Update status kondisi HANYA untuk Aset Sewa (barang_sewa) yang selesai
-            if ($request->stock->kategori === 'barang_sewa') {
+            // Update status kondisi HANYA untuk Aset Sewa (aset_sewa) yang selesai
+            if ($request->stock->kategori === 'aset_sewa') {
                 Stock::where('idbarang', $request->idbarang)->update([
                     'status_kondisi' => 'digunakan',
                     'keterangan_kondisi' => 'Selesai digunakan oleh ' . $request->user->name,

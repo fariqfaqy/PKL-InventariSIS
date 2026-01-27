@@ -211,7 +211,7 @@
                                     @endphp
                                     @if($outgoing && $outgoing->penerima)
                                         <div class="text-gray-900 font-medium">{{ $outgoing->penerima }}</div>
-                                        @if($outgoing->kategori == 'barang_sewa' && $outgoing->tanggal_akhir_sewa)
+                                        @if($outgoing->kategori == 'aset_sewa' && $outgoing->tanggal_akhir_sewa)
                                             @php
                                                 $sisaHari = now()->startOfDay()->diffInDays($outgoing->tanggal_akhir_sewa, false);
                                             @endphp
@@ -345,14 +345,8 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                @if($item->tipe_request == 'pinjam_sewa')
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
-                                        Pinjam Aset Sewa
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <x-heroicon-o-shopping-cart class="w-3 h-3 mr-1" />
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <x-heroicon-o-shopping-cart class="w-3 h-3 mr-1" />
                                         Pakai Material Umum
                                     </span>
                                 @endif
@@ -924,5 +918,5 @@ function switchAsetSewaTab(subtab) {
     activeSubtab.classList.remove('border-transparent', 'text-gray-500');
 }
 </script>
-
+</div>
 @endsection

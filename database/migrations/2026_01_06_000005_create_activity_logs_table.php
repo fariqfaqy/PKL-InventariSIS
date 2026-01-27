@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('log', function (Blueprint $table) {
+        Schema::create('activity_logs', function (Blueprint $table) {
             $table->id('idlog');
             $table->timestamp('date')->useCurrent();
             $table->string('usr');
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('log');
+        Schema::dropIfExists('activity_logs');
     }
 };

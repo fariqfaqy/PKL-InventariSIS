@@ -88,6 +88,38 @@
         </form>
     </div>
 
+    <!-- Instant Search Script -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterForm = document.querySelector('form[action="{{ route('admin.activity-log.index') }}"]');
+        const usrInput = filterForm.querySelector('input[name="usr"]');
+        const endpointInput = filterForm.querySelector('input[name="endpoint"]');
+        const methodSelect = filterForm.querySelector('select[name="method"]');
+        const statusCodeSelect = filterForm.querySelector('select[name="status_code"]');
+        const dateFromInput = filterForm.querySelector('input[name="date_from"]');
+        const dateToInput = filterForm.querySelector('input[name="date_to"]');
+        
+        let searchTimeout;
+        
+        // Instant search on typing
+        [usrInput, endpointInput].forEach(input => {
+            input.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    filterForm.submit();
+                }, 500);
+            });
+        });
+        
+        // Instant filter on select/date change
+        [methodSelect, statusCodeSelect, dateFromInput, dateToInput].forEach(element => {
+            element.addEventListener('change', function() {
+                filterForm.submit();
+            });
+        });
+    });
+    </script>
+
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="bg-white rounded-xl shadow-md p-5">

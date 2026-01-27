@@ -189,14 +189,14 @@ class PermintaanController extends Controller
                 }
                 
                 // Convert tipe_request untuk OutgoingTransaction
-                // pinjam_sewa / pinjam_material -> 'peminjaman' (harus dikembalikan)
+                // pinjam_material -> 'peminjaman' (harus dikembalikan)
                 // pakai_habis_pakai -> 'permintaan' (tidak dikembalikan)
-                $tipeKeluar = in_array($permintaan->tipe_request, ['pinjam_sewa', 'pinjam_material']) 
+                $tipeKeluar = ($permintaan->tipe_request === 'pinjam_material') 
                     ? 'peminjaman' 
                     : 'permintaan';
                 
                 // Tentukan status OutgoingTransaction:
-                // - peminjaman (pinjam_sewa/pinjam_material) = sedang_dipakai (belum dikembalikan)
+                // - peminjaman (pinjam_material) = sedang_dipakai (belum dikembalikan)
                 // - permintaan (pakai_habis_pakai) = selesai (langsung completed)
                 $status = ($tipeKeluar === 'peminjaman') ? 'sedang_dipakai' : 'selesai';
                 $tanggalSelesai = ($tipeKeluar === 'permintaan') ? now() : null;
@@ -206,9 +206,9 @@ class PermintaanController extends Controller
                 Stock::where('idbarang', $permintaan->idbarang)
                     ->decrement('stock', $permintaan->qty);
                 
-                // Update status kondisi HANYA untuk Aset Sewa (barang_sewa)
+                // Update status kondisi HANYA untuk Aset Sewa (aset_sewa)
                 // Material Umum (barang_pinjam) TIDAK pakai status_kondisi
-                if ($tipeKeluar === 'peminjaman' && $permintaan->stock->kategori === 'barang_sewa') {
+                if ($tipeKeluar === 'peminjaman' && $permintaan->stock->kategori === 'aset_sewa') {
                     Stock::where('idbarang', $permintaan->idbarang)->update([
                         'status_kondisi' => 'digunakan',
                         'keterangan_kondisi' => 'Sedang dipinjam oleh ' . ($permintaan->penerima ?? $permintaan->user->name),
@@ -238,7 +238,7 @@ class PermintaanController extends Controller
                 
                 
                 // Update RequestBarang status:
-                // - peminjaman (pinjam_sewa/pinjam_material): 'approved' karena barang harus dikembalikan
+                // - peminjaman (pinjam_material): 'approved' karena barang harus dikembalikan
                 // - permintaan (pakai_habis_pakai): 'completed' karena barang tidak dikembalikan
                 $finalStatus = ($tipeKeluar === 'peminjaman') ? 'approved' : 'completed';
                 
@@ -328,7 +328,7 @@ class PermintaanController extends Controller
         ]);
         
         // Update status kondisi barang sewa menjadi tersedia
-        if ($permintaan->stock->kategori === 'barang_sewa') {
+        if ($permintaan->stock->kategori === 'aset_sewa') {
             Stock::where('idbarang', $permintaan->idbarang)->update([
                 'status_kondisi' => 'tersedia',
                 'keterangan_kondisi' => null,
@@ -376,7 +376,7 @@ class PermintaanController extends Controller
 
     /**
      * Mark request as completed (admin can mark approved requests as completed)
-     * Used for marking rental items (pinjam_sewa & pinjam_material) as returned
+     * Used for marking rental items (pinjam_material) as returned
      */
     public function markComplete($id)
     {
@@ -406,14 +406,14 @@ class PermintaanController extends Controller
                 ]);
             
             // Kembalikan stok HANYA untuk Barang Pinjam (pinjam_material)
-            // Aset Sewa (pinjam_sewa) TIDAK dikembalikan, tetap di barang keluar
+            // Aset Sewa yang di-assign admin TIDAK melalui request_barang
             if ($permintaan->tipe_request === 'pinjam_material') {
                 Stock::where('idbarang', $permintaan->idbarang)
                     ->increment('stock', $permintaan->qty);
             }
             
-            // Update status kondisi HANYA untuk Aset Sewa (barang_sewa) yang selesai
-            if ($permintaan->stock->kategori === 'barang_sewa') {
+            // Update status kondisi HANYA untuk Aset Sewa (aset_sewa) yang selesai
+            if ($permintaan->stock->kategori === 'aset_sewa') {
                 Stock::where('idbarang', $permintaan->idbarang)->update([
                     'status_kondisi' => 'digunakan',
                     'keterangan_kondisi' => 'Selesai digunakan oleh ' . ($permintaan->penerima ?? $permintaan->user->name),

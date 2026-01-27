@@ -188,7 +188,7 @@ function updateBarangInfo() {
             tanggalMulaiInput.min = today;
             tanggalAkhirInput.min = today;
         } else {
-            // Material Umum (barang_habis_pakai) tidak butuh tanggal
+            // Barang Habis Pakai (barang_habis_pakai) tidak butuh tanggal
             rentalSection.classList.add('hidden');
             tanggalMulaiInput.required = false;
             tanggalAkhirInput.required = false;
@@ -217,4 +217,5 @@ document.addEventListener('DOMContentLoaded', function() {
     updateBarangInfo();
 });
 </script>
+</div>
 @endsection

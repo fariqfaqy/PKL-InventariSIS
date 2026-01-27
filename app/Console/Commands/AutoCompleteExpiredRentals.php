@@ -31,11 +31,11 @@ class AutoCompleteExpiredRentals extends Command
     {
         $this->info('Checking for expired rental requests...');
         
-        // Cari semua request peminjaman (pinjam_sewa & pinjam_material) yang masih approved
+        // Cari semua request peminjaman (pinjam_material) yang masih approved
         // dan sudah melewati tanggal pengembalian
         $expiredRentals = RequestBarang::with('stock', 'user')
             ->where('status', 'approved')
-            ->whereIn('tipe_request', ['pinjam_sewa', 'pinjam_material'])
+            ->where('tipe_request', 'pinjam_material')
             ->whereNotNull('tanggal_akhir_sewa')
             ->whereDate('tanggal_akhir_sewa', '<', now())
             ->get();
@@ -70,8 +70,8 @@ class AutoCompleteExpiredRentals extends Command
                         'tanggal_selesai' => now(),
                     ]);
                 
-                // Update status kondisi HANYA untuk Aset Sewa (barang_sewa)
-                if ($rental->stock->kategori === 'barang_sewa') {
+                // Update status kondisi HANYA untuk Aset Sewa
+                if ($rental->stock->kategori === 'aset_sewa') {
                     Stock::where('idbarang', $rental->idbarang)->update([
                         'status_kondisi' => 'digunakan',
                         'keterangan_kondisi' => 'Selesai digunakan (expired - auto completed)',
@@ -79,8 +79,7 @@ class AutoCompleteExpiredRentals extends Command
                     ]);
                 }
                 
-                // Kembalikan stok HANYA untuk Barang Pinjam (pinjam_material)
-                // Aset Sewa (pinjam_sewa) TIDAK dikembalikan
+                // Kembalikan stok untuk pinjam_material (Barang Pinjam)
                 if ($rental->tipe_request === 'pinjam_material') {
                     Stock::where('idbarang', $rental->idbarang)
                         ->increment('stock', $rental->qty);

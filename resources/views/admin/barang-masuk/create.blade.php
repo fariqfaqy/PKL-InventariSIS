@@ -38,9 +38,9 @@
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('kategori') border-red-500 @enderror"
                     onchange="toggleSewaFields(); toggleSubKategori(); toggleRackField(); updatePrefixOptions()">
                     <option value="">-- Pilih Kategori --</option>
-                    <option value="barang_sewa" {{ old('kategori') == 'barang_sewa' ? 'selected' : '' }}>Aset Sewa</option>
+                    <option value="aset_sewa" {{ old('kategori') == 'aset_sewa' ? 'selected' : '' }}>Aset Sewa</option>
                     <option value="aset_tetap" {{ old('kategori') == 'aset_tetap' ? 'selected' : '' }}>Aset Tetap</option>
-                    <option value="habis_pakai" {{ old('kategori') == 'habis_pakai' ? 'selected' : '' }}>Material Umum</option>
+                    <option value="material_umum" {{ old('kategori') == 'material_umum' ? 'selected' : '' }}>Material Umum</option>
                 </select>
                 <p class="mt-1 text-xs text-gray-500">
                     <span class="font-medium">Catatan:</span> Aset Sewa dapat dipinjam dengan tanggal sewa. Aset Tetap tidak dapat dipinjam.
@@ -297,7 +297,7 @@ function toggleSewaFields() {
     
     if (!sewaFields) return;
     
-    if (kategori === 'barang_sewa') {
+    if (kategori === 'aset_sewa') {
         sewaFields.classList.remove('hidden');
         // Make user_id required when visible
         if (userId) userId.required = true;
@@ -326,7 +326,7 @@ function toggleSubKategori() {
     
     if (!subKategoriField || !subKategoriSelect) return;
     
-    if (kategori === 'habis_pakai') {
+    if (kategori === 'material_umum') {
         subKategoriField.classList.remove('hidden');
         subKategoriSelect.required = true;
     } else {
@@ -346,7 +346,7 @@ function toggleRackField() {
     if (!rackField || !rackSelect || !rackPrefix) return;
     
     // Aset Sewa & Aset Tetap: hide rack field (bawah)
-    if (kategori === 'barang_sewa' || kategori === 'aset_tetap') {
+    if (kategori === 'aset_sewa' || kategori === 'aset_tetap') {
         rackField.classList.add('hidden');
         rackSelect.required = false;
         rackPrefix.required = true; // Prefix tetap required untuk kode barang
@@ -368,7 +368,7 @@ function toggleQtyField() {
     
     if (!qtyInput || !qtyHint) return;
     
-    if (kategori === 'barang_sewa') {
+    if (kategori === 'aset_sewa') {
         qtyInput.value = 1;
         qtyInput.readOnly = true;
         qtyInput.classList.add('bg-gray-100', 'cursor-not-allowed');
@@ -399,14 +399,14 @@ function updatePrefixOptions() {
     // Clear current options
     rackPrefix.innerHTML = '';
     
-    if (kategori === 'barang_sewa' || kategori === 'aset_tetap') {
+    if (kategori === 'aset_sewa' || kategori === 'aset_tetap') {
         // Aset Sewa & Aset Tetap: Fixed "SIS" (disabled, auto-selected)
         rackPrefix.innerHTML = '<option value="SIS" selected>SIS</option>';
         rackPrefix.disabled = true;
         rackPrefix.classList.add('bg-gray-100', 'cursor-not-allowed');
         kodeHint.textContent = 'Format: SIS + 3 digit. Contoh: SIS001, SIS042';
         console.log('Set to SIS (Aset Sewa/Tetap)');
-    } else if (kategori === 'habis_pakai') {
+    } else if (kategori === 'material_umum') {
         // Material Umum: Pilihan Rak
         rackPrefix.innerHTML = `
             <option value="">-- Pilih Rak --</option>
@@ -491,7 +491,7 @@ function validateForm() {
     }
     
     // Validate user_id for Aset Sewa
-    if (kategori === 'barang_sewa' && !userId) {
+    if (kategori === 'aset_sewa' && !userId) {
         alert('Pengguna harus dipilih untuk Aset Sewa!');
         return false;
     }
@@ -796,4 +796,5 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Barang Masuk form loaded and ready');
 });
 </script>
+</div>
 @endsection

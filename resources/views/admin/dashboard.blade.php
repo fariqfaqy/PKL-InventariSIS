@@ -114,7 +114,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-xs font-medium uppercase mb-1">Barang Sewa</p>
-                    <p class="text-2xl font-bold text-purple-600">{{ $categoryStats['barang_sewa'] }}</p>
+                    <p class="text-2xl font-bold text-purple-600">{{ $categoryStats['aset_sewa'] }}</p>
                 </div>
                 <x-heroicon-o-computer-desktop class="w-10 h-10 text-purple-500 opacity-50" />
             </div>
@@ -125,7 +125,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-xs font-medium uppercase mb-1">Material Umum</p>
-                    <p class="text-2xl font-bold text-pink-600">{{ $categoryStats['habis_pakai'] }}</p>
+                    <p class="text-2xl font-bold text-pink-600">{{ $categoryStats['material_umum'] }}</p>
                 </div>
                 <x-heroicon-o-shopping-bag class="w-10 h-10 text-pink-500 opacity-50" />
             </div>
@@ -235,14 +235,14 @@
                             <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
                             <span class="text-gray-700">Aset Sewa</span>
                         </div>
-                        <span class="font-semibold text-gray-900">{{ $categoryStats['barang_sewa'] }}</span>
+                        <span class="font-semibold text-gray-900">{{ $categoryStats['aset_sewa'] }}</span>
                     </div>
                     <div class="flex items-center justify-between text-sm">
                         <div class="flex items-center gap-2">
                             <div class="w-3 h-3 bg-pink-500 rounded-full"></div>
                             <span class="text-gray-700">Material Umum</span>
                         </div>
-                        <span class="font-semibold text-gray-900">{{ $categoryStats['habis_pakai'] }}</span>
+                        <span class="font-semibold text-gray-900">{{ $categoryStats['material_umum'] }}</span>
                     </div>
                     <div class="flex items-center justify-between text-sm">
                         <div class="flex items-center gap-2">
@@ -603,8 +603,8 @@
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-3 text-sm text-gray-900">{{ $item->namabarang }}</td>
                             <td class="px-4 py-3 text-sm">
-                                <span class="px-2 py-1 {{ $item->kategori == 'barang_sewa' ? 'bg-purple-100 text-purple-800' : ($item->kategori == 'aset_tetap' ? 'bg-teal-100 text-teal-800' : 'bg-pink-100 text-pink-800') }} rounded-full text-xs font-semibold">
-                                    {{ $item->kategori == 'barang_sewa' ? 'Sewa' : ($item->kategori == 'aset_tetap' ? 'Aset Tetap' : 'Material Umum') }}
+                                <span class="px-2 py-1 {{ $item->kategori == 'aset_sewa' ? 'bg-purple-100 text-purple-800' : ($item->kategori == 'aset_tetap' ? 'bg-teal-100 text-teal-800' : 'bg-pink-100 text-pink-800') }} rounded-full text-xs font-semibold">
+                                    {{ $item->kategori == 'aset_sewa' ? 'Sewa' : ($item->kategori == 'aset_tetap' ? 'Aset Tetap' : 'Material Umum') }}
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-sm">
@@ -625,7 +625,6 @@
             </div>
         </div>
     </div>
-</div>
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -694,8 +693,8 @@
             labels: ['Aset Sewa', 'Material Umum', 'Aset Tetap'],
             datasets: [{
                 data: [
-                    {{ $categoryStats['barang_sewa'] }},
-                    {{ $categoryStats['habis_pakai'] }},
+                    {{ $categoryStats['aset_sewa'] }},
+                    {{ $categoryStats['material_umum'] }},
                     {{ $categoryStats['aset_tetap'] }}
                 ],
                 backgroundColor: [
@@ -845,4 +844,5 @@
     setTimeout(updateDashboardStats, 2000);
 </script>
 @endpush
+</div>
 @endsection

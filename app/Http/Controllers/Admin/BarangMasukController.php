@@ -21,7 +21,7 @@ class BarangMasukController extends Controller
             ->select('masuk.*', 'stock.kategori', 'stock.sub_kategori');
         
         // Filter by kategori if provided
-        if ($request->filled('kategori') && in_array($request->kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
+        if ($request->filled('kategori') && in_array($request->kategori, ['aset_sewa', 'material_umum', 'aset_tetap'])) {
             $query->where('stock.kategori', $request->kategori);
         }
 
@@ -70,19 +70,19 @@ class BarangMasukController extends Controller
             'kodebarang' => 'required|string|max:255',
             'namabarang' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'kategori' => 'required|in:barang_sewa,habis_pakai,aset_tetap',
-            'sub_kategori' => 'nullable|required_if:kategori,habis_pakai|in:barang_habis_pakai,barang_pinjam',
+            'kategori' => 'required|in:aset_sewa,material_umum,aset_tetap',
+            'sub_kategori' => 'nullable|required_if:kategori,material_umum|in:barang_habis_pakai,barang_pinjam',
             'qty' => 'required|integer|min:1',
-            'rack' => 'nullable|required_if:kategori,habis_pakai|in:1a,1b,1c,2a,2b,2c',
+            'rack' => 'nullable|required_if:kategori,material_umum|in:1a,1b,1c,2a,2b,2c',
             'deskripsi' => 'nullable|string',
             'tanggal' => 'required|date',
             'keterangan' => 'required|string',
-            'user_id' => 'nullable|required_if:kategori,barang_sewa|exists:users,id',
+            'user_id' => 'nullable|required_if:kategori,aset_sewa|exists:users,id',
             'tanggal_mulai_pakai' => 'nullable|date',
             'tanggal_akhir_pakai' => 'nullable|date|after_or_equal:tanggal_mulai_pakai',
         ], [
             'sub_kategori.required_if' => 'Sub-kategori wajib diisi untuk Material Umum',
-            'sub_kategori.in' => 'Sub-kategori harus berupa Material Umum atau Barang Pinjam',
+            'sub_kategori.in' => 'Sub-kategori harus berupa Barang Habis Pakai atau Barang Pinjam',
             'rack.required_if' => 'Rak wajib diisi untuk Material Umum',
             'user_id.required_if' => 'User wajib dipilih untuk Aset Sewa',
             'user_id.exists' => 'User yang dipilih tidak valid',
@@ -113,15 +113,15 @@ class BarangMasukController extends Controller
             $imagePath = $imageName; // Simpan hanya nama file
         }
 
-        // For Material Umum (habis_pakai), ensure sub_kategori is set
+        // For Material Umum (material_umum), ensure sub_kategori is set
         $actualKategori = $validated['kategori'];
-        $actualSubKategori = ($validated['kategori'] === 'habis_pakai' && isset($validated['sub_kategori'])) 
+        $actualSubKategori = ($validated['kategori'] === 'material_umum' && isset($validated['sub_kategori'])) 
             ? $validated['sub_kategori'] 
             : null;
 
         // For Aset Sewa: ALWAYS create new stock (1 kode = 1 physical item, no merging)
-        // Skip stock checking for barang_sewa
-        if ($actualKategori === 'barang_sewa') {
+        // Skip stock checking for aset_sewa
+        if ($actualKategori === 'aset_sewa') {
             $stock = null; // Force create new
             $validated['qty'] = 1; // Force qty = 1
         } else {
@@ -150,8 +150,8 @@ class BarangMasukController extends Controller
                 $stock->image = $imagePath;
             }
             
-            // Update user and rental dates for barang_sewa
-            if ($validated['kategori'] === 'barang_sewa' && $request->filled('user_id')) {
+            // Update user and rental dates for aset_sewa
+            if ($validated['kategori'] === 'aset_sewa' && $request->filled('user_id')) {
                 $user = \App\Models\User::findOrFail($validated['user_id']);
                 
                 // Create OutgoingTransaction for assignment
@@ -160,7 +160,7 @@ class BarangMasukController extends Controller
                     'tanggal' => $validated['tanggal'],
                     'penerima' => $user->name,
                     'user_id' => $validated['user_id'],
-                    'kategori' => 'barang_sewa',
+                    'kategori' => 'aset_sewa',
                     'qty' => 1, // Aset sewa always 1 item
                     'keterangan' => 'Admin assignment: ' . ($validated['keterangan'] ?? 'Aset sewa baru'),
                     'namabarang_k' => $stock->namabarang,
@@ -191,16 +191,16 @@ class BarangMasukController extends Controller
                 'penginput' => auth()->user()->name,
             ];
             
-            // Set default status kondisi for barang_sewa
-            if ($actualKategori === 'barang_sewa') {
+            // Set default status kondisi for aset_sewa
+            if ($actualKategori === 'aset_sewa') {
                 $stockData['status_kondisi'] = 'digunakan'; // Default status
             }
             
             $stock = Stock::create($stockData);
             $idbarang = $stock->idbarang;
             
-            // Create OutgoingTransaction for barang_sewa assignment
-            if ($actualKategori === 'barang_sewa' && $request->filled('user_id')) {
+            // Create OutgoingTransaction for aset_sewa assignment
+            if ($actualKategori === 'aset_sewa' && $request->filled('user_id')) {
                 $user = \App\Models\User::findOrFail($validated['user_id']);
                 
                 \App\Models\OutgoingTransaction::create([
@@ -208,7 +208,7 @@ class BarangMasukController extends Controller
                     'tanggal' => $validated['tanggal'],
                     'penerima' => $user->name,
                     'user_id' => $validated['user_id'],
-                    'kategori' => 'barang_sewa',
+                    'kategori' => 'aset_sewa',
                     'qty' => 1, // Aset sewa always 1 item
                     'keterangan' => 'Admin assignment: ' . ($validated['keterangan'] ?? 'Aset sewa baru'),
                     'namabarang_k' => $stock->namabarang,
@@ -357,7 +357,7 @@ class BarangMasukController extends Controller
 
         // Filter by kategori if provided
         $kategori = $request->get('kategori');
-        if ($kategori && in_array($kategori, ['barang_sewa', 'habis_pakai', 'aset_tetap'])) {
+        if ($kategori && in_array($kategori, ['aset_sewa', 'material_umum', 'aset_tetap'])) {
             $query->where('stock.kategori', $kategori);
         }
 

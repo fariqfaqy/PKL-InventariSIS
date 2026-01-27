@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('rack_assignments', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('idbarang');
+            $table->unsignedBigInteger('user_id')->index();
+            $table->unsignedBigInteger('idbarang')->index();
             $table->enum('rack', ['1a', '1b', '1c', '2a', '2b', '2c']);
             $table->integer('qty')->default(0);
             $table->text('keterangan')->nullable();

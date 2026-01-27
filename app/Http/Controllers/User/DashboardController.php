@@ -54,7 +54,7 @@ class DashboardController extends Controller
             ->where('penginput', auth()->user()->name) // penginput berisi nama user, bukan email
             ->whereNotNull('diproses_oleh') // sudah di-approve admin
             ->where('status', 'sedang_dipakai') // belum selesai
-            ->where('kategori', 'barang_sewa') // hanya aset sewa
+            ->where('kategori', 'aset_sewa') // hanya aset sewa
             ->orderBy('tanggal', 'desc')
             ->get(); // tampilkan semua tanpa limit
         
@@ -84,7 +84,7 @@ class DashboardController extends Controller
             ->where('penginput', auth()->user()->name) // penginput berisi nama user, bukan email
             ->whereNotNull('diproses_oleh')
             ->where('status', 'sedang_dipakai')
-            ->where('kategori', 'barang_sewa') // hanya aset sewa
+            ->where('kategori', 'aset_sewa') // hanya aset sewa
             ->orderBy('tanggal', 'desc')
             ->get() // tampilkan semua tanpa limit
             ->map(function ($trans) {
@@ -96,11 +96,11 @@ class DashboardController extends Controller
                     'qty' => $trans->qty,
                     'penerima' => $trans->penerima,
                     'kategori' => $trans->kategori,
-                    'is_barang_sewa' => $trans->kategori === 'barang_sewa',
+                    'is_aset_sewa' => $trans->kategori === 'aset_sewa',
                 ];
 
                 // Tambahkan info sewa jika aset sewa
-                if ($trans->kategori === 'barang_sewa') {
+                if ($trans->kategori === 'aset_sewa') {
                     $data['durasi_sewa'] = $trans->durasi_sewa;
                     $data['tanggal_mulai_sewa'] = $trans->tanggal_mulai_sewa ? $trans->tanggal_mulai_sewa->format('d/m/Y') : null;
                     $data['tanggal_akhir_sewa'] = $trans->tanggal_akhir_sewa ? $trans->tanggal_akhir_sewa->format('d/m/Y') : null;

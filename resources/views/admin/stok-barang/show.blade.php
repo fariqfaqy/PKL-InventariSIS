@@ -80,25 +80,20 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Kategori</label>
-                @if($stock->kategori === 'barang_sewa')
+                @if($stock->kategori === 'aset_sewa')
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
                         <x-heroicon-o-computer-desktop class="w-4 h-4 mr-1.5" />
                         Aset Sewa
                     </span>
-                @elseif($stock->kategori === 'barang_pinjam')
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                        <x-heroicon-o-arrow-path-rounded-square class="w-4 h-4 mr-1.5" />
-                        Barang Pinjam
+                @elseif($stock->kategori === 'material_umum')
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                        <x-heroicon-o-shopping-bag class="w-4 h-4 mr-1.5" />
+                        Material Umum
                     </span>
                 @elseif($stock->kategori === 'aset_tetap')
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-teal-100 text-teal-800">
                         <x-heroicon-o-building-office class="w-4 h-4 mr-1.5" />
                         Aset Tetap
-                    </span>
-                @elseif($stock->kategori === 'habis_pakai')
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
-                        <x-heroicon-o-shopping-bag class="w-4 h-4 mr-1.5" />
-                        Material Umum
                     </span>
                 @else
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
@@ -106,7 +101,23 @@
                     </span>
                 @endif
             </div>
-            @if($stock->kategori === 'barang_sewa')
+            @if($stock->kategori === 'material_umum' && $stock->sub_kategori)
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Sub-Kategori</label>
+                @if($stock->sub_kategori === 'barang_habis_pakai')
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <x-heroicon-o-archive-box class="w-4 h-4 mr-1.5" />
+                        Barang Habis Pakai
+                    </span>
+                @else
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                        <x-heroicon-o-arrow-path class="w-4 h-4 mr-1.5" />
+                        Barang Pinjam
+                    </span>
+                @endif
+            </div>
+            @endif
+            @if($stock->kategori === 'aset_sewa')
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Status Kondisi</label>
                 <div class="flex items-center gap-2">
@@ -158,7 +169,7 @@
                 </div>
                 
                 <!-- Informasi Pengguna & Peminjaman (untuk Aset Sewa) -->
-                @if($stock->kategori === 'barang_sewa' && $activeRental)
+                @if($stock->kategori === 'aset_sewa' && $activeRental)
                 <div class="mt-6 pt-6 border-t border-gray-200">
                     <h4 class="text-md font-semibold text-gray-800 flex items-center gap-2 mb-4">
                         <x-heroicon-o-user class="w-5 h-5 text-blue-600" />
@@ -275,7 +286,7 @@
     </div>
 
     <!-- History Pemakaian untuk Aset Sewa -->
-    @if($stock->kategori === 'barang_sewa' && $stock->outgoingTransactions->whereNull('id_request')->count() > 0)
+    @if($stock->kategori === 'aset_sewa' && $stock->outgoingTransactions->whereNull('id_request')->count() > 0)
     <div class="bg-white rounded-xl shadow-md p-6 mb-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
             <x-heroicon-o-clock class="w-6 h-6 text-purple-600" />

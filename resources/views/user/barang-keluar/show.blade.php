@@ -18,7 +18,7 @@
         </div>
     </div>
 
-    @if($barangKeluar->stock && $barangKeluar->kategori === 'barang_sewa')
+    @if($barangKeluar->stock && $barangKeluar->kategori === 'aset_sewa')
     <!-- Aset Sewa Info Card -->
     <div class="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl shadow-md p-6 border-2 border-purple-200">
         <div class="flex justify-between items-start mb-4">
@@ -355,12 +355,12 @@
             @if($barangKeluar->stock && $barangKeluar->stock->kategori)
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Kategori</label>
-                @if($barangKeluar->stock->kategori === 'barang_sewa')
+                @if($barangKeluar->stock->kategori === 'aset_sewa')
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
                         <x-heroicon-o-computer-desktop class="w-4 h-4 mr-1.5" />
                         Aset Sewa
                     </span>
-                @elseif($barangKeluar->stock->kategori === 'habis_pakai')
+                @elseif($barangKeluar->stock->kategori === 'material_umum')
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
                         <x-heroicon-o-shopping-bag class="w-4 h-4 mr-1.5" />
                         Material Umum
@@ -373,7 +373,7 @@
                 @endif
             </div>
             @endif
-            @if($barangKeluar->stock && $barangKeluar->stock->kategori === 'habis_pakai' && $barangKeluar->stock->sub_kategori)
+            @if($barangKeluar->stock && $barangKeluar->stock->kategori === 'material_umum' && $barangKeluar->stock->sub_kategori)
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Sub-Kategori</label>
                 @if($barangKeluar->stock->sub_kategori === 'barang_habis_pakai')

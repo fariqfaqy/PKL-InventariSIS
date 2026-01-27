@@ -120,7 +120,7 @@
     <div class="info">
         <strong>Tanggal Cetak:</strong> {{ now()->format('d F Y, H:i') }} WIB<br>
         @if(isset($kategori))
-            <strong>Kategori:</strong> {{ $kategori == 'barang_sewa' ? 'Aset Sewa' : 'Material Umum' }}<br>
+            <strong>Kategori:</strong> {{ $kategori == 'aset_sewa' ? 'Aset Sewa' : 'Material Umum' }}<br>
         @endif
         <strong>Total Item:</strong> {{ $stocks->count() }}
     </div>
@@ -159,7 +159,7 @@
                 </td>
                 <td style="font-size: 10px;">{{ $item->namabarang }}</td>
                 <td style="text-align: center;">
-                    @if($item->kategori == 'barang_sewa')
+                    @if($item->kategori == 'aset_sewa')
                         <span class="badge badge-sewa">Sewa</span>
                     @elseif($item->kategori == 'aset_tetap')
                         <span class="badge" style="background-color: #dbeafe; color: #1e40af;">Aset</span>

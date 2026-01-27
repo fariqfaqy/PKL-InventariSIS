@@ -29,8 +29,8 @@
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('kategori') border-red-500 @enderror"
                     onchange="toggleSubKategoriKeluar()">
                     <option value="">-- Pilih Kategori --</option>
-                    <option value="barang_sewa" {{ old('kategori') == 'barang_sewa' ? 'selected' : '' }}>Aset Sewa</option>
-                    <option value="habis_pakai" {{ old('kategori') == 'habis_pakai' ? 'selected' : '' }}>Material Umum</option>
+                    <option value="aset_sewa" {{ old('kategori') == 'aset_sewa' ? 'selected' : '' }}>Aset Sewa</option>
+                    <option value="material_umum" {{ old('kategori') == 'material_umum' ? 'selected' : '' }}>Material Umum</option>
                 </select>
                 @error('kategori')
                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
@@ -172,7 +172,7 @@ function toggleSubKategoriKeluar() {
     const kategori = kategoriSelect.value;
     const subKategoriField = document.getElementById('subKategoriFieldKeluar');
     
-    if (kategori === 'habis_pakai') {
+    if (kategori === 'material_umum') {
         subKategoriField.classList.remove('hidden');
         subKategoriSelect.required = true;
         // Reset barang selection
@@ -182,8 +182,8 @@ function toggleSubKategoriKeluar() {
         subKategoriField.classList.add('hidden');
         subKategoriSelect.required = false;
         subKategoriSelect.value = '';
-        // Enable barang selection for barang_sewa
-        if (kategori === 'barang_sewa') {
+        // Enable barang selection for aset_sewa
+        if (kategori === 'aset_sewa') {
             updateBarangOptions();
         }
     }
@@ -198,8 +198,8 @@ function updateBarangOptions() {
     
     let filterKategori = kategori;
     
-    // Untuk Material Umum (habis_pakai), gunakan sub-kategori sebagai filter
-    if (kategori === 'habis_pakai') {
+    // Untuk Material Umum (material_umum), gunakan sub-kategori sebagai filter
+    if (kategori === 'material_umum') {
         if (!subKategori) {
             barangSelect.innerHTML = '<option value="">-- Pilih Sub-Kategori Terlebih Dahulu --</option>';
             barangSelect.disabled = true;
@@ -264,8 +264,8 @@ barangSelect.addEventListener('change', function() {
         document.getElementById('display_rack').textContent = rack === '-' ? '-' : 'Rak ' + rack.toUpperCase();
         document.getElementById('display_stock').textContent = stock;
         
-        // Show durasi sewa only for barang_sewa
-        if (kategori === 'barang_sewa' && durasiSewa) {
+        // Show durasi sewa only for aset_sewa
+        if (kategori === 'aset_sewa' && durasiSewa) {
             document.getElementById('display_durasi_sewa').textContent = durasiSewa + ' hari';
             document.getElementById('display_durasi_container').classList.remove('hidden');
         } else {
@@ -306,4 +306,5 @@ qtyInput.addEventListener('input', function() {
     }
 });
 </script>
+</div>
 @endsection

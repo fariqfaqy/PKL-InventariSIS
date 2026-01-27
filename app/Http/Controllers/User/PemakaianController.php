@@ -90,14 +90,14 @@ class PemakaianController extends Controller
         
         // 4. Aset Sewa yang di-assign admin ke user ini (BUKAN dari request user sendiri)
         // Ambil dari OutgoingTransaction yang:
-        // - tipe_keluar = 'peminjaman' DAN kategori stock = 'barang_sewa'
+        // - tipe_keluar = 'peminjaman' DAN kategori stock = 'aset_sewa'
         // - penerima = nama user ini
         // - TIDAK ada id_request (karena di-assign langsung admin, bukan dari request)
         $asetSewaAssigned = OutgoingTransaction::with('stock')
             ->where('penerima', Auth::user()->name)
             ->whereNull('id_request') // Tidak dari request user
             ->whereHas('stock', function($query) {
-                $query->where('kategori', 'barang_sewa');
+                $query->where('kategori', 'aset_sewa');
             })
             ->orderBy('tanggal', 'desc')
             ->get();
@@ -141,15 +141,15 @@ class PemakaianController extends Controller
      */
     public function create()
     {
-        // Pegawai hanya bisa request Material Umum (habis_pakai)
+        // Pegawai hanya bisa request Material Umum (material_umum)
         // Pisahkan berdasarkan sub_kategori
-        $barangHabisPakai = Stock::where('kategori', 'habis_pakai')
+        $barangHabisPakai = Stock::where('kategori', 'material_umum')
             ->where('sub_kategori', 'barang_habis_pakai')
             ->where('stock', '>', 0)
             ->orderBy('namabarang')
             ->get();
             
-        $barangPinjam = Stock::where('kategori', 'habis_pakai')
+        $barangPinjam = Stock::where('kategori', 'material_umum')
             ->where('sub_kategori', 'barang_pinjam')
             ->where('stock', '>', 0)
             ->orderBy('namabarang')
@@ -197,8 +197,8 @@ class PemakaianController extends Controller
         try {
             $stock = Stock::findOrFail($request->idbarang);
 
-            // VALIDASI KETAT: Pegawai hanya bisa request Material Umum (habis_pakai)
-            if ($stock->kategori !== 'habis_pakai') {
+            // VALIDASI KETAT: Pegawai hanya bisa request Material Umum (material_umum)
+            if ($stock->kategori !== 'material_umum') {
                 Log::warning('Kategori barang tidak diizinkan untuk pegawai', [
                     'kategori' => $stock->kategori,
                     'user' => Auth::user()->name

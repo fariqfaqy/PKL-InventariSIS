@@ -25,7 +25,7 @@
                 <button onclick="window.location.href='{{ route('user.barang-keluar.index') }}'" class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ !request('kategori') ? 'border-[#14a2ba] text-[#14a2ba]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                     Semua
                 </button>
-                <button onclick="window.location.href='{{ route('user.barang-keluar.index', ['kategori' => 'habis_pakai']) }}'" class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ request('kategori') == 'habis_pakai' ? 'border-[#14a2ba] text-[#14a2ba]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                <button onclick="window.location.href='{{ route('user.barang-keluar.index', ['kategori' => 'material_umum']) }}'" class="flex-1 py-4 px-6 text-center border-b-2 font-medium text-sm transition-colors {{ request('kategori') == 'material_umum' ? 'border-[#14a2ba] text-[#14a2ba]' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                     <span class="inline-flex items-center gap-2">
                         <x-heroicon-o-shopping-bag class="w-4 h-4" />
                         Pemakaian Saya
@@ -41,28 +41,28 @@
         </div>
 
         <!-- Sub-tabs untuk Pemakaian Saya -->
-        @if(request('kategori') == 'habis_pakai')
+        @if(request('kategori') == 'material_umum')
             <div class="bg-blue-50 border-b border-blue-200">
                 <nav class="flex -mb-px">
-                    <button onclick="window.location.href='{{ route('user.barang-keluar.index', ['kategori' => 'habis_pakai']) }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ !request('sub_kategori') ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                    <button onclick="window.location.href='{{ route('user.barang-keluar.index', ['kategori' => 'material_umum']) }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ !request('sub_kategori') ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
                         <span class="inline-flex items-center gap-1">
                             <x-heroicon-o-squares-2x2 class="w-3 h-3" />
                             Semua Pemakaian
                         </span>
                     </button>
-                    <button onclick="window.location.href='{{ route('user.barang-keluar.index', ['kategori' => 'habis_pakai', 'sub_kategori' => 'barang_habis_pakai']) }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_habis_pakai' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                    <button onclick="window.location.href='{{ route('user.barang-keluar.index', ['kategori' => 'material_umum', 'sub_kategori' => 'barang_habis_pakai']) }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_habis_pakai' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
                         <span class="inline-flex items-center gap-1">
                             <x-heroicon-o-archive-box class="w-3 h-3" />
                             Barang Habis Pakai
                         </span>
                     </button>
-                    <button onclick="window.location.href='{{ route('user.barang-keluar.index', ['kategori' => 'habis_pakai', 'sub_kategori' => 'barang_pinjam']) }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_pinjam' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                    <button onclick="window.location.href='{{ route('user.barang-keluar.index', ['kategori' => 'material_umum', 'sub_kategori' => 'barang_pinjam']) }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_pinjam' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
                         <span class="inline-flex items-center gap-1">
                             <x-heroicon-o-arrow-path class="w-3 h-3" />
                             Barang Pinjam
                         </span>
                     </button>
-                    <button onclick="window.location.href='{{ route('user.barang-keluar.index', ['kategori' => 'habis_pakai', 'sub_kategori' => 'aset_sewa']) }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'aset_sewa' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                    <button onclick="window.location.href='{{ route('user.barang-keluar.index', ['kategori' => 'material_umum', 'sub_kategori' => 'aset_sewa']) }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'aset_sewa' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
                         <span class="inline-flex items-center gap-1">
                             <x-heroicon-o-computer-desktop class="w-3 h-3" />
                             Aset Sewa
@@ -109,7 +109,7 @@
     </div>
 
     <!-- Table Card -->
-    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <div id="table-container" class="bg-white rounded-xl shadow-md overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
@@ -140,7 +140,7 @@
                         <td class="px-6 py-4 text-sm text-gray-900">
                             <div>
                                 <p class="font-medium">{{ $item->namabarang_k }}</p>
-                                @if($item->stock && $item->stock->kategori === 'barang_sewa')
+                                @if($item->stock && $item->stock->kategori === 'aset_sewa')
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 mt-1">
                                     <x-heroicon-o-computer-desktop class="w-3 h-3 mr-1" />
                                     Aset Sewa
@@ -254,5 +254,34 @@
         </div>
         @endif
     </div>
+</div>
+
+<script>
+(function() {
+    const filterForm = document.querySelector('form[action="{{ route('user.barang-keluar.index') }}"]');
+    const searchInput = filterForm.querySelector('input[name="search"]');
+    const tanggalInput = filterForm.querySelector('input[name="tanggal"]');
+    const tableContainer = document.getElementById('table-container');
+    let searchTimeout, isLoading = false;
+    
+    function fetchData(url) {
+        if (isLoading) return;
+        isLoading = true;
+        tableContainer.style.opacity = '0.6';
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(r => r.text()).then(html => {
+            const newTable = new DOMParser().parseFromString(html, 'text/html').getElementById('table-container');
+            if (newTable) { tableContainer.innerHTML = newTable.innerHTML; attachPaginationListeners(); }
+            window.history.pushState({}, '', url);
+            isLoading = false; tableContainer.style.opacity = '1';
+        });
+    }
+    filterForm.addEventListener('submit', function(e) { e.preventDefault(); fetchData('{{ route('user.barang-keluar.index') }}?' + new URLSearchParams(new FormData(this))); });
+    searchInput.addEventListener('input', () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => filterForm.dispatchEvent(new Event('submit')), 500); });
+    tanggalInput.addEventListener('change', () => filterForm.dispatchEvent(new Event('submit')));
+    function attachPaginationListeners() { document.querySelectorAll('#table-container .pagination a').forEach(l => l.addEventListener('click', function(e) { e.preventDefault(); fetchData(this.href); window.scrollTo({ top: 0, behavior: 'smooth' }); })); }
+    attachPaginationListeners();
+})();
+</script>
 </div>
 @endsection
