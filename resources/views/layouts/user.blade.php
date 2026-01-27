@@ -198,18 +198,23 @@
 
         // Close sidebar when clicking outside on mobile
         document.addEventListener('click', (e) => {
-            if (window.innerWidth < 1024 && !sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
-                sidebar.classList.add('-translate-x-full');
+            if (window.innerWidth < 1024) {
+                if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                    sidebar.classList.add('-translate-x-full');
+                }
             }
         });
 
-        // Submenu toggle
-        function toggleSubmenu(id) {
-            const submenu = document.getElementById(id + '-submenu');
-            const icon = document.getElementById(id + '-icon');
+        // Submenu toggle function
+        function toggleSubmenu(menuId) {
+            const submenu = document.getElementById(menuId + '-submenu');
+            const icon = document.getElementById(menuId + '-icon');
+            
             submenu.classList.toggle('hidden');
             icon.classList.toggle('rotate-180');
         }
     </script>
+
+    @stack('scripts')
 </body>
 </html>

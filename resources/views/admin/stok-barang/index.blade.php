@@ -4,40 +4,6 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-            <h2 class="text-2xl font-bold text-gray-800">
-                @if(isset($kategori))
-                    @if($kategori == 'aset_sewa')
-                        Aset Sewa
-                    @elseif($kategori == 'aset_tetap')
-                        Aset Tetap
-                    @else
-                        Material Umum
-                    @endif
-                @else
-                    Semua Kategori
-                @endif
-            </h2>
-            <p class="text-sm text-gray-500 mt-1">Daftar stok barang</p>
-        </div>
-        
-        <div class="flex items-center gap-3">
-            <a href="{{ route('admin.stok-barang.export-pdf', array_filter(['kategori' => request('kategori'), 'sub_kategori' => request('sub_kategori')])) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-md hover:shadow-lg">
-                <x-heroicon-o-document-arrow-down class="w-5 h-5" />
-                <span class="font-medium">Export PDF</span>
-            </a>
-            
-            @if(isset($kategori))
-            <a href="{{ route('admin.stok-barang.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                <x-heroicon-o-arrows-right-left class="w-5 h-5" />
-                <span class="font-medium">Lihat Semua</span>
-            </a>
-            @endif
-        </div>
-    </div>
-
     @if(session('success'))
     <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center gap-3">
         <x-heroicon-o-check-circle class="w-5 h-5" />
@@ -47,6 +13,40 @@
 
     <!-- Tabs Kategori (only show when accessed from "Semua" or directly, hide when from sidebar specific category) -->
     <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <!-- Header with buttons -->
+        <div class="border-b border-gray-200 bg-cyan-50 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    @if(!request('kategori'))
+                        <x-heroicon-o-view-columns class="w-6 h-6 text-cyan-600" />
+                        <h2 class="text-lg font-semibold text-cyan-900">Semua Kategori</h2>
+                    @elseif(request('kategori') == 'aset_sewa')
+                        <x-heroicon-o-computer-desktop class="w-6 h-6 text-cyan-600" />
+                        <h2 class="text-lg font-semibold text-cyan-900">Aset Sewa</h2>
+                    @elseif(request('kategori') == 'material_umum')
+                        <x-heroicon-o-shopping-bag class="w-6 h-6 text-cyan-600" />
+                        <h2 class="text-lg font-semibold text-cyan-900">Material Umum</h2>
+                    @elseif(request('kategori') == 'aset_tetap')
+                        <x-heroicon-o-building-office class="w-6 h-6 text-cyan-600" />
+                        <h2 class="text-lg font-semibold text-cyan-900">Aset Tetap</h2>
+                    @endif
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('admin.stok-barang.export-pdf', array_filter(['kategori' => request('kategori'), 'sub_kategori' => request('sub_kategori')])) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-md hover:shadow-lg">
+                        <x-heroicon-o-document-arrow-down class="w-5 h-5" />
+                        <span class="font-medium">Export PDF</span>
+                    </a>
+                    
+                    @if(isset($kategori))
+                    <a href="{{ route('admin.stok-barang.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                        <x-heroicon-o-arrows-right-left class="w-5 h-5" />
+                        <span class="font-medium">Lihat Semua</span>
+                    </a>
+                    @endif
+                </div>
+            </div>
+        </div>
+        
         @if(!request('kategori'))
         <!-- Show all tabs when no filter -->
         <div class="border-b border-gray-200">
@@ -67,24 +67,6 @@
                     Aset Tetap
                 </a>
             </nav>
-        </div>
-        @else
-        <!-- Show only active category header when filtered -->
-        <div class="border-b border-gray-200 bg-cyan-50 px-6 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    @if(request('kategori') == 'aset_sewa')
-                        <x-heroicon-o-computer-desktop class="w-6 h-6 text-cyan-600" />
-                        <h2 class="text-lg font-semibold text-cyan-900">Aset Sewa</h2>
-                    @elseif(request('kategori') == 'material_umum')
-                        <x-heroicon-o-shopping-bag class="w-6 h-6 text-cyan-600" />
-                        <h2 class="text-lg font-semibold text-cyan-900">Material Umum</h2>
-                    @elseif(request('kategori') == 'aset_tetap')
-                        <x-heroicon-o-building-office class="w-6 h-6 text-cyan-600" />
-                        <h2 class="text-lg font-semibold text-cyan-900">Aset Tetap</h2>
-                    @endif
-                </div>
-            </div>
         </div>
         @endif
 
@@ -138,12 +120,14 @@
                     >
                 </div>
 
-                <!-- Filter Rak -->
+                <!-- Filter Rak (hanya untuk Material Umum) -->
+                @if(!request('kategori') || request('kategori') == 'material_umum')
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Filter Rak</label>
                     <select 
                         name="rack" 
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+                        {{ request('kategori') && request('kategori') != 'material_umum' ? 'disabled' : '' }}
                     >
                         <option value="">Semua Rak</option>
                         @foreach($availableRacks as $rak)
@@ -152,7 +136,11 @@
                             </option>
                         @endforeach
                     </select>
+                    @if(!request('kategori'))
+                        <p class="text-xs text-gray-500 mt-1">Filter rak hanya untuk Material Umum</p>
+                    @endif
                 </div>
+                @endif
 
                 <!-- Status Stok -->
                 <div>
@@ -168,27 +156,6 @@
                     </select>
                 </div>
             </div>
-
-            <!-- Action Buttons -->
-            <div class="flex items-center gap-3">
-                <button 
-                    type="submit" 
-                    class="inline-flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-cyan-600 to-cyan-700 text-white rounded-lg hover:from-cyan-700 hover:to-cyan-800 transition-all duration-300 shadow-md hover:shadow-lg"
-                >
-                    <x-heroicon-o-magnifying-glass class="w-5 h-5" />
-                    <span class="font-medium">Filter</span>
-                </button>
-                
-                <a 
-                    href="{{ route('admin.stok-barang.index', array_filter(['kategori' => request('kategori'), 'sub_kategori' => request('sub_kategori')])) }}" 
-                    class="inline-flex items-center gap-2 px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                    <x-heroicon-o-x-mark class="w-5 h-5" />
-                    <span class="font-medium">Reset</span>
-                </a>
-            </div>
-        </form>
-    </div>
 
             <!-- Action Buttons -->
             <div class="flex items-center gap-3">
@@ -294,6 +261,7 @@
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $stock->status_kondisi_badge ?? 'bg-gray-100 text-gray-800' }}">
                                     {{ $stock->status_kondisi_label ?? 'Digunakan' }}
                                 </span>
+                                @if($stock->stock > 0)
                                 <button 
                                     onclick="openStatusModal({{ $stock->idbarang }}, '{{ $stock->namabarang }}', '{{ $stock->status_kondisi ?? 'digunakan' }}', '{{ $stock->keterangan_kondisi ?? '' }}')"
                                     class="text-blue-600 hover:text-blue-700"
@@ -301,6 +269,7 @@
                                 >
                                     <x-heroicon-o-pencil-square class="w-4 h-4" />
                                 </button>
+                                @endif
                             </div>
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
@@ -329,26 +298,13 @@
                             @endphp
                             @if($activeTransaction && $activeTransaction->tanggal_mulai_pakai && $activeTransaction->tanggal_akhir_pakai)
                                 @php
-                                    $start = \Carbon\Carbon::parse($activeTransaction->tanggal_mulai_pakai);
-                                    $end = \Carbon\Carbon::parse($activeTransaction->tanggal_akhir_pakai);
-                                    $daysTotal = $start->diffInDays($end);
-                                    $daysRemaining = now()->diffInDays($end, false);
-                                    $isExpired = $daysRemaining < 0;
+                                    $start = \Carbon\Carbon::parse($activeTransaction->tanggal_mulai_pakai)->startOfDay();
+                                    $end = \Carbon\Carbon::parse($activeTransaction->tanggal_akhir_pakai)->startOfDay();
+                                    $daysTotal = $start->diffInDays($end) + 1;
                                 @endphp
-                                <div class="flex flex-col">
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $isExpired ? 'bg-red-100 text-red-800' : 'bg-indigo-100 text-indigo-800' }}">
-                                        {{ $daysTotal }} hari
-                                    </span>
-                                    @if($isExpired)
-                                        <span class="text-xs text-red-600 font-medium mt-1">
-                                            Lewat {{ abs($daysRemaining) }} hari
-                                        </span>
-                                    @elseif($daysRemaining >= 0)
-                                        <span class="text-xs text-gray-500 mt-1">
-                                            Sisa {{ $daysRemaining }} hari
-                                        </span>
-                                    @endif
-                                </div>
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                    {{ $daysTotal }} hari
+                                </span>
                             @else
                                 <span class="text-gray-400 text-xs">-</span>
                             @endif
@@ -381,7 +337,7 @@
                                 </button>
                                 <!-- Hidden large QR code -->
                                 <div id="qr-{{ $stock->idbarang }}" class="hidden">
-                                    {!! QrCode::size(250)->generate(route('admin.stok-barang.show', $stock->idbarang)) !!}
+                                    {!! QrCode::size(400)->generate(route('admin.stok-barang.show', $stock->idbarang)) !!}
                                 </div>
                                 <form action="{{ route('admin.stok-barang.destroy', $stock->idbarang) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus stok barang ini?')">
                                     @csrf
@@ -552,18 +508,19 @@
             </div>
         </form>
     </div>
+</div>
 
 <!-- QR Code Modal -->
-<div id="qrModal" class="hidden fixed inset-0 backdrop-blur-sm bg-white/30 z-50 flex items-center justify-center transition-all duration-300 opacity-0" onclick="closeQRModal()">
-    <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl transform scale-95 transition-all duration-300" onclick="event.stopPropagation()">
+<div id="qrModal" class="hidden fixed inset-0 backdrop-blur-sm bg-black/50 z-[9999] items-center justify-center transition-all duration-300" onclick="closeQRModal()">
+    <div class="bg-white rounded-2xl p-8 max-w-xl w-full mx-4 shadow-2xl transform scale-95 transition-all duration-300 relative z-[10000]" onclick="event.stopPropagation()">
         <div class="text-center">
-            <h3 class="text-xl font-bold text-gray-800 mb-2">QR Code Produk</h3>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">QR Code Produk</h3>
             <p class="text-sm text-gray-500 mb-6">Scan untuk lihat detail produk</p>
             <div id="qrCodeContainer" class="bg-gray-50 p-6 rounded-xl inline-block">
                 <!-- QR Code will be inserted here -->
             </div>
-            <p id="qrCodeText" class="text-xs text-gray-600 font-mono mt-4 bg-gray-100 px-4 py-2 rounded"></p>
-            <button onclick="closeQRModal()" class="mt-6 px-6 py-2 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-300">
+            <p id="qrCodeText" class="text-sm text-gray-700 font-mono font-semibold mt-4 bg-gray-100 px-4 py-2 rounded"></p>
+            <button onclick="closeQRModal()" class="mt-6 px-8 py-3 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-300 font-medium">
                 Tutup
             </button>
         </div>
@@ -573,15 +530,19 @@
 <script>
 function openQRModal(qrId, kode) {
     const qrElement = document.getElementById(qrId);
+    
     if (qrElement) {
         const modal = document.getElementById('qrModal');
-        modal.classList.remove('hidden');
+        
+        // Force display
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden', 'opacity-0');
+        
         document.getElementById('qrCodeText').textContent = kode;
         document.getElementById('qrCodeContainer').innerHTML = qrElement.innerHTML;
         
         // Trigger animation
         setTimeout(() => {
-            modal.classList.remove('opacity-0');
             modal.querySelector('div').classList.remove('scale-95');
             modal.querySelector('div').classList.add('scale-100');
         }, 10);
@@ -590,11 +551,11 @@ function openQRModal(qrId, kode) {
 
 function closeQRModal() {
     const modal = document.getElementById('qrModal');
-    modal.classList.add('opacity-0');
     modal.querySelector('div').classList.remove('scale-100');
     modal.querySelector('div').classList.add('scale-95');
     
     setTimeout(() => {
+        modal.style.display = 'none';
         modal.classList.add('hidden');
     }, 300);
 }

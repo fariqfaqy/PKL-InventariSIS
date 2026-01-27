@@ -111,67 +111,48 @@
     <!-- Table Card -->
     <div id="table-container" class="bg-white rounded-xl shadow-md overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="w-full table-auto divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode Barang</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Barang</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keterangan</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penginput</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">No</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">Tanggal</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Kode Barang</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Barang</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Jumlah</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keterangan</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Penginput</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($barangMasuk as $index => $item)
                     <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                             {{ $barangMasuk->firstItem() + $index }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                             {{ $item->tanggal->format('d/m/Y H:i') }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            @if($item->stock && $item->stock->kategori == 'aset_sewa')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                    <x-heroicon-o-computer-desktop class="w-3 h-3 mr-1" />
-                                    Barang Sewa
-                                </span>
-                            @elseif($item->stock && $item->stock->kategori == 'aset_tetap')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                    <x-heroicon-o-building-office class="w-3 h-3 mr-1" />
-                                    Aset Tetap
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800">
-                                    <x-heroicon-o-shopping-bag class="w-3 h-3 mr-1" />
-                                    Material Umum
-                                </span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ $item->kodebarang_m }}
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-900">
+                        <td class="px-4 py-3 text-sm text-gray-900">
                             {{ $item->namabarang_m }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                 +{{ $item->qty }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-500">
-                            {{ Str::limit($item->keterangan, 50) }}
+                        <td class="px-4 py-3 text-sm text-gray-900">
+                            {{ Str::limit($item->keterangan, 40) }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                             {{ $item->penginput }}
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="px-6 py-12 text-center">
+                        <td colspan="7" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center justify-center text-gray-500">
                                 <x-heroicon-o-inbox class="w-16 h-16 mb-4 opacity-30" />
                                 <p class="text-lg font-medium">Belum ada data barang masuk</p>

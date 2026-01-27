@@ -66,8 +66,14 @@ class BarangMasukController extends Controller
      */
     public function store(Request $request)
     {
+        // Additional validation for aset_sewa: kodebarang must be unique
+        $kodebarangRule = 'required|string|max:255';
+        if ($request->kategori === 'aset_sewa') {
+            $kodebarangRule .= '|unique:stock,kodebarang';
+        }
+        
         $validated = $request->validate([
-            'kodebarang' => 'required|string|max:255',
+            'kodebarang' => $kodebarangRule,
             'namabarang' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'kategori' => 'required|in:aset_sewa,material_umum,aset_tetap',
@@ -81,6 +87,7 @@ class BarangMasukController extends Controller
             'tanggal_mulai_pakai' => 'nullable|date',
             'tanggal_akhir_pakai' => 'nullable|date|after_or_equal:tanggal_mulai_pakai',
         ], [
+            'kodebarang.unique' => 'Kode barang sudah digunakan. Untuk Aset Sewa, setiap barang harus memiliki kode unik.',
             'sub_kategori.required_if' => 'Sub-kategori wajib diisi untuk Material Umum',
             'sub_kategori.in' => 'Sub-kategori harus berupa Barang Habis Pakai atau Barang Pinjam',
             'rack.required_if' => 'Rak wajib diisi untuk Material Umum',
@@ -318,16 +325,34 @@ class BarangMasukController extends Controller
     public function checkStock(Request $request)
     {
         $kodebarang = $request->input('kodebarang');
+        $kategori = $request->input('kategori');
         
         if (!$kodebarang) {
             return response()->json(['exists' => false]);
         }
 
+        // For aset_sewa, kodebarang must be unique - don't allow duplicate
+        if ($kategori === 'aset_sewa') {
+            $stock = Stock::where('kodebarang', $kodebarang)->first();
+            
+            if ($stock) {
+                return response()->json([
+                    'exists' => true,
+                    'duplicate' => true, // Indicates this is a duplicate for aset_sewa
+                    'message' => 'Kode barang sudah digunakan. Untuk Aset Sewa, setiap barang harus memiliki kode unik.',
+                ]);
+            }
+            
+            return response()->json(['exists' => false]);
+        }
+
+        // For other categories, allow merging
         $stock = Stock::where('kodebarang', $kodebarang)->first();
         
         if ($stock) {
             return response()->json([
                 'exists' => true,
+                'duplicate' => false,
                 'data' => [
                     'kodebarang' => $stock->kodebarang,
                     'namabarang' => $stock->namabarang,

@@ -115,6 +115,17 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Error Alert: Duplicate Kode for Aset Sewa -->
+                <div id="duplicateKodeAlert" class="hidden mt-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div class="flex items-start gap-3">
+                        <x-heroicon-o-x-circle class="w-5 h-5 text-red-600 mt-0.5" />
+                        <div class="flex-1">
+                            <h4 class="text-sm font-semibold text-red-800 mb-1">Kode Barang Sudah Digunakan</h4>
+                            <p id="duplicateKodeMessage" class="text-sm text-red-700">Untuk Aset Sewa, setiap barang harus memiliki kode unik. Gunakan kode yang berbeda.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- 2. Nama Barang -->
@@ -274,8 +285,8 @@
                     class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                     Batal
                 </a>
-                <button type="submit" 
-                    class="px-6 py-2 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-300">
+                <button type="submit" id="submitButton"
+                    class="px-6 py-2 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none">
                     Simpan
                 </button>
             </div>
@@ -286,6 +297,7 @@
 <script>
 // Flag to prevent circular event triggering
 let isUpdatingFields = false;
+let hasDuplicateError = false;
 
 // ========== FUNCTIONS USED BY INLINE ONCHANGE (MUST BE AT TOP) ==========
 
@@ -470,6 +482,12 @@ function validateForm() {
         return false;
     }
     
+    // Check for duplicate error
+    if (hasDuplicateError) {
+        alert('Kode barang sudah digunakan. Untuk Aset Sewa, setiap barang harus memiliki kode unik.');
+        return false;
+    }
+    
     if (!prefix) {
         alert('Prefix kode barang harus dipilih!');
         return false;
@@ -506,24 +524,30 @@ function updateKodeBarang() {
     const suffix = document.getElementById('kode_suffix').value;
     const kodebarangInput = document.getElementById('kodebarang');
     
+    console.log('updateKodeBarang called - prefix:', prefix, 'suffix:', suffix);
+    
     // Combine prefix and suffix
     if (prefix && suffix && suffix.length === 3) {
         const fullKode = prefix + suffix;
         kodebarangInput.value = fullKode;
+        
+        console.log('Full kode:', fullKode, '- calling checkStockExists...');
         
         // Check if stock exists via AJAX
         checkStockExists(fullKode);
     } else {
         kodebarangInput.value = '';
         hideExistingStockAlert();
+        hideDuplicateError();
     }
 }
 
 // Check if stock exists and auto-fill fields
 function checkStockExists(kodebarang) {
-    const url = `{{ route('admin.barang-masuk.check-stock') }}?kodebarang=${encodeURIComponent(kodebarang)}`;
+    const kategori = document.getElementById('kategori').value;
+    const url = `{{ route('admin.barang-masuk.check-stock') }}?kodebarang=${encodeURIComponent(kodebarang)}&kategori=${encodeURIComponent(kategori)}`;
     
-    console.log('Checking stock for:', kodebarang);
+    console.log('Checking stock for:', kodebarang, 'kategori:', kategori);
     
     fetch(url, {
         method: 'GET',
@@ -543,6 +567,16 @@ function checkStockExists(kodebarang) {
         console.log('Stock check response:', data);
         
         if (data.exists) {
+            // Check if it's a duplicate for aset_sewa
+            if (data.duplicate) {
+                // Show error for duplicate aset_sewa
+                console.log('DUPLICATE DETECTED! Showing error...');
+                showDuplicateError(data.message || 'Kode barang sudah digunakan. Untuk Aset Sewa, setiap barang harus memiliki kode unik.');
+                // Clear the kode suffix input
+                document.getElementById('kode_suffix').value = '';
+                return;
+            }
+            
             console.log('Stock exists! Auto-filling fields...');
             // Show alert and auto-fill fields
             showExistingStockAlert(data.data);
@@ -551,6 +585,7 @@ function checkStockExists(kodebarang) {
             console.log('Stock not found. Enabling fields for new entry...');
             // Hide alert and enable fields
             hideExistingStockAlert();
+            hideDuplicateError();
             enableFields();
         }
     })
@@ -558,6 +593,7 @@ function checkStockExists(kodebarang) {
         console.error('Error checking stock:', error);
         // On error, enable fields untuk input manual
         hideExistingStockAlert();
+        hideDuplicateError();
         enableFields();
     });
 }
@@ -578,6 +614,47 @@ function hideExistingStockAlert() {
     const alert = document.getElementById('existingStockAlert');
     if (alert) {
         alert.classList.add('hidden');
+    }
+}
+
+// Show duplicate kode error for aset_sewa
+function showDuplicateError(message) {
+    hasDuplicateError = true;
+    
+    const alert = document.getElementById('duplicateKodeAlert');
+    const messageEl = document.getElementById('duplicateKodeMessage');
+    const submitBtn = document.getElementById('submitButton');
+    
+    if (alert) {
+        alert.classList.remove('hidden');
+        if (messageEl && message) {
+            messageEl.textContent = message;
+        }
+    }
+    
+    // Disable submit button
+    if (submitBtn) {
+        submitBtn.disabled = true;
+    }
+    
+    // Also hide the existing stock alert
+    hideExistingStockAlert();
+}
+
+// Hide duplicate kode error
+function hideDuplicateError() {
+    hasDuplicateError = false;
+    
+    const alert = document.getElementById('duplicateKodeAlert');
+    const submitBtn = document.getElementById('submitButton');
+    
+    if (alert) {
+        alert.classList.add('hidden');
+    }
+    
+    // Enable submit button
+    if (submitBtn) {
+        submitBtn.disabled = false;
     }
 }
 

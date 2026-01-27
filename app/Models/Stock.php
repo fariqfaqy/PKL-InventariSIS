@@ -122,6 +122,7 @@ class Stock extends Model
             return match($this->status_kondisi) {
                 'diperbaiki' => 'Diperbaiki',
                 'rusak' => 'Rusak',
+                'selesai' => 'Selesai',
                 default => 'Tersedia'
             };
         }
@@ -161,6 +162,7 @@ class Stock extends Model
             return match($this->status_kondisi) {
                 'diperbaiki' => 'bg-yellow-100 text-yellow-800',
                 'rusak' => 'bg-red-100 text-red-800',
+                'selesai' => 'bg-gray-100 text-gray-800',
                 default => 'bg-green-100 text-green-800' // Tersedia
             };
         }

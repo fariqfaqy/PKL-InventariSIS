@@ -33,6 +33,11 @@ class StatusKondisiController extends Controller
             ->where('kategori', 'aset_sewa') // Ensure it's Aset Sewa
             ->firstOrFail();
 
+        // Prevent status change if stock = 0 (barang sudah dikembalikan ke distributor)
+        if ($barang->stock == 0) {
+            return redirect()->back()->with('error', 'Status kondisi tidak dapat diubah karena barang sudah dikembalikan ke distributor (stok = 0)');
+        }
+
         $statusLama = $barang->status_kondisi;
         $statusBaru = $validated['status_kondisi'];
 
@@ -43,6 +48,12 @@ class StatusKondisiController extends Controller
 
         DB::beginTransaction();
         try {
+            Log::info("Updating status kondisi", [
+                'kode' => $barang->kodebarang,
+                'status_lama' => $statusLama,
+                'status_baru' => $statusBaru
+            ]);
+
             // Get active outgoing transaction for this item
             $activeTransaction = OutgoingTransaction::where('kodebarang_k', $barang->kodebarang)
                 ->where('kategori', 'aset_sewa')
@@ -82,17 +93,22 @@ class StatusKondisiController extends Controller
                 if ($lastTransaction && $lastTransaction->penerima) {
                     // Re-assign ke user yang sama
                     OutgoingTransaction::create([
+                        'idbarang' => $barang->idbarang,
                         'kodebarang_k' => $barang->kodebarang,
                         'namabarang_k' => $barang->namabarang,
                         'qty' => 1,
                         'kategori' => 'aset_sewa',
-                        'tipe_keluar' => 'peminjaman',
+                        'tipe' => 'peminjaman',
                         'tanggal' => now(),
                         'penerima' => $lastTransaction->penerima,
+                        'user_id' => $lastTransaction->user_id,
                         'penginput' => $lastTransaction->penginput,
                         'diproses_oleh' => Auth::user()->name,
+                        'tanggal_diproses' => now(),
                         'status' => 'sedang_dipakai',
-                        'tanggal_kembali' => $lastTransaction->tanggal_kembali, // Keep same return date if any
+                        'status_approval' => 'approved',
+                        'tanggal_mulai_pakai' => now(),
+                        'tanggal_akhir_pakai' => $lastTransaction->tanggal_akhir_pakai,
                     ]);
 
                     // Stock TIDAK berubah (barang fisik masih ada)

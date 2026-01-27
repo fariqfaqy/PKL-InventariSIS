@@ -99,30 +99,30 @@
             </div>
             <div class="bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-yellow-500">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
+                    <table class="w-full table-auto divide-y divide-gray-200">
                         <thead class="bg-yellow-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penerima</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sub-Kategori</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">ID</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">Tanggal</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">Qty</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Penerima</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">Sub-Kategori</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @foreach($pendingRequests as $item)
                             <tr class="hover:bg-yellow-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#{{ $item->id_request }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $item->tanggal_request->format('d/m/Y H:i') }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-900">
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">#{{ $item->id_request }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{{ $item->tanggal_request->format('d/m/Y H:i') }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-900">
                                     <div class="font-medium">{{ $item->stock->namabarang }}</div>
                                     <div class="text-gray-500 text-xs">{{ $item->stock->kodebarang }}</div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->qty }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->penerima ?? '-' }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ $item->qty }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ $item->penerima ?? '-' }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm">
                                     @if($item->stock && $item->stock->sub_kategori)
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $item->sub_kategori_badge_color == 'green' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }}">
                                             @if($item->stock->sub_kategori == 'barang_habis_pakai')
@@ -137,7 +137,7 @@
                                         <span class="text-gray-400 text-xs">-</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-center">
                                     <div class="flex items-center justify-center gap-2">
                                         <a href="{{ route('user.pemakaian.show', $item->id_request) }}" class="text-[#14a2ba] hover:text-[#0d7a8f]" title="Lihat Detail">
                                             <x-heroicon-o-eye class="h-5 w-5 inline" />
@@ -213,11 +213,13 @@
                                         <div class="text-gray-900 font-medium">{{ $outgoing->penerima }}</div>
                                         @if($outgoing->kategori == 'aset_sewa' && $outgoing->tanggal_akhir_sewa)
                                             @php
-                                                $sisaHari = now()->startOfDay()->diffInDays($outgoing->tanggal_akhir_sewa, false);
+                                                $sisaHari = now()->startOfDay()->diffInDays($outgoing->tanggal_akhir_sewa->startOfDay(), false);
                                             @endphp
                                             <div class="text-xs mt-1 {{ $sisaHari < 0 ? 'text-red-600' : ($sisaHari <= 7 ? 'text-yellow-600' : 'text-gray-500') }}">
-                                                @if($sisaHari >= 0)
+                                                @if($sisaHari > 0)
                                                     {{ $sisaHari }} hari lagi
+                                                @elseif($sisaHari == 0)
+                                                    Berakhir hari ini
                                                 @else
                                                     Sudah berakhir
                                                 @endif
@@ -347,9 +349,8 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                     <x-heroicon-o-shopping-cart class="w-3 h-3 mr-1" />
-                                        Pakai Material Umum
-                                    </span>
-                                @endif
+                                    Pakai Material Umum
+                                </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 @if($item->parentRequest)
@@ -488,17 +489,8 @@
                                             @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            @php
-                                                $kondisi = $aset->stock->status_kondisi ?? 'digunakan';
-                                                $badgeColor = match($kondisi) {
-                                                    'digunakan' => 'bg-green-100 text-green-800',
-                                                    'diperbaiki' => 'bg-yellow-100 text-yellow-800',
-                                                    'rusak' => 'bg-red-100 text-red-800',
-                                                    default => 'bg-gray-100 text-gray-800'
-                                                };
-                                            @endphp
-                                            <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $badgeColor }}">
-                                                {{ ucfirst($kondisi) }}
+                                            <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $aset->stock->status_kondisi_badge }}">
+                                                {{ $aset->stock->status_kondisi_label }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">

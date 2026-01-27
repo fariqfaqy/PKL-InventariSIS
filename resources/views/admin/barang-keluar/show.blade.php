@@ -113,47 +113,14 @@
                 <label class="block text-sm font-medium text-gray-600 mb-2">Durasi</label>
                 @if($barangKeluar->tanggal_mulai_pakai && $barangKeluar->tanggal_akhir_pakai)
                     @php
-                        $now = \Carbon\Carbon::now();
-                        $startDate = \Carbon\Carbon::parse($barangKeluar->tanggal_mulai_pakai);
-                        $endDate = \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai);
-                        $totalDays = $startDate->diffInDays($endDate);
-                        $daysLeft = $now->diffInDays($endDate, false);
-                        $daysPassed = $startDate->diffInDays($now);
-                        $progress = $totalDays > 0 ? min(100, ($daysPassed / $totalDays) * 100) : 0;
-                        $isExpired = $daysLeft < 0;
+                        $startDate = \Carbon\Carbon::parse($barangKeluar->tanggal_mulai_pakai)->startOfDay();
+                        $endDate = \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai)->startOfDay();
+                        $totalDays = $startDate->diffInDays($endDate) + 1;
                     @endphp
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-2xl font-bold text-gray-900">{{ $totalDays }} hari</span>
-                            @if($isExpired)
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">
-                                    <x-heroicon-o-exclamation-circle class="w-4 h-4 mr-1" />
-                                    Lewat {{ abs(floor($daysLeft)) }} hari
-                                </span>
-                            @elseif($daysLeft <= 3)
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800">
-                                    <x-heroicon-o-clock class="w-4 h-4 mr-1" />
-                                    {{ ceil($daysLeft) }} hari lagi
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
-                                    <x-heroicon-o-check class="w-4 h-4 mr-1" />
-                                    {{ ceil($daysLeft) }} hari lagi
-                                </span>
-                            @endif
-                        </div>
-                        
-                        <!-- Progress Bar -->
-                        <div class="w-full bg-gray-200 rounded-full h-3">
-                            <div class="h-3 rounded-full transition-all duration-300
-                                @if($progress < 50) bg-green-500
-                                @elseif($progress < 90) bg-yellow-500
-                                @else bg-red-500
-                                @endif" 
-                                style="width: {{ $progress }}%">
-                            </div>
-                        </div>
-                    </div>
+                    <span class="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-semibold">
+                        <x-heroicon-o-clock class="w-4 h-4 mr-1.5" />
+                        {{ $totalDays }} hari
+                    </span>
                 @else
                     <span class="text-sm text-gray-400">-</span>
                 @endif
@@ -336,13 +303,12 @@
             <div class="bg-white rounded-lg p-4 shadow-sm md:col-span-2">
                 <label class="block text-sm font-medium text-gray-600 mb-3">Durasi Peminjaman</label>
                 @php
-                    $now = \Carbon\Carbon::now();
-                    $startDate = \Carbon\Carbon::parse($barangKeluar->tanggal_mulai_pakai);
-                    $endDate = \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai);
-                    $totalDays = $startDate->diffInDays($endDate);
+                    $now = \Carbon\Carbon::now()->startOfDay();
+                    $startDate = \Carbon\Carbon::parse($barangKeluar->tanggal_mulai_pakai)->startOfDay();
+                    $endDate = \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai)->startOfDay();
+                    $totalDays = $startDate->diffInDays($endDate) + 1;
                     $daysLeft = $now->diffInDays($endDate, false);
-                    $daysPassed = $startDate->diffInDays($now);
-                    $progress = $totalDays > 0 ? min(100, ($daysPassed / $totalDays) * 100) : 0;
+                    $progress = $totalDays > 0 ? min(100, max(0, (($totalDays - $daysLeft) / $totalDays) * 100)) : 0;
                     $isExpired = $daysLeft < 0;
                 @endphp
                 <div class="space-y-3">

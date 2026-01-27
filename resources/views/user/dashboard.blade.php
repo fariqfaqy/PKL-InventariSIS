@@ -150,12 +150,14 @@
                                     </div>
                                     @if($trans->tanggal_akhir_sewa)
                                         @php
-                                            $sisaHari = now()->startOfDay()->diffInDays($trans->tanggal_akhir_sewa, false);
+                                            $sisaHari = now()->startOfDay()->diffInDays($trans->tanggal_akhir_sewa->startOfDay(), false);
                                         @endphp
                                         <div class="text-xs mt-1 {{ $sisaHari < 0 ? 'text-red-600' : ($sisaHari <= 7 ? 'text-yellow-600' : 'text-gray-500') }}">
                                             Berakhir: {{ $trans->tanggal_akhir_sewa->format('d/m/Y') }}
-                                            @if($sisaHari >= 0)
+                                            @if($sisaHari > 0)
                                                 ({{ $sisaHari }} hari lagi)
+                                            @elseif($sisaHari == 0)
+                                                (Berakhir hari ini)
                                             @else
                                                 (Sudah berakhir)
                                             @endif

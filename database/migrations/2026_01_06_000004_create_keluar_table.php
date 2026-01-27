@@ -42,7 +42,7 @@ return new class extends Migration
                   ->comment('Durasi sewa dalam bulan (hanya untuk aset_sewa)');
             
             // Status & Completion
-            $table->enum('status', ['sedang_dipakai', 'selesai'])
+            $table->enum('status', ['sedang_dipakai', 'selesai', 'ditarik'])
                   ->default('sedang_dipakai')
                   ->comment('Status pemakaian barang');
             $table->dateTime('tanggal_selesai')->nullable()

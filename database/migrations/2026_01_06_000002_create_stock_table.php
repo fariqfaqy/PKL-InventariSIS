@@ -23,9 +23,9 @@ return new class extends Migration
             
             // Stock & Status
             $table->integer('stock')->default(0);
-            $table->enum('status_kondisi', ['digunakan', 'diperbaiki', 'rusak', 'tersedia'])
+            $table->enum('status_kondisi', ['digunakan', 'diperbaiki', 'rusak', 'tersedia', 'selesai'])
                   ->default('tersedia')
-                  ->comment('Status kondisi aset: tersedia/digunakan/diperbaiki/rusak');
+                  ->comment('Status kondisi aset: tersedia/digunakan/diperbaiki/rusak/selesai');
             $table->text('keterangan_kondisi')->nullable()
                   ->comment('Keterangan detail kondisi barang');
             $table->date('tanggal_update_kondisi')->nullable()

@@ -68,7 +68,7 @@ class PemakaianController extends Controller
         // Ambil history pemakaian berdasarkan status
         // 1. Sedang dipakai - sudah disetujui tapi belum selesai
         $sedangDipakai = OutgoingTransaction::with('stock')
-            ->where('penginput', Auth::user()->name)
+            ->where('user_id', Auth::id())
             ->whereNotNull('diproses_oleh')
             ->where('status', 'sedang_dipakai')
             ->orderBy('tanggal', 'desc')
@@ -76,7 +76,7 @@ class PemakaianController extends Controller
         
         // 2. Selesai - sudah selesai
         $selesai = OutgoingTransaction::with('stock')
-            ->where('penginput', Auth::user()->name)
+            ->where('user_id', Auth::id())
             ->where('status', 'selesai')
             ->orderBy('tanggal_selesai', 'desc')
             ->get();
@@ -332,7 +332,7 @@ class PemakaianController extends Controller
     {
         DB::beginTransaction();
         try {
-            $pemakaian = OutgoingTransaction::where('penginput', Auth::user()->name)
+            $pemakaian = OutgoingTransaction::where('user_id', Auth::id())
                 ->where('status', 'sedang_dipakai')
                 ->findOrFail($id);
 

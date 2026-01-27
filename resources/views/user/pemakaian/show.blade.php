@@ -159,7 +159,7 @@
                     <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
                         <label class="text-xs font-medium text-green-700 block mb-1">Total Durasi</label>
                         @php
-                            $durasi = $request->tanggal_mulai_sewa->diffInDays($request->tanggal_akhir_sewa);
+                            $durasi = $request->tanggal_mulai_sewa->diffInDays($request->tanggal_akhir_sewa) + 1;
                         @endphp
                         <p class="text-lg font-bold text-green-900">{{ $durasi }} hari</p>
                     </div>
@@ -168,8 +168,8 @@
                 @if($request->status == 'approved')
                     @php
                         $today = now()->startOfDay();
-                        $sisaHari = $today->diffInDays($request->tanggal_akhir_sewa, false);
-                        $persenSelesai = $durasi > 0 ? (($durasi - max(0, $sisaHari)) / $durasi * 100) : 0;
+                        $sisaHari = $today->diffInDays($request->tanggal_akhir_sewa->startOfDay(), false);
+                        $persenSelesai = $durasi > 0 ? min(100, max(0, (($durasi - $sisaHari) / $durasi) * 100)) : 0;
                     @endphp
                     <div class="mt-4 bg-gray-50 p-4 rounded-lg">
                         <div class="flex justify-between items-center mb-2">

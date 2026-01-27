@@ -88,14 +88,22 @@ class PermintaanController extends Controller
      */
     public function approve($id)
     {
-        $permintaan = RequestBarang::with(['stock', 'parentRequest'])->findOrFail($id);
-        
-        if (!$permintaan->canBeApproved()) {
-            return back()->with('error', 'Hanya permintaan dengan status pending atau processing yang bisa disetujui!');
-        }
-        
         DB::beginTransaction();
         try {
+            // Lock request dan stock untuk prevent race condition
+            $permintaan = RequestBarang::with(['stock', 'parentRequest'])
+                ->lockForUpdate()
+                ->findOrFail($id);
+            
+            if (!$permintaan->canBeApproved()) {
+                DB::rollBack();
+                return back()->with('error', 'Hanya permintaan dengan status pending atau processing yang bisa disetujui!');
+            }
+            
+            // Lock stock row untuk prevent concurrent stock updates
+            $stock = Stock::where('idbarang', $permintaan->idbarang)
+                ->lockForUpdate()
+                ->first();
             // Cek apakah ini request perubahan atau request biasa
             if ($permintaan->parent_request_id && $permintaan->parentRequest) {
                 // INI REQUEST PERUBAHAN atau PEMBATALAN
@@ -160,8 +168,8 @@ class PermintaanController extends Controller
                     if ($parentKeluarEntry) {
                         $parentKeluarEntry->update([
                             'qty' => $qtyBaru,
-                            'tanggal_mulai_sewa' => $permintaan->tanggal_mulai_sewa,
-                            'tanggal_akhir_sewa' => $permintaan->tanggal_akhir_sewa,
+                            'tanggal_mulai_pakai' => $permintaan->tanggal_mulai_sewa,
+                            'tanggal_akhir_pakai' => $permintaan->tanggal_akhir_sewa,
                         ]);
                     }
                     
@@ -219,6 +227,7 @@ class PermintaanController extends Controller
                 // Create outgoing transaction (barang keluar) dengan link ke request
                 OutgoingTransaction::create([
                     'id_request' => $permintaan->id_request,
+                    'user_id' => $permintaan->user_id,
                     'idbarang' => $permintaan->idbarang,
                     'tanggal' => now(),
                     'penerima' => $permintaan->penerima ?? $permintaan->user->name,

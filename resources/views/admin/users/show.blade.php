@@ -137,10 +137,111 @@
             <x-heroicon-o-chart-bar class="w-6 h-6 text-[#14a2ba]" />
             Aktivitas
         </h3>
-        <div class="text-center py-8 text-gray-500">
-            <x-heroicon-o-clock class="w-16 h-16 mx-auto mb-4 opacity-30" />
-            <p class="text-sm">Fitur aktivitas akan tersedia segera</p>
+        
+        @php
+            // Get all outgoing transactions (aset sewa) for this user - ALL statuses
+            $userTransactions = \App\Models\OutgoingTransaction::where('user_id', $user->id)
+                ->where('kategori', 'aset_sewa')
+                ->with(['stock'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+        @endphp
+        
+        @if($userTransactions->count() > 0)
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Periode</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durasi</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach($userTransactions as $transaction)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                            {{ $transaction->created_at->format('d M Y') }}
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            <div class="flex items-center gap-2">
+                                <x-heroicon-o-computer-desktop class="w-5 h-5 text-purple-600" />
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">{{ $transaction->namabarang_k }}</p>
+                                    <p class="text-xs text-gray-500">{{ $transaction->kodebarang_k }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                            @if($transaction->tanggal_mulai_pakai && $transaction->tanggal_akhir_pakai)
+                                {{ \Carbon\Carbon::parse($transaction->tanggal_mulai_pakai)->format('d M Y') }} - 
+                                {{ \Carbon\Carbon::parse($transaction->tanggal_akhir_pakai)->format('d M Y') }}
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                            @if($transaction->tanggal_mulai_pakai && $transaction->tanggal_akhir_pakai)
+                                @php
+                                    $start = \Carbon\Carbon::parse($transaction->tanggal_mulai_pakai);
+                                    $end = \Carbon\Carbon::parse($transaction->tanggal_akhir_pakai);
+                                    $duration = $start->diffInDays($end) + 1;
+                                @endphp
+                                {{ $duration }} hari
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 whitespace-nowrap">
+                            @if($transaction->status_approval === 'pending')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    <x-heroicon-o-clock class="w-3 h-3 mr-1" />
+                                    Menunggu Approval
+                                </span>
+                            @elseif($transaction->status_approval === 'rejected')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    <x-heroicon-o-x-mark class="w-3 h-3 mr-1" />
+                                    Ditolak
+                                </span>
+                            @elseif($transaction->status_approval === 'cancelled')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    <x-heroicon-o-no-symbol class="w-3 h-3 mr-1" />
+                                    Dibatalkan
+                                </span>
+                            @elseif($transaction->status === 'sedang_dipakai')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
+                                    Sedang Dipakai
+                                </span>
+                            @elseif($transaction->status === 'selesai')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <x-heroicon-o-check-circle class="w-3 h-3 mr-1" />
+                                    Selesai
+                                </span>
+                            @elseif($transaction->status === 'ditarik')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    <x-heroicon-o-x-circle class="w-3 h-3 mr-1" />
+                                    Ditarik
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    {{ ucfirst($transaction->status) }}
+                                </span>
+                            @endif
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
+        @else
+        <div class="text-center py-8 text-gray-500">
+            <x-heroicon-o-inbox class="w-16 h-16 mx-auto mb-4 opacity-30" />
+            <p class="text-sm">Belum ada aktivitas pemakaian aset sewa</p>
+        </div>
+        @endif
     </div>
 
     <!-- Actions -->

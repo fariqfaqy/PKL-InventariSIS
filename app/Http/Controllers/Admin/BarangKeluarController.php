@@ -23,9 +23,9 @@ class BarangKeluarController extends Controller
         if ($request->filled('kategori') && in_array($request->kategori, ['aset_sewa', 'material_umum', 'aset_tetap'])) {
             $query->where('kategori', $request->kategori);
             
-            // For Aset Sewa: exclude 'ditarik' status by default (kecuali explicitly filtered)
+            // For Aset Sewa: only show 'selesai' status (exclude sedang_dipakai & ditarik)
             if ($request->kategori === 'aset_sewa' && !$request->filled('status_filter')) {
-                $query->whereNotIn('status', ['ditarik']);
+                $query->where('status', 'selesai');
             }
         }
 
@@ -111,16 +111,36 @@ class BarangKeluarController extends Controller
                 ->withInput();
         }
 
+        // Try to find user by name (penerima)
+        $user = \App\Models\User::where('name', $validated['penerima'])->first();
+        $userId = $user ? $user->id : null;
+
+        // Determine tipe_request based on kategori and sub_kategori
+        $tipeRequest = 'permintaan'; // default
+        $status = 'selesai'; // default
+        $tanggalSelesai = now(); // default
+
+        if ($stock->kategori === 'material_umum' && $stock->sub_kategori === 'barang_pinjam') {
+            $tipeRequest = 'peminjaman';
+            $status = 'sedang_dipakai';
+            $tanggalSelesai = null;
+        }
+
         // Create outgoing transaction
         OutgoingTransaction::create([
             'idbarang' => $validated['idbarang'],
+            'user_id' => $userId,
             'tanggal' => $validated['tanggal'],
             'penerima' => $validated['penerima'],
             'qty' => $validated['qty'],
             'namabarang_k' => $stock->namabarang,
             'kodebarang_k' => $stock->kodebarang,
             'penginput' => Auth::user()->name,
+            'diproses_oleh' => Auth::user()->name,
             'kategori' => $stock->kategori,
+            'tipe_request' => $tipeRequest,
+            'status' => $status,
+            'tanggal_selesai' => $tanggalSelesai,
         ]);
 
         // Update stock quantity
@@ -268,18 +288,18 @@ class BarangKeluarController extends Controller
         ]);
         
         // KURANGI STOK ketika rental selesai
-        // Untuk Aset Sewa: stok berkurang jadi 0 setelah rental selesai
+        // Untuk Aset Sewa: stok berkurang jadi 0 setelah rental selesai (dikembalikan ke distributor)
         if ($barangKeluar->stock) {
             $barangKeluar->stock->decrement('stock');
             
             $barangKeluar->stock->update([
-                'status_kondisi' => 'digunakan',
-                'keterangan_kondisi' => 'Pemakaian selesai - Stok berkurang',
+                'status_kondisi' => 'selesai',
+                'keterangan_kondisi' => 'Pemakaian selesai - Aset dikembalikan ke distributor (stok = 0)',
                 'tanggal_update_kondisi' => now(),
             ]);
         }
         
-        return redirect()->back()->with('success', 'Pemakaian berhasil diselesaikan! Aset siap untuk di-assign lagi.');
+        return redirect()->back()->with('success', 'Pemakaian berhasil diselesaikan! Aset telah dikembalikan ke distributor (stok menjadi 0).');
     }
 
     /**
