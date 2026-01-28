@@ -49,12 +49,11 @@ class DashboardController extends Controller
         $raks = collect(['1a', '1b', '1c', '2a', '2b', '2c']);
 
         // Recent transactions barang keluar (untuk user)
-        // Tampilkan hanya aset sewa yang sedang dipakai milik user ini
+        // Tampilkan aset sewa dan material umum pinjam yang sedang dipakai milik user ini
         $recentTransactions = OutgoingTransaction::with('stock')
-            ->where('penginput', auth()->user()->name) // penginput berisi nama user, bukan email
+            ->where('user_id', Auth::id()) // Filter by user_id
             ->whereNotNull('diproses_oleh') // sudah di-approve admin
-            ->where('status', 'sedang_dipakai') // belum selesai
-            ->where('kategori', 'aset_sewa') // hanya aset sewa
+            ->where('status', 'sedang_dipakai') // status sedang dipakai (untuk aset sewa dan material pinjam)
             ->orderBy('tanggal', 'desc')
             ->get(); // tampilkan semua tanpa limit
         
@@ -79,12 +78,11 @@ class DashboardController extends Controller
      */
     public function getActivePemakaian()
     {
-        // Ambil pemakaian yang aktif (hanya aset sewa yang sedang dipakai milik user ini)
+        // Ambil pemakaian yang aktif (aset sewa dan material umum pinjam milik user ini)
         $activePemakaian = OutgoingTransaction::with('stock')
-            ->where('penginput', auth()->user()->name) // penginput berisi nama user, bukan email
+            ->where('user_id', Auth::id()) // Filter by user_id
             ->whereNotNull('diproses_oleh')
-            ->where('status', 'sedang_dipakai')
-            ->where('kategori', 'aset_sewa') // hanya aset sewa
+            ->where('status', 'sedang_dipakai') // status sedang dipakai (untuk aset sewa dan material pinjam)
             ->orderBy('tanggal', 'desc')
             ->get() // tampilkan semua tanpa limit
             ->map(function ($trans) {
