@@ -34,8 +34,8 @@ class BarangMasukController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('masuk.kodebarang_m', 'like', '%' . $search . '%')
-                  ->orWhere('masuk.namabarang_m', 'like', '%' . $search . '%');
+                $q->where('masuk.kodebarang_m', 'ILIKE', "%{$search}%")
+                  ->orWhere('masuk.namabarang_m', 'ILIKE', "%{$search}%");
             });
         }
         
@@ -119,23 +119,53 @@ class BarangMasukController extends Controller
             ? $validated['sub_kategori'] 
             : null;
 
-        // For Aset Sewa: ALWAYS create new stock (1 kode = 1 physical item, no merging)
-        // Skip stock checking for aset_sewa
+        // Check if stock exists by kodebarang
+        $stock = Stock::where('kodebarang', $validated['kodebarang'])->first();
+        
+        // For Aset Sewa: REJECT if kode already exists (1 kode = 1 unique physical item)
         if ($actualKategori === 'aset_sewa') {
-            $stock = null; // Force create new
-            $validated['qty'] = 1; // Force qty = 1
-        } else {
-            // Check if stock exists by kodebarang (for other categories)
-            $stock = Stock::where('kodebarang', $validated['kodebarang'])->first();
+            $validated['qty'] = 1; // Force qty = 1 for aset_sewa
+            
+            if ($stock) {
+                // Kode barang sudah ada - TOLAK
+                return back()->with('error', "Kode barang '{$validated['kodebarang']}' sudah terdaftar sebagai aset sewa. Setiap aset sewa harus memiliki kode unik. Silakan gunakan kode lain.")->withInput();
+            }
+            
+            // Force create new stock for aset_sewa
+            $stock = null;
         }
 
         if ($stock) {
-            // If stock exists, update the quantity and other fields
+            // VALIDASI: Kategori dan Sub-Kategori HARUS SAMA dengan yang sudah ada
+            \Log::info('Validating existing stock', [
+                'kodebarang' => $validated['kodebarang'],
+                'existing_kategori' => $stock->kategori,
+                'new_kategori' => $actualKategori,
+                'existing_sub' => $stock->sub_kategori,
+                'new_sub' => $actualSubKategori
+            ]);
+            
+            if ($stock->kategori !== $actualKategori) {
+                \Log::warning('Kategori mismatch - blocking', ['kode' => $validated['kodebarang']]);
+                return back()->with('error', "Kode barang '{$validated['kodebarang']}' sudah terdaftar dengan kategori '{$stock->kategori}'. Tidak dapat mengubah kategori barang yang sudah ada!")->withInput();
+            }
+            
+            // Untuk Material Umum: Sub-kategori juga harus sama
+            if ($actualKategori === 'material_umum' && $stock->sub_kategori !== $actualSubKategori) {
+                \Log::warning('Sub-kategori mismatch - blocking', [
+                    'kode' => $validated['kodebarang'],
+                    'old_sub' => $stock->sub_kategori,
+                    'new_sub' => $actualSubKategori
+                ]);
+                $oldSubLabel = $stock->sub_kategori === 'barang_habis_pakai' ? 'Barang Habis Pakai' : 'Barang Pinjam';
+                $newSubLabel = $actualSubKategori === 'barang_habis_pakai' ? 'Barang Habis Pakai' : 'Barang Pinjam';
+                return back()->with('error', "Kode barang '{$validated['kodebarang']}' sudah terdaftar sebagai '{$oldSubLabel}'. Tidak dapat mengubah menjadi '{$newSubLabel}'!")->withInput();
+            }
+            
+            // If stock exists and kategori/sub_kategori match, update the quantity and other fields
             $stock->increment('stock', $validated['qty']);
             
-            // Update kategori, sub_kategori, namabarang, deskripsi
-            $stock->kategori = $actualKategori;
-            $stock->sub_kategori = $actualSubKategori;
+            // Update namabarang, deskripsi (tapi TIDAK kategori/sub_kategori)
             $stock->namabarang = $validated['namabarang'];
             if (isset($validated['deskripsi'])) {
                 $stock->deskripsi = $validated['deskripsi'];

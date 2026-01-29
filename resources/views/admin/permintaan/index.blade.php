@@ -3,10 +3,11 @@
 @section('title', 'Kelola Permintaan')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
-    <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">Kelola Permintaan</h1>
-        <p class="text-gray-600 mt-2">Kelola permintaan barang dari user</p>
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h2 class="text-2xl font-bold text-gray-800">Kelola Permintaan</h2>
+        <p class="text-sm text-gray-500 mt-1">Kelola permintaan barang dari user</p>
     </div>
 
     @if(session('success'))
@@ -223,7 +224,7 @@
                                         <form action="{{ route('admin.permintaan.mark-complete', $item->id_request) }}" method="POST" class="inline">
                                             @csrf
                                             @method('PATCH')
-                                            <button type="submit" class="text-green-600 hover:text-green-900" onclick="return confirm('Tandai request ini sudah selesai?')" title="Tandai Selesai">
+                                            <button type="submit" class="text-green-600 hover:text-green-900" onclick="return customConfirm(event, 'Tandai request ini sudah selesai?', {type: 'success', title: 'Tandai Selesai', confirmText: 'Ya, Selesai'})" title="Tandai Selesai">
                                                 <x-heroicon-o-check-circle class="h-5 w-5 inline" />
                                             </button>
                                         </form>
@@ -710,7 +711,6 @@
             </div>
         </div>
     </div>
-</div>
 
 <script>
 function switchTab(tab) {

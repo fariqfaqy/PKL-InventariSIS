@@ -238,15 +238,14 @@
         </div>
         @endif
     </div>
-</div>
 
 <!-- QR Code Modal -->
-<div id="qrModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center" onclick="closeQRModal()">
-    <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl" onclick="event.stopPropagation()">
+<div id="qrModal" class="hidden fixed inset-0 backdrop-blur-sm bg-white/30 z-50 flex items-center justify-center transition-all duration-300 opacity-0" onclick="closeQRModal()">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl transform scale-95 transition-all duration-300" onclick="event.stopPropagation()">
         <div class="text-center">
             <h3 class="text-xl font-bold text-gray-800 mb-2">QR Code Produk</h3>
             <p class="text-sm text-gray-500 mb-6">Scan untuk lihat detail produk</p>
-            <div id="qrCodeContainer" class="bg-gradient-to-br from-blue-50 to-cyan-50 p-6 rounded-xl inline-block border-2 border-dashed border-blue-300">
+            <div id="qrCodeContainer" class="bg-gray-50 p-6 rounded-xl inline-block">
                 <!-- QR Code will be inserted here -->
             </div>
             <p id="qrCodeText" class="text-xs text-gray-600 font-mono mt-4 bg-gray-100 px-4 py-2 rounded"></p>
@@ -261,14 +260,29 @@
 function openQRModal(qrId, kode) {
     const qrElement = document.getElementById(qrId);
     if (qrElement) {
-        document.getElementById('qrModal').classList.remove('hidden');
+        const modal = document.getElementById('qrModal');
+        modal.classList.remove('hidden');
         document.getElementById('qrCodeText').textContent = kode;
         document.getElementById('qrCodeContainer').innerHTML = qrElement.innerHTML;
+        
+        // Trigger animation
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modal.querySelector('div').classList.remove('scale-95');
+            modal.querySelector('div').classList.add('scale-100');
+        }, 10);
     }
 }
 
 function closeQRModal() {
-    document.getElementById('qrModal').classList.add('hidden');
+    const modal = document.getElementById('qrModal');
+    modal.classList.add('opacity-0');
+    modal.querySelector('div').classList.remove('scale-100');
+    modal.querySelector('div').classList.add('scale-95');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
 }
 
 // Close modal dengan ESC key

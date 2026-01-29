@@ -10,44 +10,44 @@ class BarangMasukController extends Controller
 {
     /**
      * Display a listing of incoming transactions (read-only for user).
+     * Konsisten dengan AdminBarangMasukController
      */
     public function index(Request $request)
     {
-        $query = IncomingTransaction::with('stock');
-
-        // Filter berdasarkan kategori barang (aset_sewa/material_umum/aset_tetap)
-        // Hanya filter jika ada kategori yang dipilih (bukan "semua")
+        // Join dengan stock untuk filter kategori & sub_kategori (konsisten dengan admin)
+        $query = IncomingTransaction::with('stock')
+            ->join('stock', 'masuk.idbarang', '=', 'stock.idbarang')
+            ->select('masuk.*', 'stock.kategori', 'stock.sub_kategori');
+        
+        // Filter by kategori if provided
         if ($request->filled('kategori') && in_array($request->kategori, ['aset_sewa', 'material_umum', 'aset_tetap'])) {
-            $query->whereHas('stock', function($q) use ($request) {
-                $q->where('kategori', $request->kategori);
-            });
+            $query->where('stock.kategori', $request->kategori);
         }
 
-        // Filter berdasarkan sub_kategori (khusus untuk Material Umum)
+        // Filter by sub_kategori (khusus untuk Material Umum)
         if ($request->filled('sub_kategori') && in_array($request->sub_kategori, ['barang_habis_pakai', 'barang_pinjam'])) {
-            $query->whereHas('stock', function($q) use ($request) {
-                $q->where('sub_kategori', $request->sub_kategori);
-            });
+            $query->where('stock.sub_kategori', $request->sub_kategori);
         }
-
-        // Filter berdasarkan pencarian
+        
+        // Search by kode or nama barang
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('kodebarang_m', 'ILIKE', "%{$search}%")
-                  ->orWhere('namabarang_m', 'ILIKE', "%{$search}%");
+                $q->where('masuk.kodebarang_m', 'ILIKE', "%{$search}%")
+                  ->orWhere('masuk.namabarang_m', 'ILIKE', "%{$search}%");
             });
         }
-
-        // Filter berdasarkan tanggal
+        
+        // Filter by tanggal
         if ($request->filled('tanggal')) {
-            $query->whereDate('tanggal', $request->tanggal);
+            $query->whereDate('masuk.tanggal', $request->tanggal);
         }
-
-        $barangMasuk = $query->orderBy('tanggal', 'desc')->paginate(15)->withQueryString();
-        $kategori = $request->kategori;
-
-        return view('user.barang-masuk.index', compact('barangMasuk', 'kategori'));
+        
+        $barangMasuk = $query->orderBy('masuk.tanggal', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+        
+        return view('user.barang-masuk.index', compact('barangMasuk'));
     }
 
     /**

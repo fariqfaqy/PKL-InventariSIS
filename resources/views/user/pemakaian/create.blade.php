@@ -229,7 +229,6 @@
             </div>
         </form>
     </div>
-</div>
 
 <script>
 /**
@@ -368,7 +367,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const max = this.getAttribute('max');
         if (max && parseInt(this.value) > parseInt(max)) {
             this.value = max;
-            alert('Jumlah tidak boleh melebihi stok yang tersedia (' + max + ' unit)');
+            customAlert('Jumlah tidak boleh melebihi stok yang tersedia (' + max + ' unit)', {
+                type: 'warning',
+                title: 'Stok Tidak Mencukupi'
+            });
         }
     });
     
@@ -379,7 +381,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (max && parseInt(value) > parseInt(max)) {
             e.preventDefault();
-            alert('Jumlah tidak boleh melebihi stok yang tersedia (' + max + ' unit)');
+            customAlert('Jumlah tidak boleh melebihi stok yang tersedia (' + max + ' unit)', {
+                type: 'warning',
+                title: 'Stok Tidak Mencukupi'
+            });
             qtyInput.focus();
             return false;
         }

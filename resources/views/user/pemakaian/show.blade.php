@@ -325,7 +325,7 @@
 
                 <div class="space-y-3">
                     @if($outgoingTransaction && $outgoingTransaction->status == 'sedang_dipakai')
-                    <form action="{{ route('user.pemakaian.selesai', $request->id_request) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin pemakaian barang ini sudah selesai?')">
+                    <form action="{{ route('user.pemakaian.selesai', $request->id_request) }}" method="POST" onsubmit="return customConfirm(event, 'Apakah Anda yakin pemakaian barang ini sudah selesai?', {type: 'success', title: 'Tandai Selesai', confirmText: 'Ya, Selesai'})">
                         @csrf
                         <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors">
                             <x-heroicon-o-check-circle class="w-5 h-5" />
@@ -339,7 +339,7 @@
                         Request Perubahan
                     </a>
 
-                    <form action="{{ route('user.request-barang.request-cancel', $request->id_request) }}" method="POST" onsubmit="return confirm('Request pembatalan akan diajukan ke admin. Yakin ingin melanjutkan?')">
+                    <form action="{{ route('user.request-barang.request-cancel', $request->id_request) }}" method="POST" onsubmit="return customConfirm(event, 'Request pembatalan akan diajukan ke admin. Yakin ingin melanjutkan?', {type: 'warning', title: 'Request Pembatalan', confirmText: 'Ya, Ajukan'})">
                         @csrf
                         <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors">
                             <x-heroicon-o-x-circle class="w-5 h-5" />

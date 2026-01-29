@@ -51,12 +51,12 @@ class DashboardController extends Controller
         // Recent transactions barang keluar (untuk user)
         // Tampilkan hanya aset sewa yang sedang dipakai milik user ini
         $recentTransactions = OutgoingTransaction::with('stock')
-            ->where('penginput', auth()->user()->name) // penginput berisi nama user, bukan email
-            ->whereNotNull('diproses_oleh') // sudah di-approve admin
+            ->where('user_id', Auth::id()) // Filter by user_id (konsisten dengan admin)
             ->where('status', 'sedang_dipakai') // belum selesai
             ->where('kategori', 'aset_sewa') // hanya aset sewa
             ->orderBy('tanggal', 'desc')
-            ->get(); // tampilkan semua tanpa limit
+            ->limit(5) // Limit untuk dashboard
+            ->get();
         
         return view('user.dashboard', compact(
             'totalBarang',
@@ -81,12 +81,11 @@ class DashboardController extends Controller
     {
         // Ambil pemakaian yang aktif (hanya aset sewa yang sedang dipakai milik user ini)
         $activePemakaian = OutgoingTransaction::with('stock')
-            ->where('penginput', auth()->user()->name) // penginput berisi nama user, bukan email
-            ->whereNotNull('diproses_oleh')
+            ->where('user_id', Auth::id()) // Filter by user_id (konsisten dengan admin)
             ->where('status', 'sedang_dipakai')
             ->where('kategori', 'aset_sewa') // hanya aset sewa
             ->orderBy('tanggal', 'desc')
-            ->get() // tampilkan semua tanpa limit
+            ->get()
             ->map(function ($trans) {
                 $data = [
                     'id' => $trans->idkeluar,
@@ -99,21 +98,25 @@ class DashboardController extends Controller
                     'is_aset_sewa' => $trans->kategori === 'aset_sewa',
                 ];
 
-                // Tambahkan info sewa jika aset sewa
+                // Tambahkan info pakai untuk aset sewa (gunakan tanggal_mulai/akhir_pakai)
                 if ($trans->kategori === 'aset_sewa') {
-                    $data['durasi_sewa'] = $trans->durasi_sewa;
-                    $data['tanggal_mulai_sewa'] = $trans->tanggal_mulai_sewa ? $trans->tanggal_mulai_sewa->format('d/m/Y') : null;
-                    $data['tanggal_akhir_sewa'] = $trans->tanggal_akhir_sewa ? $trans->tanggal_akhir_sewa->format('d/m/Y') : null;
+                    $data['tanggal_mulai_pakai'] = $trans->tanggal_mulai_pakai ? $trans->tanggal_mulai_pakai->format('d/m/Y') : null;
+                    $data['tanggal_akhir_pakai'] = $trans->tanggal_akhir_pakai ? $trans->tanggal_akhir_pakai->format('d/m/Y') : null;
                     
-                    // Hitung sisa hari sewa
-                    if ($trans->tanggal_akhir_sewa) {
+                    // Hitung sisa hari pakai
+                    if ($trans->tanggal_akhir_pakai) {
                         $today = now()->startOfDay();
-                        $endDate = $trans->tanggal_akhir_sewa;
+                        $endDate = $trans->tanggal_akhir_pakai;
                         $sisaHari = $today->diffInDays($endDate, false);
                         $data['sisa_hari'] = $sisaHari;
                         $data['sisa_hari_text'] = $sisaHari > 0 ? $sisaHari . ' hari lagi' : 'Sudah berakhir';
                         $data['is_expired'] = $sisaHari < 0;
                         $data['is_near_expiry'] = $sisaHari >= 0 && $sisaHari <= 7;
+                    }
+                    
+                    // Status kondisi dari stock
+                    if ($trans->stock) {
+                        $data['status_kondisi'] = $trans->stock->status_kondisi;
                     }
                 }
 

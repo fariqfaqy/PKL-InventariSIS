@@ -60,7 +60,23 @@ return new class extends Migration
             
             // Timestamps
             $table->timestamps();
+            
+            // ✅ CARA LARAVEL: Index menggunakan method Laravel
+            // Index untuk performance query berdasarkan kategori dan status
+            $table->index(['kategori', 'status_kondisi'], 'idx_stock_kategori_status');
         });
+        
+        // ❌ CHECK Constraint harus pakai raw SQL (Laravel tidak support)
+        // Validasi: aset_sewa HARUS stock = 1
+        DB::statement("
+            ALTER TABLE stock 
+            ADD CONSTRAINT check_aset_sewa_qty 
+            CHECK (kategori != 'aset_sewa' OR stock = 1)
+        ");
+        
+        // ❌ COMMENT juga harus pakai raw SQL (PostgreSQL specific)
+        DB::statement("COMMENT ON COLUMN stock.kodebarang IS 'Kode unik barang - untuk aset_sewa harus benar-benar unik (1 kode = 1 item fisik)'");
+        DB::statement("COMMENT ON COLUMN stock.status_kondisi IS 'Status kondisi aset: tersedia (ready), digunakan (in use), diperbaiki (under repair), rusak (broken), hilang (lost)'");
     }
 
     /**

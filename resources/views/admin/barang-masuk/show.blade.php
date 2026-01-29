@@ -99,6 +99,25 @@
             </div>
             @endif
 
+            @if($barangMasuk->stock->sub_kategori)
+            <div>
+                <label class="block text-sm font-medium text-gray-500 mb-1">Sub Kategori</label>
+                @if($barangMasuk->stock->sub_kategori === 'pinjam_material')
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-cyan-100 text-cyan-800">
+                        <x-heroicon-o-arrow-path-rounded-square class="w-4 h-4 mr-1" />
+                        Barang Pinjam
+                    </span>
+                @elseif($barangMasuk->stock->sub_kategori === 'pakai_habis_pakai')
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        <x-heroicon-o-shopping-cart class="w-4 h-4 mr-1" />
+                        Barang Habis Pakai
+                    </span>
+                @else
+                    <p class="text-gray-800">{{ ucfirst(str_replace('_', ' ', $barangMasuk->stock->sub_kategori)) }}</p>
+                @endif
+            </div>
+            @endif
+
             @if($barangMasuk->stock->jenis)
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Jenis</label>
@@ -150,7 +169,7 @@
             Kembali
         </a>
         <form action="{{ route('admin.barang-masuk.destroy', $barangMasuk->idmasuk) }}" method="POST" 
-            onsubmit="return confirm('Yakin ingin menghapus transaksi ini? Stok akan dikurangi sebanyak {{ $barangMasuk->qty }}');">
+            onsubmit="return customConfirm(event, 'Yakin ingin menghapus transaksi ini? Stok akan dikurangi sebanyak {{ $barangMasuk->qty }}', {type: 'danger', title: 'Hapus Transaksi Masuk', confirmText: 'Ya, Hapus'})">
             @csrf
             @method('DELETE')
             <button type="submit" class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors inline-flex items-center gap-2">

@@ -55,8 +55,15 @@ class StokBarangController extends Controller
                     break;
             }
         }
+        
+        // Filter by status kondisi (untuk aset sewa)
+        if ($request->filled('status_kondisi') && in_array($request->status_kondisi, ['tersedia', 'digunakan', 'diperbaiki', 'rusak'])) {
+            $query->where('status_kondisi', $request->status_kondisi);
+        }
 
-        $stocks = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
+        $stocks = $query->orderBy('namabarang', 'asc') // Konsisten dengan admin
+            ->paginate(10) // Konsisten dengan admin
+            ->withQueryString();
         
         // Get racks yang tersedia (dari kolom rack di stock)
         $racks = Stock::whereNotNull('rack')

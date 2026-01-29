@@ -154,7 +154,7 @@
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="w-full px-4 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center mb-3"
-                                onclick="return confirm('Hapus permintaan ini?')">
+                                onclick="return customConfirm(event, 'Hapus permintaan ini? Data yang terhapus tidak dapat dikembalikan.', {type: 'danger', title: 'Hapus Permintaan', confirmText: 'Ya, Hapus'})">
                             <x-heroicon-o-trash class="h-5 w-5 mr-2" />
                             Hapus Permintaan
                         </button>

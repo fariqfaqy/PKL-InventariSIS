@@ -132,14 +132,42 @@
                 <label for="penerima" class="block text-sm font-medium text-gray-700 mb-2">
                     Pengguna <span class="text-red-500">*</span>
                 </label>
-                <input type="text" name="penerima" id="penerima" required
-                    value="{{ old('penerima') }}"
-                    placeholder="Masukkan nama pengguna"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('penerima') border-red-500 @enderror">
+                <div id="penerimaAsetSewa" class="hidden">
+                    <input type="text" name="penerima" id="penerima_aset_sewa" readonly
+                        value="{{ Auth::user()->name }}"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 cursor-not-allowed">
+                    <p class="mt-1 text-xs text-gray-500">Aset Sewa otomatis diassign ke Anda</p>
+                </div>
+                <div id="penerimaMaterialUmum" class="hidden">
+                    <select name="penerima" id="penerima_material_umum"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('penerima') border-red-500 @enderror">
+                        <option value="">-- Pilih Pengguna --</option>
+                        @foreach($users as $user)
+                            <option value="{{ $user->name }}" {{ old('penerima') == $user->name ? 'selected' : '' }}>
+                                {{ $user->name }} - {{ $user->division->nama_divisi ?? 'No Division' }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">Pilih pengguna yang akan menerima barang</p>
+                </div>
                 @error('penerima')
                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                 @enderror
             </div>
+
+            <!-- Keterangan -->
+            <div>
+                <label for="keterangan" class="block text-sm font-medium text-gray-700 mb-2">
+                    Keterangan
+                </label>
+                <textarea name="keterangan" id="keterangan" rows="3"
+                    placeholder="Masukkan keterangan tambahan (opsional)"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('keterangan') border-red-500 @enderror">{{ old('keterangan') }}</textarea>
+                @error('keterangan')
+                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                @enderror
+            </div>
+
             <!-- Buttons -->
             <div class="flex items-center justify-end gap-4 pt-4 border-t border-gray-200">
                 <a href="{{ route('admin.barang-keluar.index') }}" 
@@ -153,7 +181,6 @@
             </div>
         </form>
     </div>
-</div>
 
 <script>
 // Stock data from backend
@@ -171,21 +198,44 @@ const selectedItemInfo = document.getElementById('selected-item-info');
 function toggleSubKategoriKeluar() {
     const kategori = kategoriSelect.value;
     const subKategoriField = document.getElementById('subKategoriFieldKeluar');
+    const penerimaAsetSewa = document.getElementById('penerimaAsetSewa');
+    const penerimaMaterialUmum = document.getElementById('penerimaMaterialUmum');
+    const penerimaAsetSewaInput = document.getElementById('penerima_aset_sewa');
+    const penerimaMaterialUmumSelect = document.getElementById('penerima_material_umum');
     
     if (kategori === 'material_umum') {
         subKategoriField.classList.remove('hidden');
         subKategoriSelect.required = true;
+        // Show material umum penerima dropdown
+        penerimaAsetSewa.classList.add('hidden');
+        penerimaMaterialUmum.classList.remove('hidden');
+        penerimaAsetSewaInput.disabled = true;
+        penerimaMaterialUmumSelect.disabled = false;
+        penerimaMaterialUmumSelect.required = true;
         // Reset barang selection
         barangSelect.innerHTML = '<option value="">-- Pilih Sub-Kategori Terlebih Dahulu --</option>';
         barangSelect.disabled = true;
+    } else if (kategori === 'aset_sewa') {
+        subKategoriField.classList.add('hidden');
+        subKategoriSelect.required = false;
+        subKategoriSelect.value = '';
+        // Show aset sewa penerima (auto-filled with current user)
+        penerimaAsetSewa.classList.remove('hidden');
+        penerimaMaterialUmum.classList.add('hidden');
+        penerimaAsetSewaInput.disabled = false;
+        penerimaMaterialUmumSelect.disabled = true;
+        penerimaMaterialUmumSelect.required = false;
+        // Enable barang selection for aset_sewa
+        updateBarangOptions();
     } else {
         subKategoriField.classList.add('hidden');
         subKategoriSelect.required = false;
         subKategoriSelect.value = '';
-        // Enable barang selection for aset_sewa
-        if (kategori === 'aset_sewa') {
-            updateBarangOptions();
-        }
+        penerimaAsetSewa.classList.add('hidden');
+        penerimaMaterialUmum.classList.add('hidden');
+        penerimaAsetSewaInput.disabled = true;
+        penerimaMaterialUmumSelect.disabled = true;
+        penerimaMaterialUmumSelect.required = false;
     }
 }
 
@@ -196,42 +246,52 @@ function updateBarangOptions() {
     
     barangSelect.innerHTML = '<option value="">-- Pilih Barang --</option>';
     
-    let filterKategori = kategori;
-    
-    // Untuk Material Umum (material_umum), gunakan sub-kategori sebagai filter
-    if (kategori === 'material_umum') {
-        if (!subKategori) {
-            barangSelect.innerHTML = '<option value="">-- Pilih Sub-Kategori Terlebih Dahulu --</option>';
-            barangSelect.disabled = true;
-            return;
-        }
-        filterKategori = subKategori;
+    if (!kategori) {
+        barangSelect.innerHTML = '<option value="">-- Pilih Kategori Terlebih Dahulu --</option>';
+        barangSelect.disabled = true;
+        return;
     }
     
-    if (filterKategori) {
-        // Filter stocks by kategori and only show items with stock > 0
-        const availableStocks = stocksData.filter(s => s.kategori === filterKategori && s.stock > 0);
-        
-        if (availableStocks.length > 0) {
-            availableStocks.forEach(stock => {
-                const option = document.createElement('option');
-                option.value = stock.idbarang;
-                option.textContent = `${stock.kodebarang} - ${stock.namabarang} (Stok: ${stock.stock})`;
-                option.dataset.stock = stock.stock;
-                option.dataset.kodebarang = stock.kodebarang;
-                option.dataset.namabarang = stock.namabarang;
-                option.dataset.rack = stock.rack || '-';
-                option.dataset.kategori = stock.kategori;
-                option.dataset.durasiSewa = stock.durasi_sewa || '';
-                barangSelect.appendChild(option);
-            });
-            barangSelect.disabled = false;
-        } else {
-            barangSelect.innerHTML = '<option value="">-- Tidak Ada Barang Tersedia --</option>';
-            barangSelect.disabled = true;
-        }
+    // Untuk Material Umum, sub-kategori harus dipilih dulu
+    if (kategori === 'material_umum' && !subKategori) {
+        barangSelect.innerHTML = '<option value="">-- Pilih Sub-Kategori Terlebih Dahulu --</option>';
+        barangSelect.disabled = true;
+        return;
+    }
+    
+    // Filter stocks berdasarkan kategori dan sub-kategori
+    let availableStocks;
+    if (kategori === 'material_umum') {
+        // Untuk material_umum, filter berdasarkan kategori DAN sub_kategori
+        availableStocks = stocksData.filter(s => 
+            s.kategori === 'material_umum' && 
+            s.sub_kategori === subKategori && 
+            s.stock > 0
+        );
     } else {
-        barangSelect.innerHTML = '<option value="">-- Pilih Kategori Terlebih Dahulu --</option>';
+        // Untuk aset_sewa, filter hanya berdasarkan kategori
+        availableStocks = stocksData.filter(s => 
+            s.kategori === kategori && 
+            s.stock > 0
+        );
+    }
+    
+    if (availableStocks.length > 0) {
+        availableStocks.forEach(stock => {
+            const option = document.createElement('option');
+            option.value = stock.idbarang;
+            option.textContent = `${stock.kodebarang} - ${stock.namabarang} (Stok: ${stock.stock})`;
+            option.dataset.stock = stock.stock;
+            option.dataset.kodebarang = stock.kodebarang;
+            option.dataset.namabarang = stock.namabarang;
+            option.dataset.rack = stock.rack || '-';
+            option.dataset.kategori = stock.kategori;
+            option.dataset.durasiSewa = stock.durasi_sewa || '';
+            barangSelect.appendChild(option);
+        });
+        barangSelect.disabled = false;
+    } else {
+        barangSelect.innerHTML = '<option value="">-- Tidak Ada Barang Tersedia --</option>';
         barangSelect.disabled = true;
     }
     
@@ -274,9 +334,18 @@ barangSelect.addEventListener('change', function() {
         
         selectedItemInfo.classList.remove('hidden');
         
-        // Set max qty
-        qtyInput.max = stock;
-        stockInfo.textContent = `Stok tersedia: ${stock}`;
+        // Set max qty - untuk aset sewa selalu 1
+        if (kategori === 'aset_sewa') {
+            qtyInput.max = 1;
+            qtyInput.value = 1;
+            qtyInput.readOnly = true;
+            stockInfo.textContent = 'Aset Sewa hanya bisa dipinjam 1 item';
+        } else {
+            qtyInput.max = stock;
+            qtyInput.value = '';
+            qtyInput.readOnly = false;
+            stockInfo.textContent = `Stok tersedia: ${stock}`;
+        }
         stockInfo.classList.remove('text-red-500');
         stockInfo.classList.add('text-gray-500');
         
@@ -292,6 +361,15 @@ barangSelect.addEventListener('change', function() {
 
 // Validate qty on input
 qtyInput.addEventListener('input', function() {
+    const selectedOption = barangSelect.options[barangSelect.selectedIndex];
+    const kategori = selectedOption ? selectedOption.dataset.kategori : null;
+    
+    // Force qty = 1 for aset_sewa
+    if (kategori === 'aset_sewa' && this.value != 1) {
+        this.value = 1;
+        return;
+    }
+    
     const max = parseInt(this.max);
     const value = parseInt(this.value);
     

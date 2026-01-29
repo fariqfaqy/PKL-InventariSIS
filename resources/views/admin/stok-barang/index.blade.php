@@ -4,40 +4,6 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-            <h2 class="text-2xl font-bold text-gray-800">
-                @if(isset($kategori))
-                    @if($kategori == 'aset_sewa')
-                        Aset Sewa
-                    @elseif($kategori == 'aset_tetap')
-                        Aset Tetap
-                    @else
-                        Material Umum
-                    @endif
-                @else
-                    Semua Kategori
-                @endif
-            </h2>
-            <p class="text-sm text-gray-500 mt-1">Daftar stok barang</p>
-        </div>
-        
-        <div class="flex items-center gap-3">
-            <a href="{{ route('admin.stok-barang.export-pdf', array_filter(['kategori' => request('kategori'), 'sub_kategori' => request('sub_kategori')])) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-md hover:shadow-lg">
-                <x-heroicon-o-document-arrow-down class="w-5 h-5" />
-                <span class="font-medium">Export PDF</span>
-            </a>
-            
-            @if(isset($kategori))
-            <a href="{{ route('admin.stok-barang.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                <x-heroicon-o-arrows-right-left class="w-5 h-5" />
-                <span class="font-medium">Lihat Semua</span>
-            </a>
-            @endif
-        </div>
-    </div>
-
     @if(session('success'))
     <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center gap-3">
         <x-heroicon-o-check-circle class="w-5 h-5" />
@@ -83,6 +49,19 @@
                         <x-heroicon-o-building-office class="w-6 h-6 text-cyan-600" />
                         <h2 class="text-lg font-semibold text-cyan-900">Aset Tetap</h2>
                     @endif
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('admin.stok-barang.export-pdf', array_filter(['kategori' => request('kategori'), 'sub_kategori' => request('sub_kategori')])) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-md hover:shadow-lg">
+                        <x-heroicon-o-document-arrow-down class="w-5 h-5" />
+                        <span class="font-medium">Export PDF</span>
+                    </a>
+                    
+                    <a href="{{ route('admin.stok-barang.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                        <x-heroicon-o-arrows-right-left class="w-5 h-5" />
+                        <span class="font-medium">Lihat Semua</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -168,27 +147,6 @@
                     </select>
                 </div>
             </div>
-
-            <!-- Action Buttons -->
-            <div class="flex items-center gap-3">
-                <button 
-                    type="submit" 
-                    class="inline-flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-cyan-600 to-cyan-700 text-white rounded-lg hover:from-cyan-700 hover:to-cyan-800 transition-all duration-300 shadow-md hover:shadow-lg"
-                >
-                    <x-heroicon-o-magnifying-glass class="w-5 h-5" />
-                    <span class="font-medium">Filter</span>
-                </button>
-                
-                <a 
-                    href="{{ route('admin.stok-barang.index', array_filter(['kategori' => request('kategori'), 'sub_kategori' => request('sub_kategori')])) }}" 
-                    class="inline-flex items-center gap-2 px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                    <x-heroicon-o-x-mark class="w-5 h-5" />
-                    <span class="font-medium">Reset</span>
-                </a>
-            </div>
-        </form>
-    </div>
 
             <!-- Action Buttons -->
             <div class="flex items-center gap-3">
@@ -383,7 +341,7 @@
                                 <div id="qr-{{ $stock->idbarang }}" class="hidden">
                                     {!! QrCode::size(250)->generate(route('admin.stok-barang.show', $stock->idbarang)) !!}
                                 </div>
-                                <form action="{{ route('admin.stok-barang.destroy', $stock->idbarang) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus stok barang ini?')">
+                                <form action="{{ route('admin.stok-barang.destroy', $stock->idbarang) }}" method="POST" class="inline" onsubmit="return customConfirm(event, 'Yakin ingin menghapus stok barang ini? Data yang terhapus tidak dapat dikembalikan.', {type: 'danger', title: 'Hapus Stok Barang', confirmText: 'Ya, Hapus'})">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="text-red-600 hover:text-red-700 transition-colors" title="Hapus">

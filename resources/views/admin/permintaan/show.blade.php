@@ -240,7 +240,7 @@
                             }
                         @endphp
                         <button type="submit" class="w-full px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center"
-                                onclick="return confirm('{{ $confirmMsg }}')">
+                                onclick="return customConfirm(event, '{{ $confirmMsg }}', {type: 'success', title: 'Setujui Permintaan', confirmText: 'Ya, Setujui'})">
                             <x-heroicon-o-check-circle class="h-5 w-5 mr-2" />
                             Setujui
                         </button>

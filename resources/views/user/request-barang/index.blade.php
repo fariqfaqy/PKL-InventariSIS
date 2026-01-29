@@ -114,7 +114,7 @@
                                     <form action="{{ route('user.request-barang.destroy', $item->id_request) }}" method="POST" class="inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Hapus permintaan ini?')">
+                                        <button type="submit" class="text-red-600 hover:text-red-900" onclick="return customConfirm(event, 'Hapus permintaan ini?', {type: 'danger', title: 'Hapus Permintaan', confirmText: 'Ya, Hapus'})">
                                             <x-heroicon-o-trash class="h-5 w-5 inline" />
                                         </button>
                                     </form>

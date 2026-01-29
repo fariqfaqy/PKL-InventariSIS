@@ -112,14 +112,6 @@
                 Barang pinjam harus dikembalikan sesuai tanggal yang ditentukan
             </p>
         </div>
-                    <label for="tanggal_akhir_sewa" class="block text-sm font-medium text-gray-700 mb-2">
-                        Tanggal Akhir Sewa<span class="text-red-500">*</span>
-                    </label>
-                    <input type="date" id="tanggal_akhir_sewa" name="tanggal_akhir_sewa" value="{{ old('tanggal_akhir_sewa') }}"
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                </div>
-            </div>
-        </div>
 
         <!-- Keperluan -->
         <div class="mb-6">
@@ -152,9 +144,7 @@
             </a>
         </div>
     </form>
-</div>
-
-<script>
+@endsection
 function updateBarangInfo() {
     const select = document.getElementById('idbarang');
     const selectedOption = select.options[select.selectedIndex];
@@ -218,4 +208,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 </div>
-@endsection

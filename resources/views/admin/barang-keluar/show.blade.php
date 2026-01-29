@@ -33,7 +33,7 @@
                     Perpanjang
                 </button>
                 <form action="{{ route('admin.barang-keluar.complete-rental', $barangKeluar->idkeluar) }}" method="POST" 
-                      onsubmit="return confirm('Yakin ingin menyelesaikan pemakaian aset sewa ini?')">
+                      onsubmit="return customConfirm(event, 'Yakin ingin menyelesaikan pemakaian aset sewa ini?', {type: 'success', title: 'Selesaikan Pemakaian', confirmText: 'Ya, Selesaikan'})">
                     @csrf
                     <button type="submit" 
                             class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-green-700 bg-green-100 rounded-lg hover:bg-green-200 transition">
@@ -444,7 +444,7 @@
             Kembali
         </a>
         <form action="{{ route('admin.barang-keluar.destroy', $barangKeluar->idkeluar) }}" method="POST" 
-            onsubmit="return confirm('Yakin ingin menghapus transaksi ini? Stok akan dikembalikan sebanyak {{ $barangKeluar->qty }}');">
+            onsubmit="return customConfirm(event, 'Yakin ingin menghapus transaksi ini? Stok akan dikembalikan sebanyak {{ $barangKeluar->qty }}', {type: 'danger', title: 'Hapus Transaksi', confirmText: 'Ya, Hapus'})">
             @csrf
             @method('DELETE')
             <button type="submit" class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors inline-flex items-center gap-2">
@@ -452,18 +452,17 @@
             </button>
         </form>
     </div>
-</div>
 
 <!-- Extend Rental Modal -->
 @if($barangKeluar->stock && $barangKeluar->stock->kategori === 'aset_sewa' && $barangKeluar->status === 'sedang_dipakai')
-<div id="extendModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-        <div class="flex justify-between items-start mb-4">
-            <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+<div id="extendModal" class="hidden fixed inset-0 bg-black/20 backdrop-blur-md z-[9999] flex items-center justify-center transition-all duration-300 opacity-0" onclick="closeExtendModal()">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl transform scale-95 transition-all duration-300" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
                 <x-heroicon-o-arrow-path class="w-6 h-6 text-blue-600" />
                 Perpanjang Masa Sewa
             </h3>
-            <button onclick="closeExtendModal()" class="text-gray-400 hover:text-gray-600">
+            <button onclick="closeExtendModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
                 <x-heroicon-o-x-mark class="w-6 h-6" />
             </button>
         </div>
@@ -471,8 +470,8 @@
         <form action="{{ route('admin.barang-keluar.extend-rental', $barangKeluar->idkeluar) }}" method="POST">
             @csrf
             <div class="space-y-4">
-                <div class="bg-blue-50 p-3 rounded-lg">
-                    <p class="text-sm text-gray-600">Tanggal Berakhir Sekarang:</p>
+                <div class="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-xl border border-blue-100">
+                    <p class="text-xs text-gray-600 mb-1">Tanggal Berakhir Sekarang:</p>
                     <p class="text-lg font-bold text-gray-900">
                         {{ \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai)->format('d M Y') }}
                     </p>
@@ -487,24 +486,28 @@
                            name="tanggal_akhir_pakai" 
                            min="{{ \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai)->addDay()->format('Y-m-d') }}"
                            required
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <p class="text-xs text-gray-500 mt-1">Harus setelah {{ \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai)->format('d M Y') }}</p>
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                    <p class="text-xs text-gray-500 mt-1.5 flex items-center gap-1">
+                        <x-heroicon-o-information-circle class="w-3.5 h-3.5" />
+                        Harus setelah {{ \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai)->format('d M Y') }}
+                    </p>
                 </div>
                 
                 @if($errors->has('tanggal_akhir_pakai'))
-                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                    {{ $errors->first('tanggal_akhir_pakai') }}
+                <div class="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-lg text-sm flex items-start gap-2">
+                    <x-heroicon-o-exclamation-triangle class="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <span>{{ $errors->first('tanggal_akhir_pakai') }}</span>
                 </div>
                 @endif
                 
-                <div class="flex gap-3 pt-4">
+                <div class="flex gap-3 pt-2">
                     <button type="button" 
                             onclick="closeExtendModal()"
-                            class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
+                            class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
                         Batal
                     </button>
                     <button type="submit" 
-                            class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+                            class="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:shadow-lg transition-all duration-300 font-medium">
                         Perpanjang
                     </button>
                 </div>
@@ -515,16 +518,31 @@
 
 <script>
 function openExtendModal() {
-    document.getElementById('extendModal').classList.remove('hidden');
+    const modal = document.getElementById('extendModal');
+    modal.classList.remove('hidden');
+    
+    // Trigger animation
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.querySelector('div').classList.remove('scale-95');
+        modal.querySelector('div').classList.add('scale-100');
+    }, 10);
 }
 
 function closeExtendModal() {
-    document.getElementById('extendModal').classList.add('hidden');
+    const modal = document.getElementById('extendModal');
+    modal.classList.add('opacity-0');
+    modal.querySelector('div').classList.remove('scale-100');
+    modal.querySelector('div').classList.add('scale-95');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
 }
 
-// Close modal on outside click
-document.getElementById('extendModal')?.addEventListener('click', function(e) {
-    if (e.target === this) {
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
         closeExtendModal();
     }
 });

@@ -115,7 +115,6 @@
             </div>
         @endif
     </div>
-</div>
 
 <script>
 (function() {

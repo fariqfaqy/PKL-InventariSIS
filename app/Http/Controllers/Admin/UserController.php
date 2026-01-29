@@ -71,7 +71,81 @@ class UserController extends Controller
     public function show(User $user)
     {
         $user->load('division');
-        return view('admin.users.show', compact('user'));
+        
+        // Get user activities - transaksi keluar yang terkait dengan user ini
+        $activities = \App\Models\OutgoingTransaction::with(['stock'])
+            ->where('user_id', $user->id)
+            ->orderBy('tanggal', 'desc')
+            ->get()
+            ->map(function($transaction) {
+                // Determine activity type based on kategori and tipe_request
+                $activityType = 'unknown';
+                $activityLabel = 'Aktivitas';
+                $activityColor = 'gray';
+                
+                // Cek kategori barang
+                if ($transaction->kategori === 'aset_sewa') {
+                    $activityType = 'sewa';
+                    $activityLabel = 'Menyewa Aset';
+                    $activityColor = 'purple';
+                } elseif ($transaction->kategori === 'material_umum') {
+                    // Cek tipe_request
+                    if ($transaction->tipe_request === 'peminjaman' || $transaction->tipe_request === 'pinjam_material') {
+                        $activityType = 'pinjam';
+                        $activityLabel = 'Meminjam Barang';
+                        $activityColor = 'cyan';
+                    } elseif ($transaction->tipe_request === 'permintaan' || $transaction->tipe_request === 'pakai_habis_pakai') {
+                        $activityType = 'pakai';
+                        $activityLabel = 'Memakai Barang';
+                        $activityColor = 'green';
+                    } else {
+                        // Fallback: cek dari stock sub_kategori
+                        $subKategori = $transaction->stock->sub_kategori ?? null;
+                        if ($subKategori === 'pinjam_material') {
+                            $activityType = 'pinjam';
+                            $activityLabel = 'Meminjam Barang';
+                            $activityColor = 'cyan';
+                        } elseif ($subKategori === 'pakai_habis_pakai') {
+                            $activityType = 'pakai';
+                            $activityLabel = 'Memakai Barang';
+                            $activityColor = 'green';
+                        }
+                    }
+                } elseif ($transaction->kategori === 'aset_tetap') {
+                    $activityType = 'pinjam';
+                    $activityLabel = 'Meminjam Aset';
+                    $activityColor = 'blue';
+                }
+                
+                return [
+                    'id' => $transaction->idkeluar,
+                    'type' => $activityType,
+                    'label' => $activityLabel,
+                    'color' => $activityColor,
+                    'barang' => $transaction->namabarang_k,
+                    'kode' => $transaction->kodebarang_k,
+                    'qty' => $transaction->qty,
+                    'tanggal' => $transaction->tanggal,
+                    'status' => $transaction->status,
+                    'tanggal_pinjam' => $transaction->tanggal_pinjam,
+                    'tanggal_kembali' => $transaction->tanggal_kembali,
+                    'tanggal_selesai' => $transaction->tanggal_selesai,
+                    'kategori' => $transaction->kategori,
+                    'tipe_request' => $transaction->tipe_request,
+                ];
+            });
+        
+        // Group activities by type for statistics
+        $stats = [
+            'sewa' => $activities->where('type', 'sewa')->count(),
+            'pinjam' => $activities->where('type', 'pinjam')->count(),
+            'pakai' => $activities->where('type', 'pakai')->count(),
+            'total' => $activities->count(),
+            'active' => $activities->where('status', 'sedang_dipakai')->count(),
+            'completed' => $activities->where('status', 'selesai')->count(),
+        ];
+        
+        return view('admin.users.show', compact('user', 'activities', 'stats'));
     }
 
     /**

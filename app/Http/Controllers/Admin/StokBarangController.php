@@ -38,8 +38,8 @@ class StokBarangController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('kodebarang', 'like', '%' . $search . '%')
-                  ->orWhere('namabarang', 'like', '%' . $search . '%');
+                $q->where('kodebarang', 'ILIKE', "%{$search}%")
+                  ->orWhere('namabarang', 'ILIKE', "%{$search}%");
             });
         }
         

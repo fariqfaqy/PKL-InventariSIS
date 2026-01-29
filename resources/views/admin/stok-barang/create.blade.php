@@ -242,7 +242,6 @@
             </div>
         </form>
     </div>
-</div>
 
 <script>
 function previewImage(event) {

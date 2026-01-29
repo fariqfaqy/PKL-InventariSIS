@@ -150,7 +150,7 @@
                                     <x-heroicon-o-pencil class="w-5 h-5" />
                                 </a>
                                 @if($user->id !== auth()->id())
-                                <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus pegawai ini?')">
+                                <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="inline" onsubmit="return customConfirm(event, 'Yakin ingin menghapus pegawai ini? Data yang terhapus tidak dapat dikembalikan.', {type: 'danger', title: 'Hapus Pegawai', confirmText: 'Ya, Hapus'})">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="text-red-600 hover:text-red-700 transition-colors" title="Hapus">

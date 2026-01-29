@@ -23,6 +23,25 @@
         </div>
     </div>
 
+    <!-- Success/Error Messages -->
+    @if(session('success'))
+    <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg">
+        <div class="flex items-center">
+            <x-heroicon-o-check-circle class="w-5 h-5 text-green-500 mr-3" />
+            <p class="text-green-700 font-medium">{{ session('success') }}</p>
+        </div>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+        <div class="flex items-center">
+            <x-heroicon-o-x-circle class="w-5 h-5 text-red-500 mr-3" />
+            <p class="text-red-700 font-medium">{{ session('error') }}</p>
+        </div>
+    </div>
+    @endif
+
     <!-- Form Card -->
     <div class="bg-white rounded-xl shadow-md p-6">
         <form action="{{ route('admin.barang-masuk.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6" 
@@ -281,7 +300,6 @@
             </div>
         </form>
     </div>
-</div>
 
 <script>
 // Flag to prevent circular event triggering
@@ -466,33 +484,51 @@ function validateForm() {
     
     // Validate required fields
     if (!kategori) {
-        alert('Kategori harus dipilih!');
+        customAlert('Kategori harus dipilih!', {
+            type: 'warning',
+            title: 'Form Tidak Lengkap'
+        });
         return false;
     }
     
     if (!prefix) {
-        alert('Prefix kode barang harus dipilih!');
+        customAlert('Prefix kode barang harus dipilih!', {
+            type: 'warning',
+            title: 'Form Tidak Lengkap'
+        });
         return false;
     }
     
     if (!suffix || suffix.length !== 3) {
-        alert('Kode barang harus 3 digit angka!');
+        customAlert('Kode barang harus 3 digit angka!', {
+            type: 'warning',
+            title: 'Format Kode Salah'
+        });
         return false;
     }
     
     if (!kodebarang) {
-        alert('Kode barang belum terisi! Prefix: ' + prefix + ', Suffix: ' + suffix);
+        customAlert('Kode barang belum terisi! Prefix: ' + prefix + ', Suffix: ' + suffix, {
+            type: 'warning',
+            title: 'Form Tidak Lengkap'
+        });
         return false;
     }
     
     if (!namabarang) {
-        alert('Nama barang harus diisi!');
+        customAlert('Nama barang harus diisi!', {
+            type: 'warning',
+            title: 'Form Tidak Lengkap'
+        });
         return false;
     }
     
     // Validate user_id for Aset Sewa
     if (kategori === 'aset_sewa' && !userId) {
-        alert('Pengguna harus dipilih untuk Aset Sewa!');
+        customAlert('Pengguna harus dipilih untuk Aset Sewa!', {
+            type: 'warning',
+            title: 'Form Tidak Lengkap'
+        });
         return false;
     }
     
@@ -794,7 +830,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     console.log('Barang Masuk form loaded and ready');
+    
+    // Auto-scroll to error message if exists
+    @if(session('error'))
+    const errorBox = document.querySelector('.bg-red-50');
+    if (errorBox) {
+        errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Add attention animation
+        errorBox.style.animation = 'pulse 0.5s ease-in-out 3';
+    }
+    @endif
 });
+
+// Add pulse animation for error
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+    }
+`;
+document.head.appendChild(style);
 </script>
 </div>
 @endsection

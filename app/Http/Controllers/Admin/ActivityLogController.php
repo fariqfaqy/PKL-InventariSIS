@@ -15,7 +15,7 @@ class ActivityLogController extends Controller
 
         // Filter berdasarkan user
         if ($request->filled('usr')) {
-            $query->where('usr', 'like', '%' . $request->usr . '%');
+            $query->where('usr', 'ILIKE', "%{$request->usr}%");
         }
 
         // Filter berdasarkan method
@@ -25,7 +25,7 @@ class ActivityLogController extends Controller
 
         // Filter berdasarkan endpoint
         if ($request->filled('endpoint')) {
-            $query->where('endpoint', 'like', '%' . $request->endpoint . '%');
+            $query->where('endpoint', 'ILIKE', "%{$request->endpoint}%");
         }
 
         // Filter berdasarkan status code
@@ -60,7 +60,7 @@ class ActivityLogController extends Controller
 
         // Apply same filters
         if ($request->filled('usr')) {
-            $query->where('usr', 'like', '%' . $request->usr . '%');
+            $query->where('usr', 'ILIKE', "%{$request->usr}%");
         }
 
         if ($request->filled('method')) {
@@ -68,7 +68,7 @@ class ActivityLogController extends Controller
         }
 
         if ($request->filled('endpoint')) {
-            $query->where('endpoint', 'like', '%' . $request->endpoint . '%');
+            $query->where('endpoint', 'ILIKE', "%{$request->endpoint}%");
         }
 
         if ($request->filled('status_code')) {
@@ -124,7 +124,7 @@ class ActivityLogController extends Controller
 
         // Apply same filters
         if ($request->filled('usr')) {
-            $query->where('usr', 'like', '%' . $request->usr . '%');
+            $query->where('usr', 'ILIKE', "%{$request->usr}%");
         }
 
         if ($request->filled('method')) {
@@ -132,7 +132,7 @@ class ActivityLogController extends Controller
         }
 
         if ($request->filled('endpoint')) {
-            $query->where('endpoint', 'like', '%' . $request->endpoint . '%');
+            $query->where('endpoint', 'ILIKE', "%{$request->endpoint}%");
         }
 
         if ($request->filled('status_code')) {

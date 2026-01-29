@@ -141,7 +141,7 @@
                                 <a href="{{ route('admin.divisions.edit', $division->id) }}" class="text-yellow-600 hover:text-yellow-700 transition-colors" title="Edit">
                                     <x-heroicon-o-pencil class="w-5 h-5" />
                                 </a>
-                                <form action="{{ route('admin.divisions.destroy', $division->id) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin menghapus divisi ini?')">
+                                <form action="{{ route('admin.divisions.destroy', $division->id) }}" method="POST" class="inline" onsubmit="return customConfirm(event, 'Yakin ingin menghapus divisi ini? Pegawai yang terkait akan kehilangan divisi.', {type: 'danger', title: 'Hapus Divisi', confirmText: 'Ya, Hapus'})">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="text-red-600 hover:text-red-700 transition-colors" title="Hapus">

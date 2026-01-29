@@ -66,18 +66,19 @@ class PemakaianController extends Controller
             ->get();
 
         // Ambil history pemakaian berdasarkan status
-        // 1. Sedang dipakai - sudah disetujui tapi belum selesai
+        // 1. Sedang dipakai - aset sewa yang aktif (gunakan user_id, konsisten dengan admin)
         $sedangDipakai = OutgoingTransaction::with('stock')
-            ->where('penginput', Auth::user()->name)
-            ->whereNotNull('diproses_oleh')
+            ->where('user_id', Auth::id()) // Filter by user_id
             ->where('status', 'sedang_dipakai')
+            ->where('kategori', 'aset_sewa') // Hanya aset sewa untuk history ini
             ->orderBy('tanggal', 'desc')
             ->get();
         
-        // 2. Selesai - sudah selesai
+        // 2. Selesai - aset sewa yang sudah dikembalikan
         $selesai = OutgoingTransaction::with('stock')
-            ->where('penginput', Auth::user()->name)
+            ->where('user_id', Auth::id()) // Filter by user_id
             ->where('status', 'selesai')
+            ->where('kategori', 'aset_sewa') // Hanya aset sewa
             ->orderBy('tanggal_selesai', 'desc')
             ->get();
         
@@ -88,19 +89,9 @@ class PemakaianController extends Controller
             ->orderBy('tanggal_request', 'desc')
             ->get();
         
-        // 4. Aset Sewa yang di-assign admin ke user ini (BUKAN dari request user sendiri)
-        // Ambil dari OutgoingTransaction yang:
-        // - tipe_keluar = 'peminjaman' DAN kategori stock = 'aset_sewa'
-        // - penerima = nama user ini
-        // - TIDAK ada id_request (karena di-assign langsung admin, bukan dari request)
-        $asetSewaAssigned = OutgoingTransaction::with('stock')
-            ->where('penerima', Auth::user()->name)
-            ->whereNull('id_request') // Tidak dari request user
-            ->whereHas('stock', function($query) {
-                $query->where('kategori', 'aset_sewa');
-            })
-            ->orderBy('tanggal', 'desc')
-            ->get();
+        // 4. Aset Sewa yang di-assign admin ke user ini
+        // Sudah tercakup dalam $sedangDipakai dan $selesai (karena pakai user_id filter)
+        // Tidak perlu query terpisah lagi
 
         // Hitung notifikasi untuk badge (hanya yang butuh action/attention)
         // - Pending requests: perlu menunggu admin approve
@@ -122,7 +113,6 @@ class PemakaianController extends Controller
             'sedangDipakai', 
             'selesai', 
             'ditolakDibatalkan',
-            'asetSewaAssigned',
             'outgoingTransactions',
             'requestNotifCount',
             'changeRequestNotifCount',

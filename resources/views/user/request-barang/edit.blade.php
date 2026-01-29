@@ -153,7 +153,6 @@
             </a>
         </div>
     </form>
-</div>
 
 <script>
 function updateBarangInfo() {

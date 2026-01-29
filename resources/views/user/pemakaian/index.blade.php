@@ -69,8 +69,8 @@
             </button>
             <button onclick="switchTab('aset-sewa')" id="tab-aset-sewa" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm tab-button">
                 Aset Sewa Saya
-                @if($asetSewaAssigned->where('status', 'sedang_dipakai')->count() > 0)
-                    <span class="ml-2 bg-purple-500 text-white rounded-full px-2 py-0.5 text-xs font-semibold">{{ $asetSewaAssigned->where('status', 'sedang_dipakai')->count() }}</span>
+                @if($sedangDipakai->count() > 0)
+                    <span class="ml-2 bg-purple-500 text-white rounded-full px-2 py-0.5 text-xs font-semibold">{{ $sedangDipakai->count() }}</span>
                 @endif
             </button>
             <button onclick="switchTab('history')" id="tab-history" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm tab-button">
@@ -148,7 +148,7 @@
                                         <form action="{{ route('user.request-barang.destroy', $item->id_request) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Batalkan request ini?')" title="Batalkan Request">
+                                            <button type="submit" class="text-red-600 hover:text-red-900" onclick="return customConfirm(event, 'Batalkan request ini? Data yang terhapus tidak dapat dikembalikan.', {type: 'danger', title: 'Batalkan Request', confirmText: 'Ya, Batalkan'})" title="Batalkan Request">
                                                 <x-heroicon-o-trash class="h-5 w-5 inline" />
                                             </button>
                                         </form>
@@ -263,7 +263,7 @@
                                         <form action="{{ route('user.request-barang.complete', $item->id_request) }}" method="POST" class="inline">
                                             @csrf
                                             @method('PATCH')
-                                            <button type="submit" class="text-green-600 hover:text-green-900" onclick="return confirm('Tandai request ini sudah selesai?')" title="Tandai Selesai">
+                                            <button type="submit" class="text-green-600 hover:text-green-900" onclick="return customConfirm(event, 'Tandai request ini sudah selesai?', {type: 'success', title: 'Tandai Selesai', confirmText: 'Ya, Selesai'})" title="Tandai Selesai">
                                                 <x-heroicon-o-check-circle class="h-5 w-5 inline" />
                                             </button>
                                         </form>
@@ -272,7 +272,7 @@
                                         </a>
                                         <form action="{{ route('user.request-barang.request-cancel', $item->id_request) }}" method="POST" class="inline">
                                             @csrf
-                                            <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Request pembatalan? Admin harus approve untuk return barang.')" title="Request Pembatalan">
+                                            <button type="submit" class="text-red-600 hover:text-red-900" onclick="return customConfirm(event, 'Request pembatalan? Admin harus approve untuk return barang.', {type: 'warning', title: 'Request Pembatalan', confirmText: 'Ya, Ajukan'})" title="Request Pembatalan">
                                                 <x-heroicon-o-x-circle class="h-5 w-5 inline" />
                                             </button>
                                         </form>
@@ -349,7 +349,6 @@
                                     <x-heroicon-o-shopping-cart class="w-3 h-3 mr-1" />
                                         Pakai Material Umum
                                     </span>
-                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 @if($item->parentRequest)
@@ -387,7 +386,7 @@
                                 <div class="flex items-center gap-2">
                                     @if($item->status == 'pending')
                                         <!-- Delete request perubahan yang masih pending -->
-                                        <form action="{{ route('user.request-barang.destroy', $item->id_request) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus request perubahan ini?')">
+                                        <form action="{{ route('user.request-barang.destroy', $item->id_request) }}" method="POST" onsubmit="return customConfirm(event, 'Yakin ingin menghapus request perubahan ini?', {type: 'danger', title: 'Hapus Request', confirmText: 'Ya, Hapus'})">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-red-600 hover:text-red-800" title="Hapus">
@@ -420,11 +419,11 @@
     <!-- Aset Sewa Tab Content -->
     <div id="content-aset-sewa" class="tab-content hidden">
         @php
-            $asetSedangDigunakan = $asetSewaAssigned->where('status', 'sedang_dipakai');
-            $asetSelesai = $asetSewaAssigned->where('status', 'selesai');
+            $asetSedangDigunakan = $sedangDipakai; // Aset sewa yang sedang digunakan
+            $asetSelesai = $selesai; // Aset sewa yang sudah selesai
         @endphp
 
-        @if($asetSewaAssigned->count() > 0)
+        @if($sedangDipakai->count() > 0 || $selesai->count() > 0)
             <!-- Sub-tabs untuk Aset Sewa -->
             <div class="mb-4">
                 <div class="border-b border-gray-200">
@@ -851,7 +850,6 @@
             </div>
         </div>
     </div>
-</div>
 
 <script>
 // Simple tab switching - no localStorage tracking, seperti admin

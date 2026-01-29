@@ -187,6 +187,39 @@
         </div>
     </div>
 
+    <!-- Global Confirmation Modal -->
+    <div id="confirmModal" class="hidden fixed inset-0 bg-gradient-to-br from-gray-900/50 to-gray-800/50 backdrop-blur-sm z-[9999] flex items-center justify-center transition-all duration-300 opacity-0">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full mx-4 shadow-2xl transform scale-90 transition-all duration-300 border border-gray-100" onclick="event.stopPropagation()">
+            <!-- Icon -->
+            <div class="flex justify-center mb-4">
+                <div id="confirmIcon" class="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- Title & Message -->
+            <h3 class="text-lg font-bold text-gray-900 text-center mb-2" id="confirmTitle">Konfirmasi</h3>
+            <p class="text-sm text-gray-600 text-center mb-6" id="confirmMessage"></p>
+            
+            <!-- Buttons -->
+            <div class="flex gap-3" id="confirmButtons">
+                <button type="button" 
+                        id="cancelButton"
+                        onclick="closeConfirmModal()"
+                        class="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-medium">
+                    Batal
+                </button>
+                <button type="button" 
+                        id="confirmButton"
+                        class="flex-1 px-4 py-2.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium">
+                    Ya, Lanjutkan
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Sidebar Toggle Script -->
     <script>
         const sidebar = document.getElementById('sidebar');
@@ -209,6 +242,111 @@
             const icon = document.getElementById(id + '-icon');
             submenu.classList.toggle('hidden');
             icon.classList.toggle('rotate-180');
+        }
+
+        // Global Confirm Modal Functions
+        let confirmCallback = null;
+
+        function showConfirm(message, callback, options = {}) {
+            const modal = document.getElementById('confirmModal');
+            const title = options.title || 'Konfirmasi';
+            const confirmText = options.confirmText || 'Ya, Lanjutkan';
+            const type = options.type || 'warning';
+            const isAlert = confirmText === 'OK';
+            
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            document.getElementById('confirmButton').textContent = confirmText;
+            
+            // Hide cancel button for alerts
+            const cancelBtn = document.getElementById('cancelButton');
+            const confirmBtn = document.getElementById('confirmButton');
+            if (isAlert) {
+                cancelBtn.classList.add('hidden');
+                confirmBtn.classList.remove('flex-1');
+                confirmBtn.classList.add('w-full');
+            } else {
+                cancelBtn.classList.remove('hidden');
+                confirmBtn.classList.remove('w-full');
+                confirmBtn.classList.add('flex-1');
+            }
+            
+            const iconContainer = document.getElementById('confirmIcon');
+            
+            if (type === 'danger') {
+                iconContainer.className = 'w-16 h-16 rounded-full bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center';
+                iconContainer.innerHTML = '<svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>';
+                confirmBtn.className = 'flex-1 px-4 py-2.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium';
+            } else if (type === 'success') {
+                iconContainer.className = 'w-16 h-16 rounded-full bg-gradient-to-br from-green-100 to-emerald-200 flex items-center justify-center';
+                iconContainer.innerHTML = '<svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
+                confirmBtn.className = 'flex-1 px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-700 text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium';
+            } else {
+                iconContainer.className = 'w-16 h-16 rounded-full bg-gradient-to-br from-yellow-100 to-orange-100 flex items-center justify-center';
+                iconContainer.innerHTML = '<svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+                if (isAlert) {
+                    confirmBtn.className = 'w-full px-4 py-2.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium';
+                } else {
+                    confirmBtn.className = 'flex-1 px-4 py-2.5 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium';
+                }
+            }
+            
+            confirmCallback = callback;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('div').classList.remove('scale-90');
+                modal.querySelector('div').classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.remove('scale-100');
+            modal.querySelector('div').classList.add('scale-90');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                confirmCallback = null;
+            }, 300);
+        }
+
+        document.getElementById('confirmButton')?.addEventListener('click', function() {
+            if (confirmCallback) {
+                confirmCallback();
+            }
+            closeConfirmModal();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeConfirmModal();
+            }
+        });
+
+        function customConfirm(event, message, options = {}) {
+            event.preventDefault();
+            const form = event.target.closest('form');
+            showConfirm(message, () => {
+                if (form) {
+                    form.submit();
+                }
+            }, options);
+            return false;
+        }
+
+        // Custom Alert Function
+        function customAlert(message, options = {}) {
+            const type = options.type || 'warning';
+            const title = options.title || 'Peringatan';
+            showConfirm(message, () => {}, { 
+                ...options, 
+                type: type, 
+                title: title,
+                confirmText: 'OK'
+            });
         }
     </script>
 </body>

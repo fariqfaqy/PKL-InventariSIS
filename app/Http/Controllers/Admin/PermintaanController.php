@@ -220,6 +220,7 @@ class PermintaanController extends Controller
                 OutgoingTransaction::create([
                     'id_request' => $permintaan->id_request,
                     'idbarang' => $permintaan->idbarang,
+                    'user_id' => $permintaan->user_id,
                     'tanggal' => now(),
                     'penerima' => $permintaan->penerima ?? $permintaan->user->name,
                     'qty' => $permintaan->qty,
