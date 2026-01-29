@@ -113,7 +113,7 @@
                         @if($request->tanggal_mulai_sewa && $request->tanggal_akhir_sewa)
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Durasi:</span>
-                                <span class="font-medium">{{ $request->tanggal_mulai_sewa->diffInDays($request->tanggal_akhir_sewa) }} hari</span>
+                                <span class="font-medium">{{ $request->tanggal_mulai_sewa->diffInDays($request->tanggal_akhir_sewa) + 1 }} hari</span>
                             </div>
                         @endif
                     </div>

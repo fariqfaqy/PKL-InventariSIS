@@ -337,16 +337,27 @@ class RequestBarangController extends Controller
      */
     public function destroy($id)
     {
-        $request = RequestBarang::where('user_id', Auth::id())
-            ->findOrFail($id);
-        
-        if (!$request->canBeDeleted()) {
-            return back()->with('error', 'Hanya permintaan dengan status pending yang bisa dihapus!');
+        DB::beginTransaction();
+        try {
+            // Use locking to prevent race condition with admin approval
+            $request = RequestBarang::where('user_id', Auth::id())
+                ->where('id_request', $id)
+                ->lockForUpdate()
+                ->firstOrFail();
+            
+            if (!$request->canBeDeleted()) {
+                DB::rollBack();
+                return back()->with('error', 'Hanya permintaan dengan status pending yang bisa dihapus!');
+            }
+            
+            $request->delete();
+            
+            DB::commit();
+            return redirect()->route('user.pemakaian.index')->with('success', 'Permintaan berhasil dihapus!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menghapus permintaan: ' . $e->getMessage());
         }
-        
-        $request->delete();
-        
-        return redirect()->route('user.pemakaian.index')->with('success', 'Permintaan berhasil dihapus!');
     }
 
     /**

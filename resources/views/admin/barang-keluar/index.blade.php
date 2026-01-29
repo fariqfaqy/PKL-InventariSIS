@@ -76,20 +76,14 @@
             </div>
         </div>
 
-        <!-- Sub-tabs untuk Aset Sewa -->
-        @if(request('kategori') == 'aset_sewa')
+        <!-- Sub-tabs untuk Aset Sewa - REMOVED: Aset Sewa hanya masuk barang keluar kalau sudah selesai -->
+        @if(false && request('kategori') == 'aset_sewa')
             <div class="bg-purple-50 border-b border-purple-200">
                 <nav class="flex -mb-px">
                     <a href="{{ route('admin.barang-keluar.index', ['kategori' => 'aset_sewa', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ !request('status_filter') ? 'border-purple-500 text-purple-700' : 'border-transparent text-purple-600 hover:text-purple-800 hover:border-purple-300' }}">
                         <span class="inline-flex items-center gap-1">
                             <x-heroicon-o-squares-2x2 class="w-3 h-3" />
                             Semua
-                        </span>
-                    </a>
-                    <a href="{{ route('admin.barang-keluar.index', ['kategori' => 'aset_sewa', 'status_filter' => 'sedang_dipakai', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('status_filter') == 'sedang_dipakai' ? 'border-purple-500 text-purple-700' : 'border-transparent text-purple-600 hover:text-purple-800 hover:border-purple-300' }}">
-                        <span class="inline-flex items-center gap-1">
-                            <x-heroicon-o-arrow-path class="w-3 h-3" />
-                            Sedang Dipakai
                         </span>
                     </a>
                     <a href="{{ route('admin.barang-keluar.index', ['kategori' => 'aset_sewa', 'status_filter' => 'selesai', 'search' => request('search'), 'tanggal' => request('tanggal')]) }}" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('status_filter') == 'selesai' ? 'border-purple-500 text-purple-700' : 'border-transparent text-purple-600 hover:text-purple-800 hover:border-purple-300' }}">
@@ -235,32 +229,14 @@
                         <td class="px-4 py-3 whitespace-nowrap text-sm">
                             @if($item->tanggal_mulai_pakai && $item->tanggal_akhir_pakai)
                                 @php
-                                    $now = \Carbon\Carbon::now();
-                                    $startDate = \Carbon\Carbon::parse($item->tanggal_mulai_pakai);
-                                    $endDate = \Carbon\Carbon::parse($item->tanggal_akhir_pakai);
-                                    $totalDays = $startDate->diffInDays($endDate);
-                                    $daysLeft = $now->diffInDays($endDate, false);
-                                    $isExpired = $daysLeft < 0;
+                                    $now = \Carbon\Carbon::now()->startOfDay();
+                                    $startDate = \Carbon\Carbon::parse($item->tanggal_mulai_pakai)->startOfDay();
+                                    $endDate = \Carbon\Carbon::parse($item->tanggal_akhir_pakai)->startOfDay();
+                                    $totalDays = $startDate->diffInDays($endDate) + 1;
                                 @endphp
-                                <div class="space-y-1">
-                                    <p class="text-xs text-gray-600">{{ $totalDays }} hari total</p>
-                                    @if($isExpired)
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                                            <x-heroicon-o-exclamation-circle class="w-3 h-3 mr-1" />
-                                            Lewat {{ abs(floor($daysLeft)) }} hari
-                                        </span>
-                                    @elseif($daysLeft <= 3)
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                            <x-heroicon-o-clock class="w-3 h-3 mr-1" />
-                                            {{ ceil($daysLeft) }} hari lagi
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
-                                            <x-heroicon-o-check class="w-3 h-3 mr-1" />
-                                            {{ ceil($daysLeft) }} hari lagi
-                                        </span>
-                                    @endif
-                                </div>
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                    {{ $totalDays }} hari total
+                                </span>
                             @else
                                 <span class="text-xs text-gray-400">-</span>
                             @endif

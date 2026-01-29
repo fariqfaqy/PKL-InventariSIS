@@ -113,7 +113,7 @@
 <div class="bg-white rounded-xl shadow-md p-6">
     <div class="flex items-center gap-2 mb-4">
         <x-heroicon-o-clock class="w-5 h-5 text-[#14a2ba]" />
-        <h3 class="text-lg font-bold text-gray-800">Pinjaman Aset Sewa Sedang Progress</h3>
+        <h3 class="text-lg font-bold text-gray-800">Barang yang Sedang Digunakan</h3>
     </div>
     
     <div id="pemakaian-container">
@@ -125,8 +125,6 @@
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Barang</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jumlah</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Penerima</th>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="pemakaian-tbody" class="bg-white divide-y divide-gray-200">
@@ -150,12 +148,14 @@
                                     </div>
                                     @if($trans->tanggal_akhir_sewa)
                                         @php
-                                            $sisaHari = now()->startOfDay()->diffInDays($trans->tanggal_akhir_sewa, false);
+                                            $sisaHari = now()->startOfDay()->diffInDays($trans->tanggal_akhir_sewa->startOfDay(), false);
                                         @endphp
                                         <div class="text-xs mt-1 {{ $sisaHari < 0 ? 'text-red-600' : ($sisaHari <= 7 ? 'text-yellow-600' : 'text-gray-500') }}">
                                             Berakhir: {{ $trans->tanggal_akhir_sewa->format('d/m/Y') }}
-                                            @if($sisaHari >= 0)
+                                            @if($sisaHari > 0)
                                                 ({{ $sisaHari }} hari lagi)
+                                            @elseif($sisaHari == 0)
+                                                (Berakhir hari ini)
                                             @else
                                                 (Sudah berakhir)
                                             @endif
@@ -169,15 +169,6 @@
                                 {{ $trans->qty }} unit
                             </span>
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-900">
-                            {{ $trans->penerima }}
-                        </td>
-                        <td class="px-4 py-3 text-sm text-center">
-                            <a href="{{ route('user.pemakaian.show', $trans->id_request) }}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-[#14a2ba] hover:bg-[#0d7a8f] text-white rounded-lg text-xs font-medium transition-colors">
-                                <x-heroicon-o-eye class="w-4 h-4" />
-                                Detail
-                            </a>
-                        </td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -186,8 +177,8 @@
         @else
         <div id="empty-state" class="text-center py-8 text-gray-500">
             <x-heroicon-o-inbox class="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p class="text-sm">Tidak ada pinjaman aset sewa yang sedang berjalan</p>
-            <p class="text-xs text-gray-400 mt-1">Pinjaman aset sewa yang sudah disetujui admin akan muncul di sini</p>
+            <p class="text-sm">Tidak ada barang yang sedang digunakan</p>
+            <p class="text-xs text-gray-400 mt-1">Barang yang sedang Anda gunakan (aset sewa & material pinjam) akan muncul di sini</p>
         </div>
         @endif
     </div>
@@ -214,8 +205,8 @@ function updatePemakaianTable(data) {
                     <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
                     </svg>
-                    <p class="text-sm">Tidak ada pinjaman aset sewa yang sedang berjalan</p>
-                    <p class="text-xs text-gray-400 mt-1">Pinjaman aset sewa yang sudah disetujui admin akan muncul di sini</p>
+                    <p class="text-sm">Tidak ada barang yang sedang digunakan</p>
+                    <p class="text-xs text-gray-400 mt-1">Barang yang sedang Anda gunakan (aset sewa & material pinjam) akan muncul di sini</p>
                 </div>
             `;
         }
@@ -278,18 +269,6 @@ function updatePemakaianTable(data) {
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
                             ${trans.qty} unit
                         </span>
-                    </td>
-                    <td class="px-4 py-3 text-sm text-gray-900">
-                        ${trans.penerima}
-                    </td>
-                    <td class="px-4 py-3 text-sm text-center">
-                        <a href="/user/pemakaian/${trans.id}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-[#14a2ba] hover:bg-[#0d7a8f] text-white rounded-lg text-xs font-medium transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                            </svg>
-                            Detail
-                        </a>
                     </td>
                 </tr>
             `;

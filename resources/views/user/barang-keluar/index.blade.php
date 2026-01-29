@@ -111,111 +111,69 @@
     <!-- Table Card -->
     <div id="table-container" class="bg-white rounded-xl shadow-md overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="w-full table-auto divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode Barang</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Barang</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Periode Pemakaian</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durasi</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">No</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">Tanggal</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Kode Barang</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Barang</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Jumlah</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penerima</th>
+                        @if(request('kategori') === 'aset_sewa')
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">Durasi</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Status</th>
+                        @endif
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Penginput</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($barangKeluar as $index => $item)
                     <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                             {{ $barangKeluar->firstItem() + $index }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $item->tanggal->format('d/m/Y') }}
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                            {{ $item->tanggal->format('d/m/Y H:i') }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ $item->kodebarang_k }}
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-900">
-                            <div>
-                                <p class="font-medium">{{ $item->namabarang_k }}</p>
-                                @if($item->stock && $item->stock->kategori === 'aset_sewa')
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 mt-1">
-                                    <x-heroicon-o-computer-desktop class="w-3 h-3 mr-1" />
-                                    Aset Sewa
-                                </span>
-                                @endif
-                            </div>
+                        <td class="px-4 py-3 text-sm text-gray-900">
+                            {{ $item->namabarang_k }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                {{ $item->qty }} unit
+                                -{{ $item->qty }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-sm">
+                        <td class="px-4 py-3 text-sm text-gray-900">
+                            {{ $item->penerima }}
+                        </td>
+                        @if(request('kategori') === 'aset_sewa')
+                        <td class="px-4 py-3 whitespace-nowrap text-sm">
                             @if($item->tanggal_mulai_pakai && $item->tanggal_akhir_pakai)
-                                <div class="space-y-1">
-                                    <div class="flex items-center gap-1 text-xs">
-                                        <x-heroicon-o-calendar class="w-3 h-3 text-gray-400" />
-                                        <span class="text-gray-600">{{ \Carbon\Carbon::parse($item->tanggal_mulai_pakai)->format('d M Y') }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-1 text-xs">
-                                        <x-heroicon-o-calendar class="w-3 h-3 text-gray-400" />
-                                        <span class="text-gray-600">{{ \Carbon\Carbon::parse($item->tanggal_akhir_pakai)->format('d M Y') }}</span>
-                                    </div>
-                                </div>
-                            @else
-                                <span class="text-xs text-gray-400">-</span>
+                            @php
+                                $startDate = \Carbon\Carbon::parse($item->tanggal_mulai_pakai)->startOfDay();
+                                $endDate = \Carbon\Carbon::parse($item->tanggal_akhir_pakai)->startOfDay();
+                                $totalDays = $startDate->diffInDays($endDate) + 1;
+                            @endphp
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                {{ $totalDays }} hari total
+                            </span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            @if($item->tanggal_mulai_pakai && $item->tanggal_akhir_pakai)
-                                @php
-                                    $now = \Carbon\Carbon::now();
-                                    $startDate = \Carbon\Carbon::parse($item->tanggal_mulai_pakai);
-                                    $endDate = \Carbon\Carbon::parse($item->tanggal_akhir_pakai);
-                                    $totalDays = $startDate->diffInDays($endDate);
-                                    $daysLeft = $now->diffInDays($endDate, false);
-                                    $isExpired = $daysLeft < 0;
-                                @endphp
-                                <div class="space-y-1">
-                                    <p class="text-xs text-gray-600">{{ $totalDays }} hari total</p>
-                                    @if($isExpired)
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                                            <x-heroicon-o-exclamation-circle class="w-3 h-3 mr-1" />
-                                            Lewat {{ abs(floor($daysLeft)) }} hari
-                                        </span>
-                                    @elseif($daysLeft <= 3)
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                            <x-heroicon-o-clock class="w-3 h-3 mr-1" />
-                                            {{ ceil($daysLeft) }} hari lagi
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
-                                            <x-heroicon-o-check class="w-3 h-3 mr-1" />
-                                            {{ ceil($daysLeft) }} hari lagi
-                                        </span>
-                                    @endif
-                                </div>
-                            @else
-                                <span class="text-xs text-gray-400">-</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <td class="px-4 py-3 whitespace-nowrap text-sm">
                             @if($item->status === 'sedang_dipakai')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
                                     Aktif
                                 </span>
                             @elseif($item->status === 'selesai')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    <x-heroicon-o-check-circle class="w-3 h-3 mr-1" />
                                     Selesai
                                 </span>
                             @elseif($item->status === 'ditarik')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                    <x-heroicon-o-x-circle class="w-3 h-3 mr-1" />
                                     Ditarik
                                 </span>
                             @else
@@ -224,17 +182,14 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                            <a href="{{ route('user.barang-keluar.show', $item->idkeluar) }}" 
-                               class="text-[#14a2ba] hover:text-[#0d7a8f] transition-colors" 
-                               title="Detail">
-                                <x-heroicon-o-eye class="w-5 h-5 inline" />
-                            </a>
+                        @endif
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                            {{ $item->penginput }}
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="px-6 py-12 text-center">
+                        <td colspan="9" class="px-4 py-12 text-center">
                             <div class="flex flex-col items-center justify-center text-gray-500">
                                 <x-heroicon-o-inbox class="w-16 h-16 mb-4 opacity-30" />
                                 <p class="text-lg font-medium">Belum ada pemakaian barang</p>
