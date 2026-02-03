@@ -169,7 +169,6 @@ function updateBarangInfo() {
         barangInfo.classList.remove('hidden');
         document.getElementById('infoNama').textContent = selectedOption.dataset.nama;
         document.getElementById('infoKode').textContent = selectedOption.dataset.kode;
-        document.getElementById('infoKategori').textContent = selectedOption.dataset.kategori.replace('_', ' ');
         document.getElementById('infoStok').textContent = selectedOption.dataset.stock;
         
         // Set max qty - HANYA jika belum ada max attribute (untuk pending request)

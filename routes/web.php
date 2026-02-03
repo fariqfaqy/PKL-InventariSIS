@@ -36,6 +36,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // Export routes MUST be defined BEFORE resource routes
     Route::get('stok-barang/export-pdf', [StokBarangController::class, 'exportPdf'])->name('stok-barang.export-pdf');
     Route::put('stok-barang/{idbarang}/update-status', [\App\Http\Controllers\Admin\StatusKondisiController::class, 'update'])->name('stok-barang.update-status');
+    Route::post('stok-barang/{idbarang}/extend-rental', [StokBarangController::class, 'extendRental'])->name('stok-barang.extend-rental');
     Route::resource('stok-barang', StokBarangController::class)->except(['create', 'store']);
     
     Route::get('barang-masuk/export-pdf', [BarangMasukController::class, 'exportPdf'])->name('barang-masuk.export-pdf');
@@ -69,6 +70,19 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('permintaan/{id}/complete', [\App\Http\Controllers\Admin\PermintaanController::class, 'complete'])->name('permintaan.complete');
     Route::post('permintaan/{id}/update-status', [\App\Http\Controllers\Admin\PermintaanController::class, 'updateStatus'])->name('permintaan.update-status');
     Route::patch('permintaan/{id}/mark-complete', [\App\Http\Controllers\Admin\PermintaanController::class, 'markComplete'])->name('permintaan.mark-complete');
+    Route::post('permintaan/{id}/extend-rental', [\App\Http\Controllers\Admin\PermintaanController::class, 'extendRental'])->name('permintaan.extend-rental');
+    Route::post('permintaan/{id}/complete-rental', [\App\Http\Controllers\Admin\PermintaanController::class, 'completeRental'])->name('permintaan.complete-rental');
+    
+    // Notifications
+    Route::get('notifications', function() {
+        return view('admin.notifications.index', [
+            'notifications' => Auth::user()->notifications()->paginate(20)
+        ]);
+    })->name('notifications.index');
+    Route::get('notifications/mark-all-read', function() {
+        Auth::user()->unreadNotifications->markAsRead();
+        return back()->with('success', 'Semua notifikasi telah ditandai sebagai dibaca');
+    })->name('notifications.mark-all-read');
     
     // Add more admin routes here
     // Route::resource('reports', ReportController::class);
@@ -80,6 +94,17 @@ Route::prefix('user')->name('user.')->middleware(['auth', 'role:user'])->group(f
     Route::get('/dashboard/pemakaian-aktif', [UserDashboardController::class, 'getActivePemakaian'])->name('dashboard.pemakaian-aktif');
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
     Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('profile.update-password');
+    
+    // Notifications
+    Route::get('/notifications', function() {
+        return view('user.notifications.index', [
+            'notifications' => Auth::user()->notifications()->paginate(20)
+        ]);
+    })->name('notifications.index');
+    Route::get('/notifications/mark-all-read', function() {
+        Auth::user()->unreadNotifications->markAsRead();
+        return back()->with('success', 'Semua notifikasi telah ditandai sebagai dibaca');
+    })->name('notifications.mark-all-read');
     
     // Stok Barang (Read Only untuk User)
     Route::get('/stok-barang', [\App\Http\Controllers\User\StokBarangController::class, 'index'])->name('stok-barang.index');

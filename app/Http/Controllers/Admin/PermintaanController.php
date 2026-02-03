@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\RequestBarang;
 use App\Models\Stock;
 use App\Models\OutgoingTransaction;
+use App\Notifications\RequestStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -43,17 +44,38 @@ class PermintaanController extends Controller
         
         // History data dengan sub-tabs
         // 1. Sedang Dipakai - sudah disetujui tapi belum selesai
+        // Include both OutgoingTransaction (for aset_sewa) and RequestBarang (for barang_pinjam)
         $sedangDipakai = OutgoingTransaction::with(['stock', 'user'])
             ->whereNotNull('diproses_oleh')
             ->where('status', 'sedang_dipakai')
             ->orderBy('tanggal', 'desc')
             ->get();
         
+        // Add active rentals from RequestBarang (barang_pinjam)
+        $activeRentals = RequestBarang::with(['user', 'stock'])
+            ->where('tipe_request', 'pinjam_material')
+            ->where('status', 'approved')
+            ->orderBy('tanggal_request', 'desc')
+            ->get();
+        
+        // Merge both collections
+        $sedangDipakai = $sedangDipakai->merge($activeRentals);
+        
         // 2. Selesai - sudah selesai
         $selesai = OutgoingTransaction::with(['stock', 'user'])
             ->where('status', 'selesai')
             ->orderBy('tanggal_selesai', 'desc')
             ->get();
+        
+        // Add completed rentals from RequestBarang (barang_pinjam)
+        $completedRentals = RequestBarang::with(['user', 'stock'])
+            ->where('tipe_request', 'pinjam_material')
+            ->where('status', 'completed')
+            ->orderBy('updated_at', 'desc')
+            ->get();
+        
+        // Merge completed rentals
+        $selesai = $selesai->merge($completedRentals);
         
         // 3. Ditolak/Dibatalkan - request yang rejected atau cancelled
         $ditolakDibatalkan = RequestBarang::with(['user', 'stock'])
@@ -197,55 +219,39 @@ class PermintaanController extends Controller
                 }
                 
                 // Convert tipe_request untuk OutgoingTransaction
-                // pinjam_material -> 'peminjaman' (harus dikembalikan)
-                // pakai_habis_pakai -> 'permintaan' (tidak dikembalikan)
+                // pinjam_material -> 'peminjaman' (harus dikembalikan, stok berkurang saat pinjam)
+                // pakai_habis_pakai -> 'permintaan' (tidak dikembalikan, stok berkurang permanen)
                 $tipeKeluar = ($permintaan->tipe_request === 'pinjam_material') 
                     ? 'peminjaman' 
                     : 'permintaan';
                 
-                // Tentukan status OutgoingTransaction:
-                // - peminjaman (pinjam_material) = sedang_dipakai (belum dikembalikan)
-                // - permintaan (pakai_habis_pakai) = selesai (langsung completed)
-                $status = ($tipeKeluar === 'peminjaman') ? 'sedang_dipakai' : 'selesai';
-                $tanggalSelesai = ($tipeKeluar === 'permintaan') ? now() : null;
-                
-                // Update stock (kurangi stok) - HARUS DILAKUKAN SEBELUM create OutgoingTransaction
-                // untuk memastikan stok berkurang dulu sebelum transaksi dicatat
+                // Update stock (kurangi stok)
                 Stock::where('idbarang', $permintaan->idbarang)
                     ->decrement('stock', $permintaan->qty);
                 
-                // Update status kondisi HANYA untuk Aset Sewa (aset_sewa)
-                // Material Umum (barang_pinjam) TIDAK pakai status_kondisi
-                if ($tipeKeluar === 'peminjaman' && $permintaan->stock->kategori === 'aset_sewa') {
-                    Stock::where('idbarang', $permintaan->idbarang)->update([
-                        'status_kondisi' => 'digunakan',
-                        'keterangan_kondisi' => 'Sedang dipinjam oleh ' . ($permintaan->penerima ?? $permintaan->user->name),
-                        'tanggal_update_kondisi' => now(),
+                // Hanya buat OutgoingTransaction untuk pakai_habis_pakai
+                // Untuk pinjam_material, stok berkurang tapi tidak ada entry di barang keluar
+                // Barang keluar dibuat manual oleh admin jika perlu
+                if ($permintaan->tipe_request === 'pakai_habis_pakai') {
+                    // Create outgoing transaction (barang keluar) dengan link ke request
+                    OutgoingTransaction::create([
+                        'id_request' => $permintaan->id_request,
+                        'user_id' => $permintaan->user_id,
+                        'idbarang' => $permintaan->idbarang,
+                        'tanggal' => now(),
+                        'penerima' => $permintaan->penerima ?? $permintaan->user->name,
+                        'qty' => $permintaan->qty,
+                        'namabarang_k' => $permintaan->stock->namabarang,
+                        'kodebarang_k' => $permintaan->stock->kodebarang,
+                        'penginput' => $permintaan->user->name,
+                        'diproses_oleh' => Auth::user()->name,
+                        'kategori' => $permintaan->stock->kategori,
+                        'tipe_request' => 'permintaan',
+                        'status' => 'selesai',
+                        'tanggal_selesai' => now(),
+                        'status_approval' => 'approved',
                     ]);
                 }
-                
-                // Create outgoing transaction (barang keluar) dengan link ke request
-                OutgoingTransaction::create([
-                    'id_request' => $permintaan->id_request,
-                    'user_id' => $permintaan->user_id,
-                    'idbarang' => $permintaan->idbarang,
-                    'user_id' => $permintaan->user_id,
-                    'tanggal' => now(),
-                    'penerima' => $permintaan->penerima ?? $permintaan->user->name,
-                    'qty' => $permintaan->qty,
-                    'namabarang_k' => $permintaan->stock->namabarang,
-                    'kodebarang_k' => $permintaan->stock->kodebarang,
-                    'penginput' => $permintaan->user->name,
-                    'diproses_oleh' => Auth::user()->name,
-                    'kategori' => $permintaan->stock->kategori,
-                    'tanggal_mulai_pakai' => $permintaan->tanggal_mulai_sewa,
-                    'tanggal_akhir_pakai' => $permintaan->tanggal_akhir_sewa,
-                    'tipe_request' => $tipeKeluar,
-                    'status' => $status,
-                    'tanggal_selesai' => $tanggalSelesai,
-                    'status_approval' => 'approved',
-                ]);
-                
                 
                 // Update RequestBarang status:
                 // - peminjaman (pinjam_material): 'approved' karena barang harus dikembalikan
@@ -258,10 +264,16 @@ class PermintaanController extends Controller
                     'tanggal_diproses' => now(),
                 ]);
                 
-                $message = 'Permintaan disetujui dan barang telah diberikan ke user!';
+                $message = $permintaan->tipe_request === 'pinjam_material'
+                    ? 'Permintaan peminjaman disetujui! Stok berkurang sementara hingga barang dikembalikan.'
+                    : 'Permintaan disetujui dan barang telah diberikan ke user!';
             }
             
             DB::commit();
+            
+            // Send notification to user
+            $permintaan->user->notify(new RequestStatusNotification($permintaan, 'approved'));
+            
             return back()->with('success', $message);
             
         } catch (\Exception $e) {
@@ -318,6 +330,9 @@ class PermintaanController extends Controller
             'diproses_oleh' => Auth::user()->name,
             'tanggal_diproses' => now(),
         ]);
+        
+        // Send notification to user
+        $permintaan->user->notify(new RequestStatusNotification($permintaan, 'rejected', $validated['catatan_admin']));
         
         return back()->with('success', 'Permintaan berhasil ditolak!');
     }
@@ -441,6 +456,106 @@ class PermintaanController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Gagal menandai selesai: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Extend rental period for pinjam_material (Material Umum - Barang Pinjam)
+     * Perpanjang masa peminjaman untuk material umum
+     */
+    public function extendRental(Request $request, $id)
+    {
+        $permintaan = RequestBarang::with('stock')->findOrFail($id);
+        
+        // Validasi: harus tipe pinjam_material dan status approved
+        if ($permintaan->tipe_request !== 'pinjam_material') {
+            return back()->with('error', 'Hanya peminjaman material yang dapat diperpanjang!');
+        }
+        
+        if ($permintaan->status !== 'approved') {
+            return back()->with('error', 'Hanya peminjaman yang sudah disetujui yang bisa diperpanjang!');
+        }
+        
+        // Validasi tanggal akhir sewa harus ada
+        if (!$permintaan->tanggal_akhir_sewa) {
+            return back()->with('error', 'Peminjaman ini tidak memiliki tanggal kembali!');
+        }
+        
+        $validated = $request->validate([
+            'tanggal_akhir_sewa_baru' => 'required|date|after:' . $permintaan->tanggal_akhir_sewa->format('Y-m-d'),
+        ], [
+            'tanggal_akhir_sewa_baru.required' => 'Tanggal kembali baru harus diisi',
+            'tanggal_akhir_sewa_baru.date' => 'Format tanggal tidak valid',
+            'tanggal_akhir_sewa_baru.after' => 'Tanggal kembali baru harus setelah tanggal kembali saat ini (' . $permintaan->tanggal_akhir_sewa->format('d/m/Y') . ')',
+        ]);
+        
+        DB::beginTransaction();
+        try {
+            // Update tanggal_akhir_sewa di RequestBarang
+            $permintaan->update([
+                'tanggal_akhir_sewa' => $validated['tanggal_akhir_sewa_baru'],
+            ]);
+            
+            // Update tanggal_akhir_pakai di OutgoingTransaction jika ada
+            OutgoingTransaction::where('id_request', $id)
+                ->update([
+                    'tanggal_akhir_pakai' => $validated['tanggal_akhir_sewa_baru'],
+                ]);
+            
+            DB::commit();
+            
+            return back()->with('success', 'Masa peminjaman berhasil diperpanjang sampai ' . \Carbon\Carbon::parse($validated['tanggal_akhir_sewa_baru'])->format('d/m/Y') . '!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal memperpanjang peminjaman: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Complete rental - mark pinjam_material as returned and restore stock
+     * Selesaikan peminjaman material umum dan kembalikan stok
+     */
+    public function completeRental($id)
+    {
+        $permintaan = RequestBarang::with('stock')->findOrFail($id);
+        
+        // Validasi: harus tipe pinjam_material dan status approved
+        if ($permintaan->tipe_request !== 'pinjam_material') {
+            return back()->with('error', 'Hanya peminjaman material yang dapat diselesaikan!');
+        }
+        
+        if ($permintaan->status !== 'approved') {
+            return back()->with('error', 'Hanya peminjaman yang sudah disetujui yang bisa diselesaikan!');
+        }
+        
+        DB::beginTransaction();
+        try {
+            // Auto-reject semua pending change requests untuk request ini
+            RequestBarang::where('parent_request_id', $id)
+                ->where('status', 'pending')
+                ->update([
+                    'status' => 'rejected',
+                    'catatan_admin' => 'Request ditolak otomatis karena peminjaman sudah selesai.',
+                    'diproses_oleh' => 'System',
+                    'tanggal_diproses' => now(),
+                ]);
+            
+            // Kembalikan stok untuk Barang Pinjam (pinjam_material)
+            Stock::where('idbarang', $permintaan->idbarang)
+                ->increment('stock', $permintaan->qty);
+            
+            // Update status request ke completed
+            $permintaan->update([
+                'status' => 'completed',
+            ]);
+            
+            DB::commit();
+            
+            return redirect()->route('admin.permintaan.index')
+                ->with('success', 'Peminjaman selesai! ' . $permintaan->qty . ' unit ' . $permintaan->stock->namabarang . ' telah dikembalikan ke stok.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menyelesaikan peminjaman: ' . $e->getMessage());
         }
     }
 }

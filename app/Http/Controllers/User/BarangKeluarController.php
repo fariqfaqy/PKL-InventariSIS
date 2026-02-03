@@ -11,22 +11,22 @@ class BarangKeluarController extends Controller
 {
     /**
      * Display a listing of outgoing transactions (read-only for user).
-     * User hanya bisa lihat barang yang di-assign ke dia (via user_id untuk aset sewa)
+     * Menampilkan SEMUA transaksi barang keluar (tidak di-filter per user)
      * Konsisten dengan Admin logic
      */
     public function index(Request $request)
     {
-        $query = OutgoingTransaction::with(['stock', 'user.division'])
-            ->where('user_id', Auth::id()); // Hanya barang yang di-assign ke user ini
+        $query = OutgoingTransaction::with(['stock', 'user.division']);
+        // TIDAK ada filter user_id - tampilkan semua transaksi untuk semua user
         
         // Filter by kategori
         if ($request->filled('kategori') && in_array($request->kategori, ['aset_sewa', 'material_umum', 'aset_tetap'])) {
             $query->where('kategori', $request->kategori);
             
-            // Untuk aset_sewa, tambahkan filter status jika ada
+            // For Aset Sewa: only show 'selesai' status (exclude sedang_dipakai & ditarik)
+            // Konsisten dengan Admin - hanya tampilkan yang sudah diselesaikan
             if ($request->kategori === 'aset_sewa' && !$request->filled('status_filter')) {
-                // Default: tampilkan hanya yang sedang dipakai untuk aset_sewa
-                // $query->where('status', 'sedang_dipakai'); // Commented: tampilkan semua
+                $query->where('status', 'selesai');
             }
         }
         

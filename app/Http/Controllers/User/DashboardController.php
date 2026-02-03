@@ -49,14 +49,42 @@ class DashboardController extends Controller
         $raks = collect(['1a', '1b', '1c', '2a', '2b', '2c']);
 
         // Recent transactions barang keluar (untuk user)
-        // Tampilkan hanya aset sewa yang sedang dipakai milik user ini
-        $recentTransactions = OutgoingTransaction::with('stock')
-            ->where('user_id', Auth::id()) // Filter by user_id (konsisten dengan admin)
-            ->where('status', 'sedang_dipakai') // belum selesai
-            ->where('kategori', 'aset_sewa') // hanya aset sewa
-            ->orderBy('tanggal', 'desc')
-            ->limit(5) // Limit untuk dashboard
-            ->get();
+        // Tampilkan Aset Sewa yang sedang digunakan oleh user ini
+        // Data diambil dari Stock (bukan OutgoingTransaction)
+        $recentTransactions = Stock::with('user.division')
+            ->where('kategori', 'aset_sewa')
+            ->where('status_kondisi', 'digunakan')
+            ->where('user_id', Auth::id())
+            ->orderBy('tanggal_mulai_pakai', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function($stock) {
+                // Hitung durasi sewa dalam tahun
+                $durasiSewa = null;
+                if ($stock->tanggal_mulai_pakai && $stock->tanggal_akhir_pakai) {
+                    $start = \Carbon\Carbon::parse($stock->tanggal_mulai_pakai);
+                    $end = \Carbon\Carbon::parse($stock->tanggal_akhir_pakai);
+                    $totalDays = $start->diffInDays($end);
+                    $durasiSewa = round($totalDays / 365, 1); // Konversi ke tahun
+                }
+                
+                // Format ke object yang mirip OutgoingTransaction untuk view compatibility
+                return (object) [
+                    'idkeluar' => 'AS-' . $stock->idbarang,
+                    'tanggal' => $stock->tanggal_mulai_pakai ? \Carbon\Carbon::parse($stock->tanggal_mulai_pakai) : now(),
+                    'namabarang_k' => $stock->namabarang,
+                    'kodebarang_k' => $stock->kodebarang,
+                    'qty' => 1,
+                    'penerima' => $stock->user->name ?? '-',
+                    'kategori' => 'aset_sewa',
+                    'status' => 'sedang_dipakai',
+                    'tanggal_mulai_pakai' => $stock->tanggal_mulai_pakai,
+                    'tanggal_akhir_pakai' => $stock->tanggal_akhir_pakai,
+                    'tanggal_akhir_sewa' => $stock->tanggal_akhir_pakai ? \Carbon\Carbon::parse($stock->tanggal_akhir_pakai) : null, // Alias untuk view
+                    'durasi_sewa' => $durasiSewa,
+                    'stock' => $stock,
+                ];
+            });
         
         return view('user.dashboard', compact(
             'totalBarang',
@@ -79,45 +107,40 @@ class DashboardController extends Controller
      */
     public function getActivePemakaian()
     {
-        // Ambil pemakaian yang aktif (hanya aset sewa yang sedang dipakai milik user ini)
-        $activePemakaian = OutgoingTransaction::with('stock')
-            ->where('user_id', Auth::id()) // Filter by user_id (konsisten dengan admin)
-            ->where('status', 'sedang_dipakai')
-            ->where('kategori', 'aset_sewa') // hanya aset sewa
-            ->orderBy('tanggal', 'desc')
+        // Ambil Aset Sewa yang sedang digunakan oleh user ini (dari Stock)
+        $activePemakaian = Stock::with('user.division')
+            ->where('kategori', 'aset_sewa')
+            ->where('status_kondisi', 'digunakan')
+            ->where('user_id', Auth::id())
+            ->orderBy('tanggal_mulai_pakai', 'desc')
             ->get()
-            ->map(function ($trans) {
+            ->map(function ($stock) {
                 $data = [
-                    'id' => $trans->idkeluar,
-                    'tanggal' => $trans->tanggal->format('d/m/Y'),
-                    'tanggal_raw' => $trans->tanggal->toIso8601String(),
-                    'namabarang' => $trans->namabarang_k,
-                    'qty' => $trans->qty,
-                    'penerima' => $trans->penerima,
-                    'kategori' => $trans->kategori,
-                    'is_aset_sewa' => $trans->kategori === 'aset_sewa',
+                    'id' => 'AS-' . $stock->idbarang,
+                    'tanggal' => $stock->tanggal_mulai_pakai ? \Carbon\Carbon::parse($stock->tanggal_mulai_pakai)->format('d/m/Y') : now()->format('d/m/Y'),
+                    'tanggal_raw' => $stock->tanggal_mulai_pakai ? \Carbon\Carbon::parse($stock->tanggal_mulai_pakai)->toIso8601String() : now()->toIso8601String(),
+                    'namabarang' => $stock->namabarang,
+                    'kodebarang' => $stock->kodebarang,
+                    'qty' => 1,
+                    'penerima' => $stock->user->name ?? '-',
+                    'kategori' => 'aset_sewa',
+                    'is_aset_sewa' => true,
+                    'status_kondisi' => $stock->status_kondisi,
                 ];
 
-                // Tambahkan info pakai untuk aset sewa (gunakan tanggal_mulai/akhir_pakai)
-                if ($trans->kategori === 'aset_sewa') {
-                    $data['tanggal_mulai_pakai'] = $trans->tanggal_mulai_pakai ? $trans->tanggal_mulai_pakai->format('d/m/Y') : null;
-                    $data['tanggal_akhir_pakai'] = $trans->tanggal_akhir_pakai ? $trans->tanggal_akhir_pakai->format('d/m/Y') : null;
-                    
-                    // Hitung sisa hari pakai
-                    if ($trans->tanggal_akhir_pakai) {
-                        $today = now()->startOfDay();
-                        $endDate = $trans->tanggal_akhir_pakai;
-                        $sisaHari = $today->diffInDays($endDate, false);
-                        $data['sisa_hari'] = $sisaHari;
-                        $data['sisa_hari_text'] = $sisaHari > 0 ? $sisaHari . ' hari lagi' : 'Sudah berakhir';
-                        $data['is_expired'] = $sisaHari < 0;
-                        $data['is_near_expiry'] = $sisaHari >= 0 && $sisaHari <= 7;
-                    }
-                    
-                    // Status kondisi dari stock
-                    if ($trans->stock) {
-                        $data['status_kondisi'] = $trans->stock->status_kondisi;
-                    }
+                // Info tanggal pakai untuk aset sewa
+                $data['tanggal_mulai_pakai'] = $stock->tanggal_mulai_pakai ? \Carbon\Carbon::parse($stock->tanggal_mulai_pakai)->format('d/m/Y') : null;
+                $data['tanggal_akhir_pakai'] = $stock->tanggal_akhir_pakai ? \Carbon\Carbon::parse($stock->tanggal_akhir_pakai)->format('d/m/Y') : null;
+                
+                // Hitung sisa hari pakai
+                if ($stock->tanggal_akhir_pakai) {
+                    $today = now()->startOfDay();
+                    $endDate = \Carbon\Carbon::parse($stock->tanggal_akhir_pakai)->startOfDay();
+                    $sisaHari = $today->diffInDays($endDate, false);
+                    $data['sisa_hari'] = $sisaHari;
+                    $data['sisa_hari_text'] = $sisaHari > 0 ? $sisaHari . ' hari lagi' : 'Sudah berakhir';
+                    $data['is_expired'] = $sisaHari < 0;
+                    $data['is_near_expiry'] = $sisaHari >= 0 && $sisaHari <= 7;
                 }
 
                 return $data;

@@ -100,7 +100,6 @@
         @php
             $pendingRequests = $normalRequests->where('status', 'pending');
             $approvedRequests = $normalRequests->where('status', 'approved');
-            $rejectedRequests = $normalRequests->where('status', 'rejected');
         @endphp
 
         <!-- Pending Section -->
@@ -220,12 +219,12 @@
                                         $hasPendingCancellation = $pendingChangeRequest && $pendingChangeRequest->isCancellationRequest();
                                     @endphp
                                     <div class="flex items-center gap-2">
-                                        @if(!$hasPendingCancellation)
-                                        <form action="{{ route('admin.permintaan.mark-complete', $item->id_request) }}" method="POST" class="inline">
+                                        @if(!$hasPendingCancellation && $item->tipe_request === 'pinjam_material')
+                                        <!-- Complete Rental Button -->
+                                        <form action="{{ route('admin.permintaan.complete-rental', $item->id_request) }}" method="POST" class="inline">
                                             @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="text-green-600 hover:text-green-900" onclick="return customConfirm(event, 'Tandai request ini sudah selesai?', {type: 'success', title: 'Tandai Selesai', confirmText: 'Ya, Selesai'})" title="Tandai Selesai">
-                                                <x-heroicon-o-check-circle class="h-5 w-5 inline" />
+                                            <button type="submit" class="text-green-600 hover:text-green-900" onclick="return customConfirm(event, 'Selesaikan peminjaman? Barang akan dikembalikan dan stok bertambah {{ $item->qty }} unit.', {type: 'success', title: 'Selesaikan Peminjaman', confirmText: 'Ya, Selesai'})" title="Selesaikan Peminjaman">
+                                                <x-heroicon-o-check-badge class="h-5 w-5 inline" />
                                             </button>
                                         </form>
                                         @endif
@@ -233,66 +232,6 @@
                                             <x-heroicon-o-eye class="h-5 w-5 inline" /> Detail
                                         </a>
                                     </div>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        @endif
-
-        <!-- Rejected Section -->
-        @if($rejectedRequests->count() > 0)
-        <div class="mb-6">
-            <div class="flex items-center gap-2 mb-3">
-                <x-heroicon-o-x-circle class="h-6 w-6 text-red-600" />
-                <h3 class="text-lg font-semibold text-gray-800">Ditolak</h3>
-                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">{{ $rejectedRequests->count() }}</span>
-            </div>
-            <div class="bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-red-500">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-red-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Barang</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($rejectedRequests as $item)
-                            <tr class="hover:bg-red-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#{{ $item->id_request }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $item->tanggal_request->format('d/m/Y H:i') }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-900">
-                                    <div class="font-medium">{{ $item->user->name }}</div>
-                                    @if($item->user->nip)
-                                    <div class="text-gray-500 text-xs">NIP: {{ $item->user->nip }}</div>
-                                    @endif
-                                    @if($item->user->division)
-                                    <div class="text-gray-500 text-xs">{{ $item->user->division->nama_divisi }}</div>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-900">
-                                    <div class="font-medium">{{ $item->stock->namabarang }}</div>
-                                    <div class="text-gray-500 text-xs">{{ $item->stock->kodebarang }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $item->qty }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <span class="px-2 py-1 text-xs rounded-full {{ $item->tipe_request == 'pinjam_material' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
-                                        {{ $item->tipe_request_label }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <a href="{{ route('admin.permintaan.show', $item->id_request) }}" class="text-blue-600 hover:text-blue-900">
-                                        <x-heroicon-o-eye class="h-5 w-5 inline" /> Detail
-                                    </a>
                                 </td>
                             </tr>
                             @endforeach
@@ -474,23 +413,46 @@
                                     {{ $index + 1 }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    #{{ $trans->idkeluar }}
+                                    @if($trans instanceof \App\Models\OutgoingTransaction)
+                                        #{{ $trans->idkeluar }}
+                                    @else
+                                        #{{ $trans->id_request }}
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $trans->tanggal->format('d/m/Y H:i') }}
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-900">
-                                    <div class="font-medium">{{ $trans->penginput }}</div>
-                                    @if($trans->user && $trans->user->nip)
-                                    <div class="text-gray-500 text-xs">NIP: {{ $trans->user->nip }}</div>
-                                    @endif
-                                    @if($trans->user && $trans->user->division)
-                                    <div class="text-gray-500 text-xs">{{ $trans->user->division->nama_divisi }}</div>
+                                    @if($trans instanceof \App\Models\OutgoingTransaction)
+                                        {{ $trans->tanggal->format('d/m/Y H:i') }}
+                                    @else
+                                        {{ $trans->tanggal_request->format('d/m/Y H:i') }}
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
-                                    <div class="font-medium">{{ $trans->namabarang_k }}</div>
-                                    <div class="text-gray-500 text-xs">{{ $trans->kodebarang_k }}</div>
+                                    @if($trans instanceof \App\Models\OutgoingTransaction)
+                                        <div class="font-medium">{{ $trans->penginput }}</div>
+                                        @if($trans->user && $trans->user->nip)
+                                        <div class="text-gray-500 text-xs">NIP: {{ $trans->user->nip }}</div>
+                                        @endif
+                                        @if($trans->user && $trans->user->division)
+                                        <div class="text-gray-500 text-xs">{{ $trans->user->division->nama_divisi }}</div>
+                                        @endif
+                                    @else
+                                        <div class="font-medium">{{ $trans->user->name }}</div>
+                                        @if($trans->user->nip)
+                                        <div class="text-gray-500 text-xs">NIP: {{ $trans->user->nip }}</div>
+                                        @endif
+                                        @if($trans->user->division)
+                                        <div class="text-gray-500 text-xs">{{ $trans->user->division->nama_divisi }}</div>
+                                        @endif
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    @if($trans instanceof \App\Models\OutgoingTransaction)
+                                        <div class="font-medium">{{ $trans->namabarang_k }}</div>
+                                        <div class="text-gray-500 text-xs">{{ $trans->kodebarang_k }}</div>
+                                    @else
+                                        <div class="font-medium">{{ $trans->stock->namabarang }}</div>
+                                        <div class="text-gray-500 text-xs">{{ $trans->stock->kodebarang }}</div>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
@@ -498,18 +460,29 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ $trans->penerima }}
+                                    @if($trans instanceof \App\Models\OutgoingTransaction)
+                                        {{ $trans->penerima }}
+                                    @else
+                                        {{ $trans->penerima ?? $trans->user->name }}
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    @if($trans->tipe_request == 'peminjaman')
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                            <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
-                                            Peminjaman
-                                        </span>
+                                    @if($trans instanceof \App\Models\OutgoingTransaction)
+                                        @if($trans->tipe_request == 'peminjaman')
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
+                                                Peminjaman
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                <x-heroicon-o-shopping-cart class="w-3 h-3 mr-1" />
+                                                Permintaan
+                                            </span>
+                                        @endif
                                     @else
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            <x-heroicon-o-shopping-cart class="w-3 h-3 mr-1" />
-                                            Permintaan
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
+                                            Barang Pinjam
                                         </span>
                                     @endif
                                 </td>
@@ -555,26 +528,53 @@
                                     {{ $index + 1 }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    #{{ $trans->idkeluar }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $trans->tanggal->format('d/m/Y') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $trans->tanggal_selesai ? $trans->tanggal_selesai->format('d/m/Y') : '-' }}
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-900">
-                                    <div class="font-medium">{{ $trans->penginput }}</div>
-                                    @if($trans->user && $trans->user->nip)
-                                    <div class="text-gray-500 text-xs">NIP: {{ $trans->user->nip }}</div>
-                                    @endif
-                                    @if($trans->user && $trans->user->division)
-                                    <div class="text-gray-500 text-xs">{{ $trans->user->division->nama_divisi }}</div>
+                                    @if($trans instanceof \App\Models\OutgoingTransaction)
+                                        #{{ $trans->idkeluar }}
+                                    @else
+                                        #{{ $trans->id_request }}
                                     @endif
                                 </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    @if($trans instanceof \App\Models\OutgoingTransaction)
+                                        {{ $trans->tanggal->format('d/m/Y') }}
+                                    @else
+                                        {{ $trans->tanggal_request->format('d/m/Y') }}
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    @if($trans instanceof \App\Models\OutgoingTransaction)
+                                        {{ $trans->tanggal_selesai ? $trans->tanggal_selesai->format('d/m/Y') : '-' }}
+                                    @else
+                                        {{ $trans->updated_at->format('d/m/Y') }}
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
-                                    <div class="font-medium">{{ $trans->namabarang_k }}</div>
-                                    <div class="text-gray-500 text-xs">{{ $trans->kodebarang_k }}</div>
+                                    @if($trans instanceof \App\Models\OutgoingTransaction)
+                                        <div class="font-medium">{{ $trans->penginput }}</div>
+                                        @if($trans->user && $trans->user->nip)
+                                        <div class="text-gray-500 text-xs">NIP: {{ $trans->user->nip }}</div>
+                                        @endif
+                                        @if($trans->user && $trans->user->division)
+                                        <div class="text-gray-500 text-xs">{{ $trans->user->division->nama_divisi }}</div>
+                                        @endif
+                                    @else
+                                        <div class="font-medium">{{ $trans->user->name }}</div>
+                                        @if($trans->user->nip)
+                                        <div class="text-gray-500 text-xs">NIP: {{ $trans->user->nip }}</div>
+                                        @endif
+                                        @if($trans->user->division)
+                                        <div class="text-gray-500 text-xs">{{ $trans->user->division->nama_divisi }}</div>
+                                        @endif
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    @if($trans instanceof \App\Models\OutgoingTransaction)
+                                        <div class="font-medium">{{ $trans->namabarang_k }}</div>
+                                        <div class="text-gray-500 text-xs">{{ $trans->kodebarang_k }}</div>
+                                    @else
+                                        <div class="font-medium">{{ $trans->stock->namabarang }}</div>
+                                        <div class="text-gray-500 text-xs">{{ $trans->stock->kodebarang }}</div>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
@@ -582,18 +582,29 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ $trans->penerima }}
+                                    @if($trans instanceof \App\Models\OutgoingTransaction)
+                                        {{ $trans->penerima }}
+                                    @else
+                                        {{ $trans->penerima ?? $trans->user->name }}
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    @if($trans->tipe_request == 'peminjaman')
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                            <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
-                                            Peminjaman
-                                        </span>
+                                    @if($trans instanceof \App\Models\OutgoingTransaction)
+                                        @if($trans->tipe_request == 'peminjaman')
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
+                                                Peminjaman
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                <x-heroicon-o-shopping-cart class="w-3 h-3 mr-1" />
+                                                Permintaan
+                                            </span>
+                                        @endif
                                     @else
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            <x-heroicon-o-shopping-cart class="w-3 h-3 mr-1" />
-                                            Permintaan
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <x-heroicon-o-check-circle class="w-3 h-3 mr-1" />
+                                            Barang Pinjam
                                         </span>
                                     @endif
                                 </td>

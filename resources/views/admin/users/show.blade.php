@@ -122,12 +122,6 @@
                 <label class="block text-sm font-medium text-gray-500 mb-1">Tanggal Masuk</label>
                 <p class="text-gray-800">{{ $user->tanggal_masuk ? $user->tanggal_masuk->format('d F Y') : '-' }}</p>
             </div>
-            @if($user->tanggal_masuk)
-            <div>
-                <label class="block text-sm font-medium text-gray-500 mb-1">Masa Kerja</label>
-                <p class="text-gray-800 font-semibold">{{ $user->tanggal_masuk->diffForHumans(null, true) }}</p>
-            </div>
-            @endif
         </div>
     </div>
 
@@ -299,10 +293,24 @@
                     
                     <!-- Right: Action Button -->
                     <div>
-                        <a href="{{ route('admin.barang-keluar.show', $activity['id']) }}" 
-                            class="text-{{ $activity['color'] }}-600 hover:text-{{ $activity['color'] }}-800 transition-colors">
-                            <x-heroicon-o-eye class="w-5 h-5" />
-                        </a>
+                        @if(str_starts_with($activity['id'], 'AS-'))
+                            {{-- Aset Sewa aktif dari Stock - link ke stok barang --}}
+                            @php
+                                $stockId = str_replace('AS-', '', $activity['id']);
+                            @endphp
+                            <a href="{{ route('admin.stok-barang.show', $stockId) }}" 
+                                class="text-{{ $activity['color'] }}-600 hover:text-{{ $activity['color'] }}-800 transition-colors"
+                                title="Lihat Detail Stok">
+                                <x-heroicon-o-eye class="w-5 h-5" />
+                            </a>
+                        @else
+                            {{-- Transaksi keluar normal - link ke barang keluar --}}
+                            <a href="{{ route('admin.barang-keluar.show', $activity['id']) }}" 
+                                class="text-{{ $activity['color'] }}-600 hover:text-{{ $activity['color'] }}-800 transition-colors"
+                                title="Lihat Detail Transaksi">
+                                <x-heroicon-o-eye class="w-5 h-5" />
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>

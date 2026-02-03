@@ -41,7 +41,6 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:admin,user',
             'division_id' => 'nullable|exists:divisions,id',
             'nip' => 'nullable|string|max:50|unique:users,nip',
             'jabatan' => 'nullable|string|max:255',
@@ -53,7 +52,7 @@ class UserController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role' => $validated['role'],
+            'role' => 'user', // Auto set role sebagai user (admin hanya 1)
             'division_id' => $validated['division_id'] ?? null,
             'nip' => $validated['nip'] ?? null,
             'jabatan' => $validated['jabatan'] ?? null,
@@ -72,8 +71,39 @@ class UserController extends Controller
     {
         $user->load('division');
         
-        // Get user activities - transaksi keluar yang terkait dengan user ini
-        $activities = \App\Models\OutgoingTransaction::with(['stock'])
+        // Get user activities - gabungkan dari 2 sumber:
+        // 1. Aset Sewa yang sedang digunakan (dari Stock)
+        // 2. Transaksi keluar yang sudah selesai (dari OutgoingTransaction)
+        
+        $activities = collect();
+        
+        // 1. Aset Sewa yang sedang digunakan (dari Stock)
+        $activeAsetSewa = \App\Models\Stock::with('user')
+            ->where('kategori', 'aset_sewa')
+            ->where('status_kondisi', 'digunakan')
+            ->where('user_id', $user->id)
+            ->get()
+            ->map(function($stock) {
+                return [
+                    'id' => 'AS-' . $stock->idbarang,
+                    'type' => 'sewa',
+                    'label' => 'Menyewa Aset',
+                    'color' => 'purple',
+                    'barang' => $stock->namabarang,
+                    'kode' => $stock->kodebarang,
+                    'qty' => 1,
+                    'tanggal' => $stock->tanggal_mulai_pakai ? \Carbon\Carbon::parse($stock->tanggal_mulai_pakai) : now(),
+                    'status' => 'sedang_dipakai',
+                    'tanggal_pinjam' => $stock->tanggal_mulai_pakai,
+                    'tanggal_kembali' => $stock->tanggal_akhir_pakai,
+                    'tanggal_selesai' => null,
+                    'kategori' => 'aset_sewa',
+                    'tipe_request' => 'aset_sewa',
+                ];
+            });
+        
+        // 2. Transaksi keluar (OutgoingTransaction) - untuk history yang sudah selesai dan material umum
+        $outgoingActivities = \App\Models\OutgoingTransaction::with(['stock'])
             ->where('user_id', $user->id)
             ->orderBy('tanggal', 'desc')
             ->get()
@@ -134,6 +164,9 @@ class UserController extends Controller
                     'tipe_request' => $transaction->tipe_request,
                 ];
             });
+        
+        // Gabungkan activities dari Stock dan OutgoingTransaction
+        $activities = $activeAsetSewa->merge($outgoingActivities)->sortByDesc('tanggal')->values();
         
         // Group activities by type for statistics
         $stats = [

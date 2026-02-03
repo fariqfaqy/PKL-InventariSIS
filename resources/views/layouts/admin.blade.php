@@ -91,17 +91,9 @@
                 </div>
 
                 <!-- Kelola Permintaan -->
-                <a href="{{ route('admin.permintaan.index') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('admin.permintaan.*') ? 'text-white bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f]' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group relative">
+                <a href="{{ route('admin.permintaan.index') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('admin.permintaan.*') ? 'text-white bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f]' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
                     <x-heroicon-o-clipboard-document-list class="w-5 h-5 {{ request()->routeIs('admin.permintaan.*') ? '' : 'group-hover:text-[#14a2ba]' }}" />
                     <span class="font-medium">Kelola Permintaan</span>
-                    @php
-                        $pendingCount = \App\Models\RequestBarang::where('status', 'pending')->count();
-                    @endphp
-                    @if($pendingCount > 0)
-                        <span class="absolute -top-1 -right-1 px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full">
-                            {{ $pendingCount }}
-                        </span>
-                    @endif
                 </a>
 
                 <!-- Kelola User -->
@@ -152,6 +144,60 @@
 
                 <!-- Right Side -->
                 <div class="flex items-center gap-4">
+                    <!-- Notification Bell -->
+                    <div class="relative">
+                        <button id="notificationButton" class="relative p-2 text-gray-600 hover:text-[#14a2ba] transition-colors">
+                            <x-heroicon-o-bell class="w-6 h-6" />
+                            @php
+                                $unreadCount = Auth::user()->unreadNotifications->count();
+                            @endphp
+                            @if($unreadCount > 0)
+                            <span class="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                                {{ $unreadCount > 9 ? '9+' : $unreadCount }}
+                            </span>
+                            @endif
+                        </button>
+                        
+                        <!-- Notification Dropdown -->
+                        <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                            <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                                <h3 class="font-semibold text-gray-800">Notifikasi</h3>
+                                @if($unreadCount > 0)
+                                <a href="{{ route('admin.notifications.mark-all-read') }}" class="text-xs text-blue-600 hover:text-blue-800">Tandai semua dibaca</a>
+                                @endif
+                            </div>
+                            <div class="max-h-96 overflow-y-auto">
+                                @forelse(Auth::user()->notifications()->take(5)->get() as $notification)
+                                <a href="{{ $notification->data['url'] ?? '#' }}" 
+                                   class="block p-4 hover:bg-gray-50 border-b border-gray-100 {{ is_null($notification->read_at) ? 'bg-blue-50' : '' }}">
+                                    <div class="flex items-start gap-3">
+                                        <div class="shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                            <x-heroicon-o-bell class="w-5 h-5 text-blue-600" />
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium text-gray-900">{{ $notification->data['message'] ?? 'Notifikasi' }}</p>
+                                            @if(isset($notification->data['user']))
+                                            <p class="text-xs text-gray-600 mt-1">User: {{ $notification->data['user'] }}</p>
+                                            @endif
+                                            <p class="text-xs text-gray-400 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
+                                        </div>
+                                    </div>
+                                </a>
+                                @empty
+                                <div class="p-8 text-center text-gray-500">
+                                    <x-heroicon-o-bell-slash class="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                                    <p class="text-sm">Tidak ada notifikasi</p>
+                                </div>
+                                @endforelse
+                            </div>
+                            @if(Auth::user()->notifications->count() > 5)
+                            <div class="p-3 border-t border-gray-200 text-center">
+                                <a href="{{ route('admin.notifications.index') }}" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Lihat semua notifikasi</a>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                    
                     <!-- User Menu -->
                     <div class="flex items-center gap-3 pl-4 border-l border-gray-200">
                         <div class="text-right hidden sm:block">
@@ -241,6 +287,24 @@
             
             submenu.classList.toggle('hidden');
             icon.classList.toggle('rotate-180');
+        }
+        
+        // Notification dropdown toggle
+        const notificationButton = document.getElementById('notificationButton');
+        const notificationDropdown = document.getElementById('notificationDropdown');
+        
+        if (notificationButton && notificationDropdown) {
+            notificationButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                notificationDropdown.classList.toggle('hidden');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!notificationButton.contains(e.target) && !notificationDropdown.contains(e.target)) {
+                    notificationDropdown.classList.add('hidden');
+                }
+            });
         }
 
         // Global Confirm Modal Functions

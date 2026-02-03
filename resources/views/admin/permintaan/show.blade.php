@@ -175,7 +175,46 @@
                                 <span class="font-medium">{{ $permintaan->tanggal_mulai_sewa->diffInDays($permintaan->tanggal_akhir_sewa) }} hari</span>
                             </div>
                         @endif
+                        
+                        @php
+                            $now = now();
+                            $isOverdue = $permintaan->tanggal_akhir_sewa && $permintaan->tanggal_akhir_sewa->lt($now);
+                            $daysRemaining = $permintaan->tanggal_akhir_sewa ? $now->diffInDays($permintaan->tanggal_akhir_sewa, false) : null;
+                        @endphp
+                        
+                        @if($permintaan->status === 'approved')
+                            <div class="flex justify-between items-center pt-3 border-t border-blue-200">
+                                <span class="text-gray-600">Status:</span>
+                                @if($isOverdue)
+                                    <span class="px-3 py-1 text-sm font-semibold rounded-full bg-red-100 text-red-800">
+                                        <x-heroicon-o-exclamation-triangle class="w-4 h-4 inline" />
+                                        Terlambat {{ abs($daysRemaining) }} hari
+                                    </span>
+                                @elseif($daysRemaining <= 3)
+                                    <span class="px-3 py-1 text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                        <x-heroicon-o-clock class="w-4 h-4 inline" />
+                                        {{ $daysRemaining }} hari lagi
+                                    </span>
+                                @else
+                                    <span class="px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800">
+                                        <x-heroicon-o-check-circle class="w-4 h-4 inline" />
+                                        Masih {{ $daysRemaining }} hari
+                                    </span>
+                                @endif
+                            </div>
+                        @endif
                     </div>
+                    
+                    <!-- Extend Rental Button (only for approved rentals) -->
+                    @if($permintaan->status === 'approved')
+                        <div class="mt-4 pt-4 border-t border-blue-200">
+                            <button type="button" onclick="document.getElementById('extendRentalModal').classList.remove('hidden')" 
+                                    class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center">
+                                <x-heroicon-o-arrow-path class="h-5 w-5 mr-2" />
+                                Perpanjang Peminjaman
+                            </button>
+                        </div>
+                    @endif
                 </div>
             @endif
 
@@ -247,11 +286,28 @@
                     </form>
 
                     <!-- Reject Button with Modal -->
-                    <button type="button" onclick="document.getElementById('rejectModal').classList.remove('hidden')" 
+                    <button type="button" onclick="openRejectModal()" 
                             class="w-full px-4 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center justify-center">
                         <x-heroicon-o-x-circle class="h-5 w-5 mr-2" />
                         Tolak
                     </button>
+                
+                @elseif($permintaan->status === 'approved' && $permintaan->tipe_request === 'pinjam_material')
+                    <!-- Complete Rental Button (untuk barang pinjam yang sudah approved) -->
+                    <form action="{{ route('admin.permintaan.complete-rental', $permintaan->id_request) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="w-full px-4 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center mb-3"
+                                onclick="return customConfirm(event, 'Tandai peminjaman ini sebagai selesai? Barang akan dikembalikan dan stok akan bertambah {{ $permintaan->qty }} unit.', {type: 'success', title: 'Selesaikan Peminjaman', confirmText: 'Ya, Selesai'})">
+                            <x-heroicon-o-check-badge class="h-5 w-5 mr-2" />
+                            Selesaikan Peminjaman
+                        </button>
+                    </form>
+                    
+                    <div class="text-center text-gray-500 py-2 text-xs">
+                        <x-heroicon-o-information-circle class="h-4 w-4 inline mb-1" />
+                        <p>Klik tombol di atas ketika barang sudah dikembalikan</p>
+                    </div>
+                
                 @else
                     <div class="text-center text-gray-500 py-4">
                         <x-heroicon-o-information-circle class="h-12 w-12 mx-auto mb-2 text-gray-400" />
@@ -264,25 +320,115 @@
 </div>
 
 <!-- Reject Modal -->
-<div id="rejectModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+<div id="rejectModal" class="hidden fixed inset-0 backdrop-blur-sm bg-white/30 z-50 flex items-center justify-center transition-all duration-300 opacity-0" onclick="closeRejectModal()">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 transform scale-95 transition-all duration-300" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-gray-800">Tolak Permintaan</h3>
+            <button onclick="closeRejectModal()" class="text-gray-400 hover:text-gray-600">
+                <x-heroicon-o-x-mark class="w-6 h-6" />
+            </button>
+        </div>
+
+        <form id="rejectForm" action="{{ route('admin.permintaan.reject', $permintaan->id_request) }}" method="POST"
+              onsubmit="return customConfirm(event, 'Yakin menolak permintaan ini? Tindakan tidak dapat dibatalkan.', {type: 'danger', title: 'Tolak Permintaan', confirmText: 'Ya, Tolak'})">
+            @csrf
+            <div class="mb-6">
+                <label for="catatan_admin" class="block text-sm font-medium text-gray-700 mb-2">
+                    Alasan Penolakan <span class="text-red-500">*</span>
+                </label>
+                <textarea id="catatan_admin" name="catatan_admin" rows="4" required
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                          placeholder="Masukkan alasan penolakan..."></textarea>
+                <p class="mt-1 text-sm text-gray-500">Alasan akan dikirimkan ke pemohon</p>
+            </div>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeRejectModal()" 
+                        class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                    Batal
+                </button>
+                <button type="submit" 
+                        class="flex-1 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-md hover:shadow-lg font-medium">
+                    Tolak
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openRejectModal() {
+    const modal = document.getElementById('rejectModal');
+    modal.classList.remove('hidden');
+    
+    // Trigger animation
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.querySelector('div').classList.remove('scale-95');
+        modal.querySelector('div').classList.add('scale-100');
+    }, 10);
+}
+
+function closeRejectModal() {
+    const modal = document.getElementById('rejectModal');
+    modal.classList.add('opacity-0');
+    modal.querySelector('div').classList.remove('scale-100');
+    modal.querySelector('div').classList.add('scale-95');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+// Close modal dengan ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeRejectModal();
+    }
+});
+</script>
+
+<!-- Extend Rental Modal -->
+@if($permintaan->status === 'approved' && $permintaan->tipe_request === 'pinjam_material' && $permintaan->tanggal_akhir_sewa)
+<div id="extendRentalModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
     <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <div class="mt-3">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">Tolak Permintaan</h3>
-            <form action="{{ route('admin.permintaan.reject', $permintaan->id_request) }}" method="POST">
+            <div class="flex items-center gap-2 mb-4">
+                <x-heroicon-o-arrow-path class="h-6 w-6 text-blue-600" />
+                <h3 class="text-lg font-bold text-gray-900">Perpanjang Peminjaman</h3>
+            </div>
+            
+            <form action="{{ route('admin.permintaan.extend-rental', $permintaan->id_request) }}" method="POST">
                 @csrf
-                <div class="mb-4">
-                    <label for="catatan_admin" class="block text-sm font-medium text-gray-700 mb-2">
-                        Alasan Penolakan<span class="text-red-500">*</span>
-                    </label>
-                    <textarea id="catatan_admin" name="catatan_admin" rows="4" required
-                              class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
-                              placeholder="Masukkan alasan penolakan..."></textarea>
+                
+                <div class="mb-4 p-3 bg-blue-50 rounded-lg">
+                    <p class="text-sm text-gray-700">
+                        <span class="font-semibold">Tanggal Kembali Saat Ini:</span><br>
+                        <span class="text-lg font-bold text-blue-600">{{ $permintaan->tanggal_akhir_sewa->format('d/m/Y') }}</span>
+                    </p>
                 </div>
+                
+                <div class="mb-4">
+                    <label for="tanggal_akhir_sewa_baru" class="block text-sm font-medium text-gray-700 mb-2">
+                        Tanggal Kembali Baru<span class="text-red-500">*</span>
+                    </label>
+                    <input type="date" 
+                           id="tanggal_akhir_sewa_baru" 
+                           name="tanggal_akhir_sewa_baru" 
+                           min="{{ \Carbon\Carbon::parse($permintaan->tanggal_akhir_sewa)->addDay()->format('Y-m-d') }}"
+                           required
+                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">
+                        <x-heroicon-o-information-circle class="w-3 h-3 inline" />
+                        Tanggal baru harus setelah {{ $permintaan->tanggal_akhir_sewa->format('d/m/Y') }}
+                    </p>
+                </div>
+                
                 <div class="flex gap-2">
-                    <button type="submit" class="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
-                        Tolak
+                    <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center">
+                        <x-heroicon-o-arrow-path class="h-4 w-4 mr-2" />
+                        Perpanjang
                     </button>
-                    <button type="button" onclick="document.getElementById('rejectModal').classList.add('hidden')"
+                    <button type="button" onclick="document.getElementById('extendRentalModal').classList.add('hidden')"
                             class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
                         Batal
                     </button>
@@ -291,4 +437,5 @@
         </div>
     </div>
 </div>
+@endif
 @endsection

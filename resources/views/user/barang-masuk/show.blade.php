@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.user')
 
 @section('title', 'Barang Masuk')
 
@@ -7,11 +7,17 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
         <div class="flex items-center gap-4">
-            <a href="{{ route('admin.barang-masuk.index') }}" class="text-gray-600 hover:text-[#14a2ba] transition-colors">
+            <a href="{{ route('user.barang-masuk.index') }}" class="text-gray-600 hover:text-[#14a2ba] transition-colors">
                 <x-heroicon-o-arrow-left class="w-6 h-6" />
             </a>
             <div>
-                <h2 class="text-2xl font-bold text-gray-800">Detail Barang Masuk</h2>
+                <div class="flex items-center gap-3">
+                    <h2 class="text-2xl font-bold text-gray-800">Detail Barang Masuk</h2>
+                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full border border-gray-300">
+                        <x-heroicon-o-eye class="w-3 h-3" />
+                        Read Only
+                    </span>
+                </div>
                 <p class="text-sm text-gray-500 mt-1">Informasi lengkap transaksi barang masuk</p>
             </div>
         </div>
@@ -43,7 +49,10 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Tanggal Masuk</label>
-                <p class="text-gray-800">{{ \Carbon\Carbon::parse($barangMasuk->tanggal)->format('d/m/Y H:i') }}</p>
+                <div class="flex items-center gap-2 text-gray-800">
+                    <x-heroicon-o-calendar class="w-5 h-5 text-[#14a2ba]" />
+                    <span>{{ \Carbon\Carbon::parse($barangMasuk->tanggal)->format('d/m/Y H:i') }}</span>
+                </div>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Jumlah</label>
@@ -86,7 +95,7 @@
                         Aset Sewa
                     </span>
                 @elseif($barangMasuk->stock->kategori === 'aset_tetap')
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-teal-100 text-teal-800">
                         <x-heroicon-o-building-office class="w-4 h-4 mr-1" />
                         Aset Tetap
                     </span>
@@ -102,12 +111,12 @@
             @if($barangMasuk->stock->sub_kategori)
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Sub Kategori</label>
-                @if($barangMasuk->stock->sub_kategori === 'pinjam_material')
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-cyan-100 text-cyan-800">
+                @if($barangMasuk->stock->sub_kategori === 'barang_pinjam')
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                         <x-heroicon-o-arrow-path-rounded-square class="w-4 h-4 mr-1" />
                         Barang Pinjam
                     </span>
-                @elseif($barangMasuk->stock->sub_kategori === 'pakai_habis_pakai')
+                @elseif($barangMasuk->stock->sub_kategori === 'barang_habis_pakai')
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                         <x-heroicon-o-shopping-cart class="w-4 h-4 mr-1" />
                         Barang Habis Pakai
@@ -145,12 +154,15 @@
                     {{ $barangMasuk->stock->stock }} unit
                 </span>
             </div>
+            
+            @if($barangMasuk->stock->kategori != 'aset_sewa' && $barangMasuk->stock->kategori != 'aset_tetap')
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Rak</label>
                 <span class="inline-flex items-center px-3 py-1 rounded text-sm font-medium bg-blue-100 text-blue-800">
                     Rak {{ strtoupper($barangMasuk->stock->rack) }}
                 </span>
             </div>
+            @endif
 
             @if($barangMasuk->stock->deskripsi)
             <div class="md:col-span-2">
@@ -159,19 +171,16 @@
             </div>
             @endif
         </div>
+        
+        <!-- Link ke Detail Stok -->
+        <div class="mt-6 pt-6 border-t border-gray-200">
+            <a href="{{ route('user.stok-barang.show', $barangMasuk->stock->idbarang) }}" 
+                class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-300">
+                <x-heroicon-o-cube class="w-5 h-5" />
+                <span class="font-medium">Lihat Detail Stok Lengkap</span>
+            </a>
+        </div>
     </div>
     @endif
-
-    <!-- Actions -->
-    <div class="flex justify-between items-center">
-        <form action="{{ route('admin.barang-masuk.destroy', $barangMasuk->idmasuk) }}" method="POST" 
-            onsubmit="return customConfirm(event, 'Yakin ingin menghapus history transaksi ini? Data ini hanya akan dihapus dari history, stok tidak akan terpengaruh.', {type: 'danger', title: 'Hapus History Transaksi Masuk', confirmText: 'Ya, Hapus'})">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors inline-flex items-center gap-2">
-                <x-heroicon-o-trash class="w-5 h-5" /> Hapus Transaksi
-            </button>
-        </form>
-    </div>
 </div>
 @endsection

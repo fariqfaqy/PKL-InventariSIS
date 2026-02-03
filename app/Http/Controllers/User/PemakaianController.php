@@ -66,21 +66,65 @@ class PemakaianController extends Controller
             ->get();
 
         // Ambil history pemakaian berdasarkan status
-        // 1. Sedang dipakai - aset sewa yang aktif (gunakan user_id, konsisten dengan admin)
-        $sedangDipakai = OutgoingTransaction::with('stock')
-            ->where('user_id', Auth::id()) // Filter by user_id
+        // 1. Sedang dipakai - Aset Sewa yang sedang digunakan user ini (dari Stock, bukan OutgoingTransaction)
+        //    Material Umum peminjaman yang sedang dipakai juga di sini
+        $sedangDipakai = collect();
+        
+        // Aset Sewa yang sedang dipakai (dari Stock langsung)
+        $asetSewaSedangDigunakan = Stock::with('user.division')
+            ->where('kategori', 'aset_sewa')
+            ->where('status_kondisi', 'digunakan')
+            ->where('user_id', Auth::id())
+            ->get()
+            ->map(function($stock) {
+                // Format ke object yang mirip OutgoingTransaction untuk view compatibility
+                return (object) [
+                    'idkeluar' => 'AS-' . $stock->idbarang,
+                    'tanggal' => $stock->tanggal_mulai_pakai ? \Carbon\Carbon::parse($stock->tanggal_mulai_pakai) : now(),
+                    'namabarang_k' => $stock->namabarang,
+                    'kodebarang_k' => $stock->kodebarang,
+                    'qty' => 1, // Aset sewa selalu 1
+                    'penerima' => $stock->user->name ?? '-',
+                    'tipe_request' => 'aset_sewa',
+                    'kategori' => 'aset_sewa',
+                    'status' => 'sedang_dipakai',
+                    'tanggal_mulai_pakai' => $stock->tanggal_mulai_pakai,
+                    'tanggal_akhir_pakai' => $stock->tanggal_akhir_pakai,
+                    'stock' => $stock, // Reference ke Stock untuk detail
+                ];
+            });
+        
+        // Material Umum peminjaman yang sedang dipakai (dari OutgoingTransaction)
+        $materialPeminjaman = OutgoingTransaction::with('stock')
+            ->where('user_id', Auth::id())
             ->where('status', 'sedang_dipakai')
-            ->where('kategori', 'aset_sewa') // Hanya aset sewa untuk history ini
+            ->where('kategori', 'material_umum')
             ->orderBy('tanggal', 'desc')
             ->get();
         
-        // 2. Selesai - aset sewa yang sudah dikembalikan
-        $selesai = OutgoingTransaction::with('stock')
-            ->where('user_id', Auth::id()) // Filter by user_id
+        // Gabungkan Aset Sewa dan Material Umum
+        $sedangDipakai = $asetSewaSedangDigunakan->merge($materialPeminjaman)->sortByDesc('tanggal')->values();
+        
+        // 2. Selesai - Aset Sewa yang sudah selesai + Material Umum yang sudah dikembalikan
+        $selesai = collect();
+        
+        // Aset Sewa yang sudah selesai (dari OutgoingTransaction yang dibuat saat admin klik selesaikan)
+        $asetSewaSelesai = OutgoingTransaction::with('stock', 'user.division')
+            ->where('user_id', Auth::id())
             ->where('status', 'selesai')
-            ->where('kategori', 'aset_sewa') // Hanya aset sewa
+            ->where('kategori', 'aset_sewa')
             ->orderBy('tanggal_selesai', 'desc')
             ->get();
+        
+        // Material Umum yang sudah selesai
+        $materialSelesai = OutgoingTransaction::with('stock')
+            ->where('user_id', Auth::id())
+            ->where('status', 'selesai')
+            ->where('kategori', 'material_umum')
+            ->orderBy('tanggal_selesai', 'desc')
+            ->get();
+        
+        $selesai = $asetSewaSelesai->merge($materialSelesai)->sortByDesc('tanggal_selesai')->values();
         
         // 3. Ditolak/Dibatalkan - request yang rejected atau cancelled
         $ditolakDibatalkan = RequestBarang::with('stock')

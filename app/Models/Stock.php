@@ -25,20 +25,21 @@ class Stock extends Model
         'jenis',
         'merek',
         'tipe',
+        'durasi_sewa',
         'status_kondisi',
         'keterangan_kondisi',
         'tanggal_update_kondisi',
-        'durasi_sewa',
-        'tanggal_mulai_sewa',
-        'tanggal_akhir_sewa',
+        'user_id',
+        'tanggal_mulai_pakai',
+        'tanggal_akhir_pakai',
     ];
 
     protected $casts = [
         'tanggal_update_kondisi' => 'date',
-        'tanggal_mulai_sewa' => 'date',
-        'tanggal_akhir_sewa' => 'date',
-        'durasi_sewa' => 'integer',
+        'tanggal_mulai_pakai' => 'date',
+        'tanggal_akhir_pakai' => 'date',
         'stock' => 'integer',
+        'durasi_sewa' => 'integer',
     ];
 
     /**
@@ -63,6 +64,14 @@ class Stock extends Model
     public function rackAssignments()
     {
         return $this->hasMany(RackAssignment::class, 'idbarang', 'idbarang');
+    }
+
+    /**
+     * Relationship: Stock belongs to User (untuk Aset Sewa)
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     /**
@@ -101,8 +110,14 @@ class Stock extends Model
      */
     public function getStatusKondisiLabelAttribute()
     {
-        // Untuk Aset Sewa: cek status rental real-time
+        // Untuk Aset Sewa: cek status kondisi di database dulu
         if ($this->kategori === 'aset_sewa') {
+            // Prioritas 1: Jika status_kondisi sudah 'selesai', barang tidak bisa dipakai lagi
+            if ($this->status_kondisi === 'selesai') {
+                return 'Selesai';
+            }
+            
+            // Prioritas 2: Cek apakah ada rental aktif
             $activeRental = $this->outgoingTransactions()
                 ->whereNull('id_request')
                 ->where('status', 'sedang_dipakai')
@@ -112,17 +127,11 @@ class Stock extends Model
                 return 'Sedang Digunakan';
             }
             
-            // Jika tidak ada rental aktif
-            // Cek stock: jika 0 = selesai (dikembalikan ke distributor)
-            if ($this->stock == 0) {
-                return 'Selesai';
-            }
-            
-            // Jika stock > 0, cek status_kondisi
+            // Prioritas 3: Cek status_kondisi lainnya
             return match($this->status_kondisi) {
                 'diperbaiki' => 'Diperbaiki',
                 'rusak' => 'Rusak',
-                'selesai' => 'Selesai',
+                'digunakan' => 'Digunakan',
                 default => 'Tersedia'
             };
         }
@@ -132,6 +141,7 @@ class Stock extends Model
             'digunakan' => 'Digunakan',
             'diperbaiki' => 'Diperbaiki',
             'rusak' => 'Rusak',
+            'selesai' => 'Selesai',
             default => 'Digunakan'
         };
     }
@@ -141,8 +151,14 @@ class Stock extends Model
      */
     public function getStatusKondisiBadgeAttribute()
     {
-        // Untuk Aset Sewa: cek status rental real-time
+        // Untuk Aset Sewa: cek status kondisi di database dulu
         if ($this->kategori === 'aset_sewa') {
+            // Prioritas 1: Jika status_kondisi sudah 'selesai'
+            if ($this->status_kondisi === 'selesai') {
+                return 'bg-gray-100 text-gray-800'; // Selesai - abu-abu
+            }
+            
+            // Prioritas 2: Cek apakah ada rental aktif
             $activeRental = $this->outgoingTransactions()
                 ->whereNull('id_request')
                 ->where('status', 'sedang_dipakai')
@@ -152,17 +168,11 @@ class Stock extends Model
                 return 'bg-blue-100 text-blue-800'; // Sedang Digunakan
             }
             
-            // Jika tidak ada rental aktif
-            // Cek stock: jika 0 = selesai (dikembalikan ke distributor)
-            if ($this->stock == 0) {
-                return 'bg-gray-100 text-gray-800'; // Selesai
-            }
-            
-            // Jika stock > 0, cek status_kondisi
+            // Prioritas 3: Cek status_kondisi lainnya
             return match($this->status_kondisi) {
                 'diperbaiki' => 'bg-yellow-100 text-yellow-800',
                 'rusak' => 'bg-red-100 text-red-800',
-                'selesai' => 'bg-gray-100 text-gray-800',
+                'digunakan' => 'bg-blue-100 text-blue-800',
                 default => 'bg-green-100 text-green-800' // Tersedia
             };
         }
@@ -172,6 +182,7 @@ class Stock extends Model
             'digunakan' => 'bg-blue-100 text-blue-800',
             'diperbaiki' => 'bg-yellow-100 text-yellow-800',
             'rusak' => 'bg-red-100 text-red-800',
+            'selesai' => 'bg-gray-100 text-gray-800',
             default => 'bg-gray-100 text-gray-800'
         };
     }

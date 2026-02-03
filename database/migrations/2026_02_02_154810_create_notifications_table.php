@@ -11,9 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('stock', function (Blueprint $table) {
-            $table->string('nama_pengguna')->nullable()->after('user_pakai_id')
-                  ->comment('Nama pengguna yang menggunakan aset (input manual)');
+        Schema::create('notifications', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('type');
+            $table->morphs('notifiable');
+            $table->text('data');
+            $table->timestamp('read_at')->nullable();
+            $table->timestamps();
         });
     }
 
@@ -22,8 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('stock', function (Blueprint $table) {
-            $table->dropColumn('nama_pengguna');
-        });
+        Schema::dropIfExists('notifications');
     }
 };

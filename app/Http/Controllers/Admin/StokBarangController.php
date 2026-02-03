@@ -20,12 +20,9 @@ class StokBarangController extends Controller
         if ($request->filled('kategori') && in_array($request->kategori, ['aset_sewa', 'material_umum', 'aset_tetap'])) {
             $query->where('kategori', $request->kategori);
             
-            // For Aset Sewa: Load latest OutgoingTransaction (active or completed)
+            // For Aset Sewa: Load user relationship (pengguna disimpan di Stock)
             if ($request->kategori === 'aset_sewa') {
-                $query->with(['outgoingTransactions' => function($q) {
-                    $q->whereNull('id_request')
-                      ->latest();
-                }]);
+                $query->with(['user.division']);
             }
         }
 
@@ -168,20 +165,22 @@ class StokBarangController extends Controller
             'outgoingTransactions' => function($query) {
                 $query->with('user.division')
                       ->orderBy('created_at', 'desc');
-            }
+            },
+            'user.division' // Load user relationship untuk Aset Sewa
         ])->findOrFail($idbarang);
         
-        // Get active rental for Aset Sewa
-        $activeRental = null;
-        if ($stock->kategori === 'aset_sewa') {
-            $activeRental = $stock->outgoingTransactions()
-                ->where('status', 'sedang_dipakai')
-                ->whereNull('id_request')
-                ->with('user.division')
-                ->first();
+        // Load active rentals for material_umum barang_pinjam
+        $activeRentals = null;
+        if ($stock->kategori === 'material_umum' && $stock->sub_kategori === 'barang_pinjam') {
+            $activeRentals = \App\Models\RequestBarang::with(['user.division'])
+                ->where('idbarang', $idbarang)
+                ->where('tipe_request', 'pinjam_material')
+                ->where('status', 'approved')
+                ->orderBy('tanggal_mulai_sewa', 'desc')
+                ->get();
         }
         
-        return view('admin.stok-barang.show', compact('stock', 'activeRental'));
+        return view('admin.stok-barang.show', compact('stock', 'activeRentals'));
     }
 
     /**
@@ -297,5 +296,34 @@ class StokBarangController extends Controller
         $filename = 'Laporan_Stok_Barang_' . now()->format('Y-m-d_His') . '.pdf';
         
         return $pdf->stream($filename);
+    }
+
+    /**
+     * Extend rental period for Aset Sewa (update tanggal_akhir_pakai di Stock)
+     */
+    public function extendRental(Request $request, $idbarang)
+    {
+        $stock = Stock::findOrFail($idbarang);
+        
+        // Validate this is aset_sewa with active usage
+        if ($stock->kategori !== 'aset_sewa') {
+            return back()->with('error', 'Hanya Aset Sewa yang dapat diperpanjang!');
+        }
+        
+        if ($stock->status_kondisi !== 'digunakan') {
+            return back()->with('error', 'Aset ini tidak sedang digunakan!');
+        }
+        
+        $validated = $request->validate([
+            'tanggal_akhir_pakai' => 'required|date|after:' . ($stock->tanggal_akhir_pakai ?? 'today'),
+        ], [
+            'tanggal_akhir_pakai.after' => 'Tanggal berakhir baru harus setelah tanggal berakhir saat ini.',
+        ]);
+        
+        $stock->update([
+            'tanggal_akhir_pakai' => $validated['tanggal_akhir_pakai'],
+        ]);
+        
+        return back()->with('success', 'Masa pakai berhasil diperpanjang hingga ' . \Carbon\Carbon::parse($validated['tanggal_akhir_pakai'])->format('d M Y'));
     }
 }

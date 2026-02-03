@@ -132,9 +132,6 @@
                     <div class="px-4 py-3 bg-gray-50 rounded-lg border border-gray-200 text-gray-900">
                         @if(auth()->user()->tanggal_masuk)
                             {{ auth()->user()->tanggal_masuk->format('d F Y') }}
-                            <span class="text-sm text-gray-500 ml-2">
-                                ({{ auth()->user()->tanggal_masuk->diffForHumans() }})
-                            </span>
                         @else
                             -
                         @endif

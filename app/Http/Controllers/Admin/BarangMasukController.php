@@ -188,27 +188,15 @@ class BarangMasukController extends Controller
             }
             
             // Update user and rental dates for aset_sewa
+            // NOTE: OutgoingTransaction TIDAK dibuat di sini
+            // Aset Sewa hanya masuk Barang Keluar ketika admin eksplisit menginput via menu Barang Keluar
             if ($validated['kategori'] === 'aset_sewa' && $request->filled('user_id')) {
-                $user = \App\Models\User::findOrFail($validated['user_id']);
+                // Simpan info pengguna di Stock untuk tracking
+                $stock->user_id = $validated['user_id'];
+                $stock->tanggal_mulai_pakai = $validated['tanggal_mulai_pakai'] ?? now();
+                $stock->tanggal_akhir_pakai = $validated['tanggal_akhir_pakai'] ?? null;
                 
-                // Create OutgoingTransaction for assignment
-                \App\Models\OutgoingTransaction::create([
-                    'idbarang' => $stock->idbarang,
-                    'tanggal' => $validated['tanggal'],
-                    'penerima' => $user->name,
-                    'user_id' => $validated['user_id'],
-                    'kategori' => 'aset_sewa',
-                    'qty' => 1, // Aset sewa always 1 item
-                    'keterangan' => 'Admin assignment: ' . ($validated['keterangan'] ?? 'Aset sewa baru'),
-                    'namabarang_k' => $stock->namabarang,
-                    'kodebarang_k' => $stock->kodebarang,
-                    'status' => 'sedang_dipakai',
-                    'penginput' => Auth::user()->name,
-                    'tanggal_mulai_pakai' => $validated['tanggal_mulai_pakai'] ?? now(),
-                    'tanggal_akhir_pakai' => $validated['tanggal_akhir_pakai'] ?? null,
-                ]);
-                
-                // Set status kondisi
+                // Set status kondisi - barang sedang digunakan tapi belum ada transaksi keluar
                 $stock->status_kondisi = 'digunakan';
             }
             
@@ -236,25 +224,13 @@ class BarangMasukController extends Controller
             $stock = Stock::create($stockData);
             $idbarang = $stock->idbarang;
             
-            // Create OutgoingTransaction for aset_sewa assignment
+            // Untuk aset_sewa: simpan info pengguna di Stock (TIDAK buat OutgoingTransaction)
+            // OutgoingTransaction dibuat ketika admin input Barang Keluar secara eksplisit
             if ($actualKategori === 'aset_sewa' && $request->filled('user_id')) {
-                $user = \App\Models\User::findOrFail($validated['user_id']);
-                
-                \App\Models\OutgoingTransaction::create([
-                    'idbarang' => $stock->idbarang,
-                    'tanggal' => $validated['tanggal'],
-                    'penerima' => $user->name,
-                    'user_id' => $validated['user_id'],
-                    'kategori' => 'aset_sewa',
-                    'qty' => 1, // Aset sewa always 1 item
-                    'keterangan' => 'Admin assignment: ' . ($validated['keterangan'] ?? 'Aset sewa baru'),
-                    'namabarang_k' => $stock->namabarang,
-                    'kodebarang_k' => $stock->kodebarang,
-                    'status' => 'sedang_dipakai',
-                    'penginput' => Auth::user()->name,
-                    'tanggal_mulai_pakai' => $validated['tanggal_mulai_pakai'] ?? now(),
-                    'tanggal_akhir_pakai' => $validated['tanggal_akhir_pakai'] ?? null,
-                ]);
+                $stock->user_id = $validated['user_id'];
+                $stock->tanggal_mulai_pakai = $validated['tanggal_mulai_pakai'] ?? now();
+                $stock->tanggal_akhir_pakai = $validated['tanggal_akhir_pakai'] ?? null;
+                $stock->save();
             }
         }
 
@@ -333,20 +309,17 @@ class BarangMasukController extends Controller
 
     /**
      * Remove the specified incoming item from storage.
+     * Hanya menghapus history, tidak mempengaruhi stok.
      */
     public function destroy($idmasuk)
     {
         $barangMasuk = IncomingTransaction::findOrFail($idmasuk);
         
-        // Get stock and decrement quantity
-        $stock = Stock::findOrFail($barangMasuk->idbarang);
-        $stock->decrement('stock', $barangMasuk->qty);
-        
-        // Delete transaction
+        // Delete transaction only (tidak mempengaruhi stok)
         $barangMasuk->delete();
 
         return redirect()->route('admin.barang-masuk.index')
-            ->with('success', 'Barang masuk berhasil dihapus!');
+            ->with('success', 'History barang masuk berhasil dihapus!');
     }
 
     /**

@@ -21,12 +21,9 @@ class StokBarangController extends Controller
         if ($request->filled('kategori') && in_array($request->kategori, ['aset_sewa', 'material_umum', 'aset_tetap'])) {
             $query->where('kategori', $request->kategori);
             
-            // For Aset Sewa: Load latest OutgoingTransaction (active or completed)
+            // For Aset Sewa: Load user relationship (pengguna disimpan di Stock)
             if ($request->kategori === 'aset_sewa') {
-                $query->with(['outgoingTransactions' => function($q) {
-                    $q->whereNull('id_request')
-                      ->latest();
-                }]);
+                $query->with(['user.division']);
             }
         }
 
@@ -94,19 +91,10 @@ class StokBarangController extends Controller
             'outgoingTransactions' => function($query) {
                 $query->with('user.division')
                       ->orderBy('created_at', 'desc');
-            }
+            },
+            'user.division' // Load user relationship untuk Aset Sewa
         ])->findOrFail($id);
         
-        // Get active rental for Aset Sewa
-        $activeRental = null;
-        if ($stock->kategori === 'aset_sewa') {
-            $activeRental = $stock->outgoingTransactions()
-                ->where('status', 'sedang_dipakai')
-                ->whereNull('id_request')
-                ->with('user.division')
-                ->first();
-        }
-        
-        return view('user.stok-barang.show', compact('stock', 'activeRental'));
+        return view('user.stok-barang.show', compact('stock'));
     }
 }

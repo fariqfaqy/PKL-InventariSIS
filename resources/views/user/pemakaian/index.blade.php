@@ -657,7 +657,12 @@
                                     {{ $item->penerima }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    @if($item->tipe_request == 'peminjaman')
+                                    @if($item->kategori === 'aset_sewa' || $item->tipe_request === 'aset_sewa')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <x-heroicon-o-cube class="w-3 h-3 mr-1" />
+                                            Aset Sewa
+                                        </span>
+                                    @elseif($item->tipe_request == 'peminjaman' || $item->tipe_request == 'pinjam_material')
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                             <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
                                             Peminjaman
@@ -728,7 +733,12 @@
                                     {{ $item->penerima }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    @if($item->tipe_request == 'peminjaman')
+                                    @if($item->kategori === 'aset_sewa' || $item->tipe_request === 'aset_sewa')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <x-heroicon-o-cube class="w-3 h-3 mr-1" />
+                                            Aset Sewa
+                                        </span>
+                                    @elseif($item->tipe_request == 'peminjaman' || $item->tipe_request == 'pinjam_material')
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                             <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
                                             Peminjaman

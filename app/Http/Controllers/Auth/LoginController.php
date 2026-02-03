@@ -21,10 +21,29 @@ class LoginController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::attempt(
-            $request->only('email', 'password'),
-            $request->filled('remember')
-        )) {
+        $loginInput = $request->input('email');
+        $password = $request->input('password');
+        $remember = $request->filled('remember');
+
+        // Cek apakah input adalah email atau username
+        $fieldType = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'email' : 'name';
+
+        // Coba login dengan field yang sesuai
+        if (Auth::attempt([$fieldType => $loginInput, 'password' => $password], $remember)) {
+            $request->session()->regenerate();
+
+            $user = Auth::user();
+
+            if ($user->role === 'admin') {
+                return redirect()->route('admin.dashboard');
+            }
+
+            return redirect()->route('user.dashboard');
+        }
+
+        // Jika gagal dengan field pertama, coba field lainnya
+        $alternateField = $fieldType === 'email' ? 'name' : 'email';
+        if (Auth::attempt([$alternateField => $loginInput, 'password' => $password], $remember)) {
             $request->session()->regenerate();
 
             $user = Auth::user();
@@ -37,7 +56,7 @@ class LoginController extends Controller
         }
 
         throw ValidationException::withMessages([
-            'email' => 'Email atau password salah.',
+            'email' => 'Email/Username atau password salah.',
         ]);
     }
 

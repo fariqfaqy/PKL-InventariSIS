@@ -840,40 +840,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const rackSelect = document.getElementById('rack');
     
     if (kategoriSelect) {
-        // Track actual value changes
-        let lastKategori = kategoriSelect.value;
-        setInterval(() => {
-            if (kategoriSelect.value !== lastKategori) {
-                console.error('KATEGORI CHANGED! From:', lastKategori, 'To:', kategoriSelect.value);
-                console.trace('Change stack trace');
-                lastKategori = kategoriSelect.value;
-            }
-        }, 100);
-        
-        // Intercept setAttribute and value setter
-        const originalSetAttribute = kategoriSelect.setAttribute.bind(kategoriSelect);
-        kategoriSelect.setAttribute = function(name, value) {
-            if (name === 'value') {
-                console.error('setAttribute value on kategori:', value);
-                console.trace();
-            }
-            return originalSetAttribute(name, value);
-        };
-        
-        // Intercept direct value setter
-        const descriptor = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
-        const originalSetter = descriptor.set;
-        Object.defineProperty(kategoriSelect, 'value', {
-            set: function(newValue) {
-                if (newValue !== this.value) {
-                    console.error('Direct value set on kategori:', this.value, '→', newValue);
-                    console.trace();
-                }
-                return originalSetter.call(this, newValue);
-            },
-            get: descriptor.get
-        });
-        
         // Add event listener to prevent changes on locked select field
         kategoriSelect.addEventListener('mousedown', function(e) {
             if (this.getAttribute('data-locked') === 'true') {

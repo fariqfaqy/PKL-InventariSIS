@@ -1,7 +1,7 @@
 @extends('layouts.user')
 
-@section('title', 'Detail Stok Barang')
-@section('subtitle', 'Informasi lengkap stok barang')
+@section('title', 'Stok Barang')
+@section('subtitle', 'Lihat data stok barang yang tersedia')
 
 @section('content')
 <div class="space-y-6">
@@ -11,38 +11,38 @@
             <x-heroicon-o-arrow-left class="w-6 h-6" />
         </a>
         <div>
-            <h2 class="text-2xl font-bold text-gray-800">Detail Stok Barang</h2>
-            <p class="text-sm text-gray-500 mt-1">Informasi lengkap stok barang</p>
+            <h2 class="text-2xl font-bold text-gray-800">Detail Barang</h2>
+            <p class="text-sm text-gray-500 mt-1">Informasi lengkap barang</p>
         </div>
     </div>
 
-    <!-- Main Info Card -->
+    <!-- Foto Produk Section -->
     <div class="bg-white rounded-xl shadow-md p-6">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Foto Produk Section -->
+        <div class="mb-6">
             @if($stock->image)
-            <div class="flex flex-col items-center justify-center">
+            <div class="flex flex-col items-center">
                 <img src="{{ asset('images/barang/' . $stock->image) }}" 
                      alt="{{ $stock->namabarang }}" 
-                     class="w-full h-64 object-cover rounded-xl border-2 border-gray-200 shadow-lg">
+                     class="w-full max-w-md h-64 object-cover rounded-xl border-2 border-gray-200 shadow-lg">
                 <div class="mt-4 text-center">
-                    <p class="text-xs text-gray-600 font-mono bg-gray-100 px-3 py-1 rounded">{{ $stock->kodebarang }}</p>
+                    <p class="text-xs text-gray-600 font-mono bg-gray-100 px-3 py-1 rounded inline-block">{{ $stock->kodebarang }}</p>
                 </div>
             </div>
             @else
-            <div class="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-300">
+            <div class="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-300 max-w-md mx-auto">
                 <x-heroicon-o-photo class="w-24 h-24 text-gray-400 mb-4" />
-                <p class="text-sm text-gray-500">Tidak ada foto</p>
+                <p class="text-sm text-gray-500 mb-2">Tidak ada foto</p>
                 <div class="mt-4 text-center">
-                    <p class="text-xs text-gray-600 font-mono bg-gray-100 px-3 py-1 rounded">{{ $stock->kodebarang }}</p>
+                    <p class="text-xs text-gray-600 font-mono bg-gray-100 px-3 py-1 rounded inline-block">{{ $stock->kodebarang }}</p>
                 </div>
             </div>
             @endif
+        </div>
 
-            <!-- Info Section -->
-            <div class="lg:col-span-2">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Informasi Barang</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Info Section -->
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">Informasi Barang</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Kode Barang</label>
                 <p class="text-gray-800 font-semibold">{{ $stock->kodebarang }}</p>
@@ -133,7 +133,7 @@
                 @php
                     $start = \Carbon\Carbon::parse($lastRental->tanggal_mulai_pakai);
                     $end = \Carbon\Carbon::parse($lastRental->tanggal_akhir_pakai);
-                    $duration = $start->diffInDays($end) + 1;
+                    $duration = round($start->diffInDays($end) + 1);
                 @endphp
                 <p class="text-xs text-gray-400 mt-1">({{ $duration }} hari)</p>
             </div>
@@ -181,100 +181,88 @@
                 </div>
             </div>
             @endif
+        </div>
+    
+        <!-- Informasi Pengguna & Peminjaman (untuk Aset Sewa) -->
+        @if($stock->kategori === 'aset_sewa' && $stock->user_id && $stock->status_kondisi === 'digunakan')
+        <div class="mt-6 pt-6 border-t border-gray-200">
+            <div class="flex justify-between items-center mb-4">
+                <h4 class="text-md font-semibold text-gray-800 flex items-center gap-2">
+                    <x-heroicon-o-user class="w-5 h-5 text-blue-600" />
+                    Informasi Pemakaian Aktif
+                </h4>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50 p-4 rounded-lg">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Pengguna</label>
+                    <div class="flex items-center gap-2">
+                        <div class="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-semibold">
+                            {{ substr($stock->user->name ?? 'N', 0, 1) }}
+                        </div>
+                        <div>
+                            <p class="text-gray-800 font-semibold">{{ $stock->user->name ?? '-' }}</p>
+                            @if($stock->user && $stock->user->division)
+                            <p class="text-xs text-gray-500">{{ $stock->user->division->nama_divisi }}</p>
+                            @endif
+                        </div>
+                    </div>
                 </div>
-            
-                <!-- Informasi Pengguna & Peminjaman (untuk Aset Sewa) -->
-                @if($stock->kategori === 'aset_sewa' && isset($activeRental))
-                <div class="mt-6 pt-6 border-t border-gray-200">
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="text-md font-semibold text-gray-800 flex items-center gap-2">
-                            <x-heroicon-o-user class="w-5 h-5 text-blue-600" />
-                            Informasi Pemakaian Aktif
-                        </h4>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50 p-4 rounded-lg">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Pengguna</label>
-                            <div class="flex items-center gap-2">
-                                <div class="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-semibold">
-                                    {{ substr($activeRental->user->name ?? 'N', 0, 1) }}
-                                </div>
-                                <div>
-                                    <p class="text-gray-800 font-semibold">{{ $activeRental->user->name ?? $activeRental->penerima }}</p>
-                                    @if($activeRental->user && $activeRental->user->division)
-                                    <p class="text-xs text-gray-500">{{ $activeRental->user->division->nama_divisi }}</p>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Status</label>
-                            <p class="text-gray-800 font-semibold">
-                                @if($activeRental->status === 'sedang_dipakai')
-                                    <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                                        <x-heroicon-o-arrow-path class="w-4 h-4 mr-1.5" />
-                                        Sedang Digunakan
-                                    </span>
-                                @elseif($activeRental->status === 'ditarik')
-                                    <span class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
-                                        <x-heroicon-o-x-circle class="w-4 h-4 mr-1.5" />
-                                        Ditarik
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">
-                                        {{ ucfirst($activeRental->status) }}
-                                    </span>
-                                @endif
-                            </p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Tanggal Mulai</label>
-                            <p class="text-gray-800 font-medium">
-                                @if($activeRental->tanggal_mulai_pakai)
-                                    <span class="flex items-center gap-2">
-                                        <x-heroicon-o-calendar class="w-4 h-4 text-gray-500" />
-                                        {{ \Carbon\Carbon::parse($activeRental->tanggal_mulai_pakai)->format('d M Y') }}
-                                    </span>
-                                @else
-                                    -
-                                @endif
-                            </p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Tanggal Berakhir</label>
-                            <p class="text-gray-800 font-medium">
-                                @if($activeRental->tanggal_akhir_pakai)
-                                    <span class="flex items-center gap-2">
-                                        <x-heroicon-o-calendar class="w-4 h-4 text-gray-500" />
-                                        {{ \Carbon\Carbon::parse($activeRental->tanggal_akhir_pakai)->format('d M Y') }}
-                                    </span>
-                                @else
-                                    -
-                                @endif
-                            </p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Durasi Total</label>
-                            <p class="text-gray-800 font-medium">
-                                @if($activeRental->tanggal_mulai_pakai && $activeRental->tanggal_akhir_pakai)
-                                    @php
-                                        $startDate = \Carbon\Carbon::parse($activeRental->tanggal_mulai_pakai)->startOfDay();
-                                        $endDate = \Carbon\Carbon::parse($activeRental->tanggal_akhir_pakai)->startOfDay();
-                                        $totalDays = $startDate->diffInDays($endDate) + 1;
-                                    @endphp
-                                    <span class="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">
-                                        <x-heroicon-o-clock class="w-4 h-4 mr-1.5" />
-                                        {{ $totalDays }} hari
-                                    </span>
-                                @else
-                                    -
-                                @endif
-                            </p>
-                        </div>
-                    </div>
-                @endif
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Status</label>
+                    <p class="text-gray-800 font-semibold">
+                        <span class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                            <x-heroicon-o-arrow-path class="w-4 h-4 mr-1.5" />
+                            Sedang Digunakan
+                        </span>
+                    </p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Tanggal Mulai</label>
+                    <p class="text-gray-800 font-medium">
+                        @if($stock->tanggal_mulai_pakai)
+                            <span class="flex items-center gap-2">
+                                <x-heroicon-o-calendar class="w-4 h-4 text-gray-500" />
+                                {{ \Carbon\Carbon::parse($stock->tanggal_mulai_pakai)->format('d M Y') }}
+                            </span>
+                        @else
+                            -
+                        @endif
+                    </p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Tanggal Berakhir</label>
+                    <p class="text-gray-800 font-medium">
+                        @if($stock->tanggal_akhir_pakai)
+                            <span class="flex items-center gap-2">
+                                <x-heroicon-o-calendar class="w-4 h-4 text-gray-500" />
+                                {{ \Carbon\Carbon::parse($stock->tanggal_akhir_pakai)->format('d M Y') }}
+                            </span>
+                        @else
+                            -
+                        @endif
+                    </p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-1">Durasi Total</label>
+                    <p class="text-gray-800 font-medium">
+                        @if($stock->tanggal_mulai_pakai && $stock->tanggal_akhir_pakai)
+                            @php
+                                $startDate = \Carbon\Carbon::parse($stock->tanggal_mulai_pakai)->startOfDay();
+                                $endDate = \Carbon\Carbon::parse($stock->tanggal_akhir_pakai)->startOfDay();
+                                $totalDays = round($startDate->diffInDays($endDate) + 1);
+                            @endphp
+                            <span class="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">
+                                <x-heroicon-o-clock class="w-4 h-4 mr-1.5" />
+                                {{ $totalDays }} hari
+                            </span>
+                        @else
+                            -
+                        @endif
+                    </p>
+                </div>
             </div>
         </div>
+        @endif
     </div>
 
     <!-- History Pemakaian untuk Aset Sewa -->
@@ -399,7 +387,7 @@
                                 @php
                                     $start = \Carbon\Carbon::parse($transaction->tanggal_mulai_pakai);
                                     $end = \Carbon\Carbon::parse($transaction->tanggal_akhir_pakai);
-                                    $duration = $start->diffInDays($end) + 1;
+                                    $duration = round($start->diffInDays($end) + 1);
                                 @endphp
                                 ({{ $duration }} hari)
                             </p>
@@ -499,19 +487,5 @@
         @endif
     </div>
     @endif
-
-    <!-- Action Button -->
-    <div class="flex gap-3">
-        <a href="{{ route('user.pemakaian.create', ['barang' => $stock->idbarang]) }}" 
-            class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-300">
-            <x-heroicon-o-arrow-up-tray class="w-5 h-5" />
-            <span class="font-medium">Gunakan Barang Ini</span>
-        </a>
-        <a href="{{ route('user.stok-barang.index') }}" 
-            class="inline-flex items-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300">
-            <x-heroicon-o-arrow-left class="w-5 h-5" />
-            <span class="font-medium">Kembali</span>
-        </a>
-    </div>
 </div>
 @endsection

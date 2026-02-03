@@ -156,6 +156,63 @@
 
                 <!-- Right Side -->
                 <div class="flex items-center gap-4">
+                    <!-- Notification Bell -->
+                    <div class="relative">
+                        <button id="notificationButton" class="relative p-2 text-gray-600 hover:text-[#14a2ba] transition-colors">
+                            <x-heroicon-o-bell class="w-6 h-6" />
+                            @if(Auth::user()->unreadNotifications->count() > 0)
+                            <span class="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                                {{ Auth::user()->unreadNotifications->count() > 9 ? '9+' : Auth::user()->unreadNotifications->count() }}
+                            </span>
+                            @endif
+                        </button>
+                        
+                        <!-- Notification Dropdown -->
+                        <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                            <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                                <h3 class="font-semibold text-gray-800">Notifikasi</h3>
+                                @if(Auth::user()->unreadNotifications->count() > 0)
+                                <a href="{{ route('user.notifications.mark-all-read') }}" class="text-xs text-blue-600 hover:text-blue-800">Tandai semua dibaca</a>
+                                @endif
+                            </div>
+                            <div class="max-h-96 overflow-y-auto">
+                                @forelse(Auth::user()->notifications()->take(5)->get() as $notification)
+                                <a href="{{ $notification->data['url'] ?? '#' }}" 
+                                   onclick="event.preventDefault(); window.location.href = '{{ route('user.pemakaian.index') }}';"
+                                   class="block p-4 hover:bg-gray-50 border-b border-gray-100 {{ is_null($notification->read_at) ? 'bg-blue-50' : '' }}">
+                                    <div class="flex items-start gap-3">
+                                        <div class="shrink-0 w-10 h-10 rounded-full {{ $notification->data['action'] === 'approved' ? 'bg-green-100' : 'bg-red-100' }} flex items-center justify-center">
+                                            @if($notification->data['action'] === 'approved')
+                                                <x-heroicon-o-check-circle class="w-5 h-5 text-green-600" />
+                                            @else
+                                                <x-heroicon-o-x-circle class="w-5 h-5 text-red-600" />
+                                            @endif
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium text-gray-900">{{ $notification->data['message'] ?? 'Notifikasi' }}</p>
+                                            <p class="text-xs text-gray-600 mt-1">{{ $notification->data['barang'] ?? '' }} ({{ $notification->data['qty'] ?? '' }} unit)</p>
+                                            @if($notification->data['admin_note'] ?? false)
+                                            <p class="text-xs text-gray-500 mt-1 italic">"{{ $notification->data['admin_note'] }}"</p>
+                                            @endif
+                                            <p class="text-xs text-gray-400 mt-1">{{ $notification->created_at->diffForHumans() }}</p>
+                                        </div>
+                                    </div>
+                                </a>
+                                @empty
+                                <div class="p-8 text-center text-gray-500">
+                                    <x-heroicon-o-bell-slash class="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                                    <p class="text-sm">Tidak ada notifikasi</p>
+                                </div>
+                                @endforelse
+                            </div>
+                            @if(Auth::user()->notifications->count() > 5)
+                            <div class="p-3 border-t border-gray-200 text-center">
+                                <a href="{{ route('user.notifications.index') }}" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Lihat semua notifikasi</a>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                    
                     <!-- User Menu -->
                     <div class="flex items-center gap-3 pl-4 border-l border-gray-200">
                         <div class="text-right hidden sm:block">
@@ -245,6 +302,24 @@
             
             submenu.classList.toggle('hidden');
             icon.classList.toggle('rotate-180');
+        }
+        
+        // Notification dropdown toggle
+        const notificationButton = document.getElementById('notificationButton');
+        const notificationDropdown = document.getElementById('notificationDropdown');
+        
+        if (notificationButton && notificationDropdown) {
+            notificationButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                notificationDropdown.classList.toggle('hidden');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!notificationButton.contains(e.target) && !notificationDropdown.contains(e.target)) {
+                    notificationDropdown.classList.add('hidden');
+                }
+            });
         }
 
         // Global Confirm Modal Functions

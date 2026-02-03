@@ -269,7 +269,7 @@
                                 <a href="{{ route('admin.barang-keluar.show', $item->idkeluar) }}" class="text-[#14a2ba] hover:text-[#0d7a8f] transition-colors" title="Detail">
                                     <x-heroicon-o-eye class="w-5 h-5" />
                                 </a>
-                                <form action="{{ route('admin.barang-keluar.destroy', $item->idkeluar) }}" method="POST" class="inline" onsubmit="return customConfirm(event, 'Yakin ingin menghapus transaksi keluar ini? Stok akan dikembalikan.', {type: 'danger', title: 'Hapus Barang Keluar', confirmText: 'Ya, Hapus'})">
+                                <form action="{{ route('admin.barang-keluar.destroy', $item->idkeluar) }}" method="POST" class="inline" onsubmit="return customConfirm(event, 'Yakin ingin menghapus history transaksi keluar ini? Data ini hanya akan dihapus dari history, stok tidak akan terpengaruh.', {type: 'danger', title: 'Hapus History Barang Keluar', confirmText: 'Ya, Hapus'})">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="text-red-600 hover:text-red-700 transition-colors" title="Hapus">

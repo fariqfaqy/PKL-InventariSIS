@@ -11,30 +11,19 @@
     </div>
     @endif
 
-    <!-- Tabs Kategori (only show when accessed from "Semua" or directly, hide when from sidebar specific category) -->
+    <!-- Category Header -->
     <div class="bg-white rounded-xl shadow-md overflow-hidden">
         @if(!request('kategori'))
-        <!-- Show all tabs when no filter -->
-        <div class="border-b border-gray-200">
-            <nav class="flex -mb-px">
-                <a href="{{ route('admin.stok-barang.index') }}" class="flex-1 px-6 py-4 text-center font-medium transition-all text-cyan-600 border-b-2 border-cyan-600 bg-cyan-50">
-                    Semua
-                </a>
-                <a href="{{ route('admin.stok-barang.index', ['kategori' => 'aset_sewa']) }}" class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50">
-                    <x-heroicon-o-computer-desktop class="w-5 h-5" />
-                    Aset Sewa
-                </a>
-                <a href="{{ route('admin.stok-barang.index', ['kategori' => 'material_umum']) }}" class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50">
-                    <x-heroicon-o-shopping-bag class="w-5 h-5" />
-                    Material Umum
-                </a>
-                <a href="{{ route('admin.stok-barang.index', ['kategori' => 'aset_tetap']) }}" class="flex-1 px-6 py-4 text-center font-medium transition-all flex items-center justify-center gap-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50">
-                    <x-heroicon-o-building-office class="w-5 h-5" />
-                    Aset Tetap
-                </a>
-            </nav>
+        <!-- Header Semua Barang -->
+        <div class="border-b border-gray-200 bg-cyan-50 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <x-heroicon-o-cube class="w-6 h-6 text-cyan-600" />
+                    <h2 class="text-lg font-semibold text-cyan-900">Semua Barang</h2>
+                </div>
+            </div>
         </div>
-        @else
+        @elseif(request('kategori'))
         <!-- Show only active category header when filtered -->
         <div class="border-b border-gray-200 bg-cyan-50 px-6 py-4">
             <div class="flex items-center justify-between">
@@ -107,9 +96,10 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <!-- Cari Barang -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Cari Barang</label>
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Cari Barang</label>
                     <input 
                         type="text" 
+                        id="search"
                         name="search" 
                         value="{{ request('search') }}"
                         placeholder="Kode atau nama barang..."
@@ -117,10 +107,12 @@
                     >
                 </div>
 
-                <!-- Filter Rak -->
+                <!-- Filter Rak (Hidden for aset_sewa and aset_tetap) -->
+                @if(request('kategori') != 'aset_sewa' && request('kategori') != 'aset_tetap')
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Filter Rak</label>
+                    <label for="rack" class="block text-sm font-medium text-gray-700 mb-2">Filter Rak</label>
                     <select 
+                        id="rack"
                         name="rack" 
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
                     >
@@ -132,11 +124,13 @@
                         @endforeach
                     </select>
                 </div>
+                @endif
 
                 <!-- Status Stok -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Status Stok</label>
+                    <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status Stok</label>
                     <select 
+                        id="status"
                         name="status" 
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
                     >
@@ -179,8 +173,11 @@
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Kode Barang</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Gambar</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Barang</th>
-                        @if(request('kategori') != 'aset_sewa')
+                        @if(!request('kategori'))
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Kategori</th>
+                        @endif
+                        @if(request('kategori') == 'material_umum' && !request('sub_kategori'))
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Sub Kategori</th>
                         @endif
                         @if(request('kategori') == 'aset_sewa')
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Status Kondisi</th>
@@ -216,17 +213,12 @@
                         <td class="px-4 py-3 text-sm text-gray-900">
                             {{ $stock->namabarang }}
                         </td>
-                        @if(request('kategori') != 'aset_sewa')
+                        @if(!request('kategori'))
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                             @if($stock->kategori === 'aset_sewa')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                     <x-heroicon-o-computer-desktop class="w-3 h-3 mr-1" />
                                     Aset Sewa
-                                </span>
-                            @elseif($stock->kategori === 'barang_pinjam')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    <x-heroicon-o-arrow-path-rounded-square class="w-3 h-3 mr-1" />
-                                    Barang Pinjam
                                 </span>
                             @elseif($stock->kategori === 'aset_tetap')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
@@ -246,6 +238,23 @@
                             @endif
                         </td>
                         @endif
+                        @if(request('kategori') == 'material_umum' && !request('sub_kategori'))
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                            @if($stock->sub_kategori === 'barang_habis_pakai')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <x-heroicon-o-shopping-cart class="w-3 h-3 mr-1" />
+                                    Barang Habis Pakai
+                                </span>
+                            @elseif($stock->sub_kategori === 'barang_pinjam')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    <x-heroicon-o-arrow-path-rounded-square class="w-3 h-3 mr-1" />
+                                    Barang Pinjam
+                                </span>
+                            @else
+                                <span class="text-gray-400 text-xs">-</span>
+                            @endif
+                        </td>
+                        @endif
                         @if(request('kategori') == 'aset_sewa')
                         <td class="px-4 py-3 whitespace-nowrap text-sm">
                             <div class="flex items-center gap-2">
@@ -262,18 +271,14 @@
                             </div>
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                            @php
-                                // Get active OutgoingTransaction for current user info
-                                $activeTransaction = $stock->outgoingTransactions->first();
-                            @endphp
-                            @if($activeTransaction)
+                            @if($stock->user)
                                 <div class="flex flex-col">
-                                    <span class="font-medium text-gray-800">{{ $activeTransaction->penerima }}</span>
-                                    <span class="text-xs text-gray-500">{{ $activeTransaction->divisi }}</span>
-                                    @if($activeTransaction->tanggal_mulai_pakai && $activeTransaction->tanggal_akhir_pakai)
+                                    <span class="font-medium text-gray-800">{{ $stock->user->name }}</span>
+                                    <span class="text-xs text-gray-500">{{ $stock->user->division->nama_divisi ?? '-' }}</span>
+                                    @if($stock->tanggal_mulai_pakai && $stock->tanggal_akhir_pakai)
                                     <span class="text-xs text-gray-400 mt-1">
-                                        {{ \Carbon\Carbon::parse($activeTransaction->tanggal_mulai_pakai)->format('d/m/Y') }} - 
-                                        {{ \Carbon\Carbon::parse($activeTransaction->tanggal_akhir_pakai)->format('d/m/Y') }}
+                                        {{ \Carbon\Carbon::parse($stock->tanggal_mulai_pakai)->format('d/m/Y') }} - 
+                                        {{ \Carbon\Carbon::parse($stock->tanggal_akhir_pakai)->format('d/m/Y') }}
                                     </span>
                                     @endif
                                 </div>
@@ -282,15 +287,13 @@
                             @endif
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                            @php
-                                $activeTransaction = $stock->outgoingTransactions->first();
-                            @endphp
-                            @if($activeTransaction && $activeTransaction->tanggal_mulai_pakai && $activeTransaction->tanggal_akhir_pakai)
+                            @if($stock->tanggal_mulai_pakai && $stock->tanggal_akhir_pakai)
                                 @php
-                                    $start = \Carbon\Carbon::parse($activeTransaction->tanggal_mulai_pakai);
-                                    $end = \Carbon\Carbon::parse($activeTransaction->tanggal_akhir_pakai);
-                                    $daysTotal = $start->diffInDays($end);
-                                    $daysRemaining = now()->diffInDays($end, false);
+                                    $start = \Carbon\Carbon::parse($stock->tanggal_mulai_pakai)->startOfDay();
+                                    $end = \Carbon\Carbon::parse($stock->tanggal_akhir_pakai)->startOfDay();
+                                    $today = now()->startOfDay();
+                                    $daysTotal = $start->diffInDays($end) + 1; // +1 untuk include hari pertama
+                                    $daysRemaining = $today->diffInDays($end, false); // false = bisa negatif
                                     $isExpired = $daysRemaining < 0;
                                 @endphp
                                 <div class="flex flex-col">
@@ -318,9 +321,13 @@
                             </span>
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                {{ strtoupper($stock->rack) }}
-                            </span>
+                            @if($stock->kategori == 'aset_sewa' || $stock->kategori == 'aset_tetap')
+                                <span class="text-gray-400">-</span>
+                            @else
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                    {{ strtoupper($stock->rack) }}
+                                </span>
+                            @endif
                         </td>
                         @if(request('kategori') != 'aset_sewa')
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
@@ -332,8 +339,8 @@
                                 <a href="{{ route('admin.stok-barang.show', $stock->idbarang) }}" class="text-blue-600 hover:text-blue-700 transition-colors" title="Detail">
                                     <x-heroicon-o-eye class="w-5 h-5" />
                                 </a>
-                                <button onclick="openQRModal('qr-{{ $stock->idbarang }}', '{{ $stock->kodebarang }}')" class="text-[#14a2ba] hover:text-[#0d7a8f] transition-colors cursor-pointer" title="QR Code">
-                                    <div class="inline-block p-1 bg-white border-2 border-gray-300 rounded hover:border-[#14a2ba] transition-colors">
+                                <button onclick="openQRModal('qr-{{ $stock->idbarang }}', '{{ $stock->kodebarang }}')" class="text-[#14a2ba] hover:text-[#0d7a8f] transition-all duration-300 cursor-pointer group" title="Lihat QR Code">
+                                    <div class="inline-block p-1 bg-white border-2 border-gray-300 rounded hover:border-[#14a2ba] hover:shadow-md transition-all duration-300 group-hover:scale-110">
                                         {!! QrCode::size(30)->generate(route('admin.stok-barang.show', $stock->idbarang)) !!}
                                     </div>
                                 </button>
@@ -353,7 +360,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="px-6 py-12 text-center">
+                        <td colspan="{{ request('kategori') == 'aset_sewa' ? '11' : (request('kategori') == 'material_umum' && request('sub_kategori') ? '9' : (request('kategori') == 'material_umum' ? '10' : (request('kategori') == 'aset_tetap' ? '8' : '9'))) }}" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center justify-center text-gray-500">
                                 <x-heroicon-o-inbox class="w-16 h-16 mb-4 opacity-30" />
                                 <p class="text-lg font-medium">Belum ada data stok barang</p>
@@ -377,10 +384,14 @@
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const filterForm = document.querySelector('form[action="{{ route('admin.stok-barang.index') }}"]');
+        if (!filterForm) return; // Exit if form not found
+        
         const searchInput = filterForm.querySelector('input[name="search"]');
         const rackSelect = filterForm.querySelector('select[name="rack"]');
         const statusSelect = filterForm.querySelector('select[name="status"]');
         const tableContainer = document.getElementById('table-container');
+        
+        if (!tableContainer) return; // Exit if table container not found
         
         let searchTimeout;
         let isLoading = false;
@@ -434,15 +445,17 @@
         });
         
         // Live search on typing
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                filterForm.dispatchEvent(new Event('submit'));
-            }, 500);
-        });
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    filterForm.dispatchEvent(new Event('submit'));
+                }, 500);
+            });
+        }
         
-        // Live filter on change
-        [rackSelect, statusSelect].forEach(element => {
+        // Live filter on change (filter out null elements)
+        [rackSelect, statusSelect].filter(el => el !== null).forEach(element => {
             element.addEventListener('change', () => {
                 filterForm.dispatchEvent(new Event('submit'));
             });
@@ -510,18 +523,26 @@
             </div>
         </form>
     </div>
+</div>
+</div>
 
 <!-- QR Code Modal -->
 <div id="qrModal" class="hidden fixed inset-0 backdrop-blur-sm bg-white/30 z-50 flex items-center justify-center transition-all duration-300 opacity-0" onclick="closeQRModal()">
     <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl transform scale-95 transition-all duration-300" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold text-gray-800">QR Code Produk</h3>
+        </div>
         <div class="text-center">
-            <h3 class="text-xl font-bold text-gray-800 mb-2">QR Code Produk</h3>
             <p class="text-sm text-gray-500 mb-6">Scan untuk lihat detail produk</p>
-            <div id="qrCodeContainer" class="bg-gray-50 p-6 rounded-xl inline-block">
-                <!-- QR Code will be inserted here -->
+            <div class="flex flex-col items-center gap-3">
+                <div id="qrCodeContainer" class="bg-gray-50 p-6 rounded-xl border-2 border-gray-200">
+                    <!-- QR Code will be inserted here -->
+                </div>
+                <p id="qrCodeText" class="text-sm text-gray-800 font-mono font-semibold bg-gray-100 px-4 py-2 rounded-lg"></p>
             </div>
-            <p id="qrCodeText" class="text-xs text-gray-600 font-mono mt-4 bg-gray-100 px-4 py-2 rounded"></p>
-            <button onclick="closeQRModal()" class="mt-6 px-6 py-2 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-300">
+        </div>
+        <div class="mt-6 flex justify-center">
+            <button onclick="closeQRModal()" class="px-6 py-2 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-300 font-medium">
                 Tutup
             </button>
         </div>
@@ -593,5 +614,4 @@ document.addEventListener('keydown', function(e) {
     }
 });
 </script>
-</div>
 @endsection

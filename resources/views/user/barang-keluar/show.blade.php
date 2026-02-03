@@ -1,6 +1,6 @@
 @extends('layouts.user')
 
-@section('title', 'Detail Pemakaian Barang')
+@section('title', 'Detail Barang Keluar')
 @section('subtitle', 'Informasi lengkap pemakaian barang')
 
 @section('content')
@@ -8,30 +8,30 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
         <div class="flex items-center gap-4">
-            <a href="{{ route('user.barang-keluar.index', ['kategori' => $barangKeluar->kategori]) }}" class="text-gray-600 hover:text-[#14a2ba] transition-colors">
+            <a href="{{ route('user.barang-keluar.index') }}" class="text-gray-600 hover:text-[#14a2ba] transition-colors">
                 <x-heroicon-o-arrow-left class="w-6 h-6" />
             </a>
             <div>
-                <h2 class="text-2xl font-bold text-gray-800">Detail Pemakaian Barang</h2>
-                <p class="text-sm text-gray-500 mt-1">Informasi lengkap pemakaian barang Anda</p>
+                <div class="flex items-center gap-3">
+                    <h2 class="text-2xl font-bold text-gray-800">Detail Barang Keluar</h2>
+                    <span class="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full border border-gray-300">
+                        <x-heroicon-o-eye class="w-4 h-4" />
+                        Read Only
+                    </span>
+                </div>
+                <p class="text-sm text-gray-500 mt-1">Informasi lengkap transaksi barang keluar</p>
             </div>
         </div>
     </div>
 
-    @if($barangKeluar->stock && $barangKeluar->kategori === 'aset_sewa')
-    <!-- Aset Sewa Info Card -->
+    @if($barangKeluar->stock && $barangKeluar->stock->kategori === 'aset_sewa')
+    <!-- Aset Sewa Info Card (Read Only - No Action Buttons) -->
     <div class="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl shadow-md p-6 border-2 border-purple-200">
         <div class="flex justify-between items-start mb-4">
             <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
                 <x-heroicon-o-computer-desktop class="w-6 h-6 text-purple-600" />
                 Informasi Pemakaian Aset Sewa
             </h3>
-            @if($barangKeluar->status === 'sedang_dipakai')
-                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
-                    <x-heroicon-o-arrow-path class="w-4 h-4 mr-1.5 animate-spin" />
-                    Sedang Digunakan
-                </span>
-            @endif
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -40,12 +40,12 @@
                 <label class="block text-sm font-medium text-gray-600 mb-2">Pengguna</label>
                 <div class="flex items-center gap-3">
                     <div class="flex-shrink-0 w-12 h-12 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold text-lg">
-                        {{ substr(auth()->user()->name ?? 'U', 0, 1) }}
+                        {{ substr($barangKeluar->user->name ?? substr($barangKeluar->penerima, 0, 1), 0, 1) }}
                     </div>
                     <div>
-                        <p class="text-gray-900 font-semibold text-lg">{{ auth()->user()->name }}</p>
-                        @if(auth()->user()->division)
-                        <p class="text-sm text-gray-600">{{ auth()->user()->division->nama_divisi }}</p>
+                        <p class="text-gray-900 font-semibold text-lg">{{ $barangKeluar->user->name ?? $barangKeluar->penerima }}</p>
+                        @if($barangKeluar->user && $barangKeluar->user->division)
+                        <p class="text-sm text-gray-600">{{ $barangKeluar->user->division->nama_divisi }}</p>
                         @endif
                     </div>
                 </div>
@@ -68,6 +68,10 @@
                     <span class="inline-flex items-center px-4 py-2 rounded-full text-base font-semibold bg-red-100 text-red-800">
                         <x-heroicon-o-x-circle class="w-5 h-5 mr-2" />
                         Ditarik
+                    </span>
+                @else
+                    <span class="inline-flex items-center px-4 py-2 rounded-full text-base font-semibold bg-gray-100 text-gray-800">
+                        {{ ucfirst($barangKeluar->status) }}
                     </span>
                 @endif
             </div>
@@ -94,8 +98,8 @@
             </div>
             
             <!-- Duration Info -->
-            <div class="bg-white rounded-lg p-4 shadow-sm md:col-span-2">
-                <label class="block text-sm font-medium text-gray-600 mb-3">Durasi</label>
+            <div class="bg-white rounded-lg p-4 shadow-sm">
+                <label class="block text-sm font-medium text-gray-600 mb-2">Durasi</label>
                 @if($barangKeluar->tanggal_mulai_pakai && $barangKeluar->tanggal_akhir_pakai)
                     @php
                         $startDate = \Carbon\Carbon::parse($barangKeluar->tanggal_mulai_pakai)->startOfDay();
@@ -115,7 +119,7 @@
     @endif
 
     @if($barangKeluar->stock && $barangKeluar->stock->sub_kategori === 'barang_pinjam' && $barangKeluar->tanggal_mulai_pakai && $barangKeluar->tanggal_akhir_pakai)
-    <!-- Barang Pinjam Info Card -->
+    <!-- Barang Pinjam Info Card (Read Only) -->
     <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl shadow-md p-6 border-2 border-blue-200">
         <div class="flex justify-between items-start mb-4">
             <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
@@ -145,8 +149,8 @@
                     </div>
                     <div>
                         <p class="text-gray-900 font-semibold text-lg">{{ $barangKeluar->penerima }}</p>
-                        @if(auth()->user()->division)
-                        <p class="text-sm text-gray-600">{{ auth()->user()->division->nama_divisi }}</p>
+                        @if($barangKeluar->user && $barangKeluar->user->division)
+                        <p class="text-sm text-gray-600">{{ $barangKeluar->user->division->nama_divisi }}</p>
                         @endif
                     </div>
                 </div>
@@ -199,8 +203,7 @@
                     $endDate = \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai)->startOfDay();
                     $totalDays = $startDate->diffInDays($endDate) + 1;
                     $daysLeft = $now->diffInDays($endDate, false);
-                    $daysPassed = $startDate->diffInDays($now);
-                    $progress = $totalDays > 0 ? min(100, max(0, ($daysPassed / $totalDays) * 100)) : 0;
+                    $progress = $totalDays > 0 ? min(100, max(0, (($totalDays - $daysLeft) / $totalDays) * 100)) : 0;
                     $isExpired = $daysLeft < 0;
                 @endphp
                 <div class="space-y-3">
@@ -213,17 +216,17 @@
                             @if($isExpired)
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">
                                     <x-heroicon-o-exclamation-triangle class="w-4 h-4 mr-1" />
-                                    Telat {{ abs(floor($daysLeft)) }} hari
+                                    Telat {{ abs(round($daysLeft)) }} hari
                                 </span>
                             @elseif($daysLeft <= 3)
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800">
                                     <x-heroicon-o-clock class="w-4 h-4 mr-1" />
-                                    {{ ceil($daysLeft) }} hari lagi
+                                    {{ round($daysLeft) }} hari lagi
                                 </span>
                             @else
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
                                     <x-heroicon-o-check class="w-4 h-4 mr-1" />
-                                    {{ ceil($daysLeft) }} hari lagi
+                                    {{ round($daysLeft) }} hari lagi
                                 </span>
                             @endif
                         @else
@@ -248,9 +251,9 @@
                     </div>
                     <p class="text-xs text-gray-600 text-center">
                         @if($isExpired)
-                            ⚠️ Peminjaman sudah melewati batas waktu
+                            ⚠️ Peminjaman sudah melewati batas waktu pengembalian
                         @else
-                            {{ ceil($daysLeft) }} hari lagi sampai batas pengembalian
+                            {{ round($daysLeft) }} hari lagi sampai batas pengembalian ({{ \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai)->format('d F Y') }})
                         @endif
                     </p>
                     @endif
@@ -259,7 +262,7 @@
         </div>
         
         @if($barangKeluar->status === 'sedang_dipakai')
-        <!-- Reminder Note -->
+        <!-- Reminder/Alert -->
         <div class="mt-4 p-4 bg-white rounded-lg border-l-4 {{ $isExpired ? 'border-red-500 bg-red-50' : ($daysLeft <= 3 ? 'border-yellow-500 bg-yellow-50' : 'border-blue-500') }}">
             <div class="flex items-start gap-3">
                 @if($isExpired)
@@ -272,20 +275,20 @@
                 <div>
                     <p class="text-sm font-semibold {{ $isExpired ? 'text-red-800' : ($daysLeft <= 3 ? 'text-yellow-800' : 'text-blue-800') }}">
                         @if($isExpired)
-                            Perhatian! Batas Pengembalian Sudah Terlewat
+                            ⚠️ Perhatian! Batas Pengembalian Sudah Terlewat
                         @elseif($daysLeft <= 3)
-                            Segera Kembalikan Barang
+                            🔔 Barang Harus Segera Dikembalikan
                         @else
-                            Jangan Lupa Kembalikan Barang
+                            ℹ️ Pengingat Pengembalian Barang
                         @endif
                     </p>
                     <p class="text-xs {{ $isExpired ? 'text-red-700' : ($daysLeft <= 3 ? 'text-yellow-700' : 'text-blue-700') }} mt-1">
                         @if($isExpired)
-                            Harap segera mengembalikan barang ini. Keterlambatan pengembalian dapat mempengaruhi peminjaman Anda di masa depan.
+                            Barang sudah melewati batas waktu pengembalian {{ abs(round($daysLeft)) }} hari. Harap segera mengembalikan barang ini ke admin.
                         @elseif($daysLeft <= 3)
-                            Batas pengembalian tinggal {{ ceil($daysLeft) }} hari lagi. Pastikan barang dalam kondisi baik saat dikembalikan.
+                            Batas pengembalian tinggal {{ round($daysLeft) }} hari lagi. Pastikan barang dalam kondisi baik saat dikembalikan.
                         @else
-                            Pastikan mengembalikan barang sebelum tanggal {{ \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai)->format('d F Y') }} dalam kondisi baik.
+                            Barang harus dikembalikan sebelum tanggal {{ \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai)->format('d F Y') }}.
                         @endif
                     </p>
                 </div>
@@ -312,7 +315,10 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Tanggal Keluar</label>
-                <p class="text-gray-800">{{ \Carbon\Carbon::parse($barangKeluar->tanggal)->format('d/m/Y H:i') }}</p>
+                <div class="flex items-center gap-2 text-gray-800">
+                    <x-heroicon-o-calendar class="w-5 h-5 text-[#14a2ba]" />
+                    <span>{{ \Carbon\Carbon::parse($barangKeluar->tanggal)->format('d/m/Y H:i') }}</span>
+                </div>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Jumlah</label>
@@ -369,12 +375,6 @@
                     {{ strtoupper($barangKeluar->stock->rack) }}
                 </span>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-500 mb-1">Rak</label>
-                <span class="inline-flex items-center px-3 py-1 rounded text-sm font-medium bg-blue-100 text-blue-800">
-                    {{ strtoupper($barangKeluar->stock->rack) }}
-                </span>
-            </div>
             @if($barangKeluar->stock->kategori)
             <div>
                 <label class="block text-sm font-medium text-gray-500 mb-1">Kategori</label>
@@ -401,7 +401,7 @@
                 <label class="block text-sm font-medium text-gray-500 mb-1">Sub-Kategori</label>
                 @if($barangKeluar->stock->sub_kategori === 'barang_habis_pakai')
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                        <x-heroicon-o-archive-box class="w-4 h-4 mr-1.5" />
+                        <x-heroicon-o-shopping-cart class="w-4 h-4 mr-1.5" />
                         Barang Habis Pakai
                     </span>
                 @else
@@ -413,203 +413,23 @@
             </div>
             @endif
         </div>
-    </div>
-    @endif
-
-    @if($barangKeluar->stock && $barangKeluar->stock->sub_kategori === 'barang_pinjam' && $barangKeluar->tanggal_mulai_pakai && $barangKeluar->tanggal_akhir_pakai)
-    <!-- Barang Pinjam Detail Card -->
-    <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl shadow-md p-6 border-2 border-blue-200">
-        <div class="flex justify-between items-start mb-4">
-            <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <x-heroicon-o-arrow-path class="w-6 h-6 text-blue-600" />
-                Detail Peminjaman Barang
-            </h3>
-            @if($barangKeluar->status === 'sedang_dipakai')
-                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
-                    <x-heroicon-o-clock class="w-4 h-4 mr-1.5" />
-                    Sedang Dipinjam
-                </span>
-            @elseif($barangKeluar->status === 'selesai')
-                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-green-100 text-green-800">
-                    <x-heroicon-o-check-circle class="w-4 h-4 mr-1.5" />
-                    Sudah Dikembalikan
-                </span>
-            @endif
-        </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Peminjam Info -->
-            <div class="bg-white rounded-lg p-4 shadow-sm">
-                <label class="block text-sm font-medium text-gray-600 mb-2">Peminjam</label>
-                <div class="flex items-center gap-3">
-                    <div class="flex-shrink-0 w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">
-                        {{ substr($barangKeluar->penerima ?? 'U', 0, 1) }}
-                    </div>
-                    <div>
-                        <p class="text-gray-900 font-semibold text-lg">{{ $barangKeluar->penerima }}</p>
-                        @if(auth()->user()->division)
-                        <p class="text-sm text-gray-600">{{ auth()->user()->division->nama_divisi }}</p>
-                        @endif
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Periode Peminjaman -->
-            <div class="bg-white rounded-lg p-4 shadow-sm">
-                <label class="block text-sm font-medium text-gray-600 mb-2">Periode Peminjaman</label>
-                <div class="space-y-2">
-                    <div class="flex items-center gap-2 text-sm">
-                        <x-heroicon-o-calendar class="w-4 h-4 text-blue-500" />
-                        <span class="text-gray-600">Tanggal Pinjam:</span>
-                        <span class="font-semibold text-gray-900">{{ \Carbon\Carbon::parse($barangKeluar->tanggal_mulai_pakai)->format('d M Y') }}</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-sm">
-                        <x-heroicon-o-calendar class="w-4 h-4 text-purple-500" />
-                        <span class="text-gray-600">Tanggal Kembali:</span>
-                        <span class="font-semibold text-gray-900">{{ \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai)->format('d M Y') }}</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Durasi & Progress -->
-            <div class="bg-white rounded-lg p-4 shadow-sm md:col-span-2">
-                <label class="block text-sm font-medium text-gray-600 mb-3">Durasi Peminjaman</label>
-                @php
-                    $now = \Carbon\Carbon::now()->startOfDay();
-                    $startDate = \Carbon\Carbon::parse($barangKeluar->tanggal_mulai_pakai)->startOfDay();
-                    $endDate = \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai)->startOfDay();
-                    $totalDays = $startDate->diffInDays($endDate) + 1;
-                    $daysLeft = $now->diffInDays($endDate, false);
-                    $daysPassed = $startDate->diffInDays($now);
-                    $progress = $totalDays > 0 ? min(100, max(0, ($daysPassed / $totalDays) * 100)) : 0;
-                    $isExpired = $daysLeft < 0;
-                @endphp
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <span class="text-3xl font-bold text-blue-600">{{ $totalDays }} hari</span>
-                            <span class="text-sm text-gray-500">total durasi</span>
-                        </div>
-                        @if($barangKeluar->status === 'sedang_dipakai')
-                            @if($isExpired)
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">
-                                    <x-heroicon-o-exclamation-triangle class="w-4 h-4 mr-1" />
-                                    Telat {{ abs(floor($daysLeft)) }} hari
-                                </span>
-                            @elseif($daysLeft <= 3)
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800">
-                                    <x-heroicon-o-clock class="w-4 h-4 mr-1" />
-                                    {{ ceil($daysLeft) }} hari lagi
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
-                                    <x-heroicon-o-check class="w-4 h-4 mr-1" />
-                                    {{ ceil($daysLeft) }} hari lagi
-                                </span>
-                            @endif
-                        @else
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-800">
-                                <x-heroicon-o-check-circle class="w-4 h-4 mr-1" />
-                                Selesai
-                            </span>
-                        @endif
-                    </div>
-                    
-                    @if($barangKeluar->status === 'sedang_dipakai')
-                    <!-- Progress Bar -->
-                    <div class="w-full bg-gray-200 rounded-full h-4">
-                        <div class="h-4 rounded-full transition-all duration-300
-                            @if($isExpired) bg-red-500
-                            @elseif($progress < 50) bg-green-500
-                            @elseif($progress < 90) bg-yellow-500
-                            @else bg-orange-500
-                            @endif" 
-                            style="width: {{ min(100, $progress) }}%">
-                        </div>
-                    </div>
-                    <p class="text-xs text-gray-600 text-center">
-                        @if($isExpired)
-                            ⚠️ Peminjaman sudah melewati batas waktu pengembalian
-                        @else
-                            {{ ceil($daysLeft) }} hari lagi sampai batas pengembalian ({{ \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai)->format('d F Y') }})
-                        @endif
-                    </p>
-                    @endif
-                </div>
-            </div>
-        </div>
-        
-        @if($barangKeluar->status === 'sedang_dipakai')
-        <!-- Reminder/Alert -->
-        <div class="mt-4 p-4 bg-white rounded-lg border-l-4 {{ $isExpired ? 'border-red-500 bg-red-50' : ($daysLeft <= 3 ? 'border-yellow-500 bg-yellow-50' : 'border-blue-500') }}">
-            <div class="flex items-start gap-3">
-                @if($isExpired)
-                    <x-heroicon-o-exclamation-triangle class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                @elseif($daysLeft <= 3)
-                    <x-heroicon-o-bell class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                @else
-                    <x-heroicon-o-information-circle class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                @endif
-                <div>
-                    <p class="text-sm font-semibold {{ $isExpired ? 'text-red-800' : ($daysLeft <= 3 ? 'text-yellow-800' : 'text-blue-800') }}">
-                        @if($isExpired)
-                            ⚠️ Perhatian! Batas Pengembalian Sudah Terlewat
-                        @elseif($daysLeft <= 3)
-                            🔔 Segera Kembalikan Barang
-                        @else
-                            ℹ️ Jangan Lupa Kembalikan Barang
-                        @endif
-                    </p>
-                    <p class="text-xs {{ $isExpired ? 'text-red-700' : ($daysLeft <= 3 ? 'text-yellow-700' : 'text-blue-700') }} mt-1">
-                        @if($isExpired)
-                            Barang sudah melewati batas waktu pengembalian {{ abs(floor($daysLeft)) }} hari. Harap segera mengembalikan barang ini.
-                        @elseif($daysLeft <= 3)
-                            Batas pengembalian tinggal {{ ceil($daysLeft) }} hari lagi. Pastikan barang dalam kondisi baik saat dikembalikan.
-                        @else
-                            Pastikan mengembalikan barang sebelum tanggal {{ \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai)->format('d F Y') }} dalam kondisi baik.
-                        @endif
-                    </p>
-                </div>
-            </div>
-        </div>
-        @endif
-    </div>
-    @endif
-
-    <!-- Stock Info -->
-    @if($barangKeluar->stock)
-    <div class="bg-white rounded-xl shadow-md p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <x-heroicon-o-cube class="w-6 h-6 text-[#14a2ba]" />
-            Informasi Stok
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <label class="block text-sm font-medium text-gray-500 mb-1">Nama Barang</label>
-                <p class="text-gray-800 font-semibold">{{ $barangKeluar->stock->namabarang }}</p>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-500 mb-1">Stok Saat Ini</label>
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {{ $barangKeluar->stock->stock > 10 ? 'bg-green-100 text-green-800' : ($barangKeluar->stock->stock > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
-                    {{ $barangKeluar->stock->stock }} unit
-                </span>
-            </div>
-            @if($barangKeluar->stock->rack)
-            <div>
-                <label class="block text-sm font-medium text-gray-500 mb-1">Rak</label>
-                <span class="inline-flex items-center px-3 py-1 rounded text-sm font-medium bg-blue-100 text-blue-800">
-                    {{ strtoupper($barangKeluar->stock->rack) }}
-                </span>
-            </div>
-            @endif
+        <!-- Link ke Detail Stok -->
+        <div class="mt-6 pt-6 border-t border-gray-200">
+            <a href="{{ route('user.stok-barang.show', $barangKeluar->stock->idbarang) }}" 
+                class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#14a2ba] to-[#0d7a8f] text-white rounded-lg hover:shadow-lg transition-all duration-300">
+                <x-heroicon-o-cube class="w-5 h-5" />
+                <span class="font-medium">Lihat Detail Stok Lengkap</span>
+            </a>
         </div>
     </div>
     @endif
 
-    <!-- Actions -->
-    <div class="flex justify-between items-center">
-        <a href="{{ route('user.barang-keluar.index', ['kategori' => $barangKeluar->kategori]) }}" 
-            class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+    <!-- Actions - Back Button Only (Read Only - No Delete) -->
+    <div class="flex justify-start">
+        <a href="{{ route('user.barang-keluar.index') }}" 
+            class="px-6 py-2.5 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors inline-flex items-center gap-2">
+            <x-heroicon-o-arrow-left class="w-5 h-5" />
             Kembali
         </a>
     </div>

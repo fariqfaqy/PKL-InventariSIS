@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Detail Barang Keluar')
+@section('title', 'Barang Keluar')
 
 @section('content')
 <div class="space-y-6">
@@ -244,165 +244,6 @@
     </div>
     @endif
 
-    @if($barangKeluar->stock && $barangKeluar->stock->sub_kategori === 'barang_pinjam' && $barangKeluar->tanggal_mulai_pakai && $barangKeluar->tanggal_akhir_pakai)
-    <!-- Barang Pinjam Detail Card -->
-    <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl shadow-md p-6 border-2 border-blue-200">
-        <div class="flex justify-between items-start mb-4">
-            <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <x-heroicon-o-arrow-path class="w-6 h-6 text-blue-600" />
-                Detail Peminjaman Barang
-            </h3>
-            @if($barangKeluar->status === 'sedang_dipakai')
-                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
-                    <x-heroicon-o-clock class="w-4 h-4 mr-1.5" />
-                    Sedang Dipinjam
-                </span>
-            @elseif($barangKeluar->status === 'selesai')
-                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-green-100 text-green-800">
-                    <x-heroicon-o-check-circle class="w-4 h-4 mr-1.5" />
-                    Sudah Dikembalikan
-                </span>
-            @endif
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Peminjam Info -->
-            <div class="bg-white rounded-lg p-4 shadow-sm">
-                <label class="block text-sm font-medium text-gray-600 mb-2">Peminjam</label>
-                <div class="flex items-center gap-3">
-                    <div class="flex-shrink-0 w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg">
-                        {{ substr($barangKeluar->penerima ?? 'U', 0, 1) }}
-                    </div>
-                    <div>
-                        <p class="text-gray-900 font-semibold text-lg">{{ $barangKeluar->penerima }}</p>
-                        @if($barangKeluar->user && $barangKeluar->user->division)
-                        <p class="text-sm text-gray-600">{{ $barangKeluar->user->division->nama_divisi }}</p>
-                        @endif
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Periode Peminjaman -->
-            <div class="bg-white rounded-lg p-4 shadow-sm">
-                <label class="block text-sm font-medium text-gray-600 mb-2">Periode Peminjaman</label>
-                <div class="space-y-2">
-                    <div class="flex items-center gap-2 text-sm">
-                        <x-heroicon-o-calendar class="w-4 h-4 text-blue-500" />
-                        <span class="text-gray-600">Tanggal Pinjam:</span>
-                        <span class="font-semibold text-gray-900">{{ \Carbon\Carbon::parse($barangKeluar->tanggal_mulai_pakai)->format('d M Y') }}</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-sm">
-                        <x-heroicon-o-calendar class="w-4 h-4 text-purple-500" />
-                        <span class="text-gray-600">Tanggal Kembali:</span>
-                        <span class="font-semibold text-gray-900">{{ \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai)->format('d M Y') }}</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Durasi & Progress -->
-            <div class="bg-white rounded-lg p-4 shadow-sm md:col-span-2">
-                <label class="block text-sm font-medium text-gray-600 mb-3">Durasi Peminjaman</label>
-                @php
-                    $now = \Carbon\Carbon::now()->startOfDay();
-                    $startDate = \Carbon\Carbon::parse($barangKeluar->tanggal_mulai_pakai)->startOfDay();
-                    $endDate = \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai)->startOfDay();
-                    $totalDays = $startDate->diffInDays($endDate) + 1;
-                    $daysLeft = $now->diffInDays($endDate, false);
-                    $progress = $totalDays > 0 ? min(100, max(0, (($totalDays - $daysLeft) / $totalDays) * 100)) : 0;
-                    $isExpired = $daysLeft < 0;
-                @endphp
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <span class="text-3xl font-bold text-blue-600">{{ $totalDays }} hari</span>
-                            <span class="text-sm text-gray-500">total durasi</span>
-                        </div>
-                        @if($barangKeluar->status === 'sedang_dipakai')
-                            @if($isExpired)
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">
-                                    <x-heroicon-o-exclamation-triangle class="w-4 h-4 mr-1" />
-                                    Telat {{ abs(floor($daysLeft)) }} hari
-                                </span>
-                            @elseif($daysLeft <= 3)
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800">
-                                    <x-heroicon-o-clock class="w-4 h-4 mr-1" />
-                                    {{ ceil($daysLeft) }} hari lagi
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">
-                                    <x-heroicon-o-check class="w-4 h-4 mr-1" />
-                                    {{ ceil($daysLeft) }} hari lagi
-                                </span>
-                            @endif
-                        @else
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-800">
-                                <x-heroicon-o-check-circle class="w-4 h-4 mr-1" />
-                                Selesai
-                            </span>
-                        @endif
-                    </div>
-                    
-                    @if($barangKeluar->status === 'sedang_dipakai')
-                    <!-- Progress Bar -->
-                    <div class="w-full bg-gray-200 rounded-full h-4">
-                        <div class="h-4 rounded-full transition-all duration-300
-                            @if($isExpired) bg-red-500
-                            @elseif($progress < 50) bg-green-500
-                            @elseif($progress < 90) bg-yellow-500
-                            @else bg-orange-500
-                            @endif" 
-                            style="width: {{ min(100, $progress) }}%">
-                        </div>
-                    </div>
-                    <p class="text-xs text-gray-600 text-center">
-                        @if($isExpired)
-                            ⚠️ Peminjaman sudah melewati batas waktu pengembalian
-                        @else
-                            {{ ceil($daysLeft) }} hari lagi sampai batas pengembalian ({{ \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai)->format('d F Y') }})
-                        @endif
-                    </p>
-                    @endif
-                </div>
-            </div>
-        </div>
-        
-        @if($barangKeluar->status === 'sedang_dipakai')
-        <!-- Reminder/Alert -->
-        <div class="mt-4 p-4 bg-white rounded-lg border-l-4 {{ $isExpired ? 'border-red-500 bg-red-50' : ($daysLeft <= 3 ? 'border-yellow-500 bg-yellow-50' : 'border-blue-500') }}">
-            <div class="flex items-start gap-3">
-                @if($isExpired)
-                    <x-heroicon-o-exclamation-triangle class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                @elseif($daysLeft <= 3)
-                    <x-heroicon-o-bell class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                @else
-                    <x-heroicon-o-information-circle class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                @endif
-                <div>
-                    <p class="text-sm font-semibold {{ $isExpired ? 'text-red-800' : ($daysLeft <= 3 ? 'text-yellow-800' : 'text-blue-800') }}">
-                        @if($isExpired)
-                            ⚠️ Perhatian! Batas Pengembalian Sudah Terlewat
-                        @elseif($daysLeft <= 3)
-                            🔔 Barang Harus Segera Dikembalikan
-                        @else
-                            ℹ️ Pengingat Pengembalian Barang
-                        @endif
-                    </p>
-                    <p class="text-xs {{ $isExpired ? 'text-red-700' : ($daysLeft <= 3 ? 'text-yellow-700' : 'text-blue-700') }} mt-1">
-                        @if($isExpired)
-                            Barang sudah melewati batas waktu pengembalian {{ abs(floor($daysLeft)) }} hari. Segera hubungi peminjam untuk pengembalian.
-                        @elseif($daysLeft <= 3)
-                            Batas pengembalian tinggal {{ ceil($daysLeft) }} hari lagi. Pastikan peminjam mengembalikan barang tepat waktu.
-                        @else
-                            Barang harus dikembalikan sebelum tanggal {{ \Carbon\Carbon::parse($barangKeluar->tanggal_akhir_pakai)->format('d F Y') }}.
-                        @endif
-                    </p>
-                </div>
-            </div>
-        </div>
-        @endif
-    </div>
-    @endif
-
     <!-- Actions -->
     <div class="flex justify-between items-center">
         <a href="{{ route('admin.barang-keluar.index') }}" 
@@ -410,7 +251,7 @@
             Kembali
         </a>
         <form action="{{ route('admin.barang-keluar.destroy', $barangKeluar->idkeluar) }}" method="POST" 
-            onsubmit="return customConfirm(event, 'Yakin ingin menghapus transaksi ini? Stok akan dikembalikan sebanyak {{ $barangKeluar->qty }}', {type: 'danger', title: 'Hapus Transaksi', confirmText: 'Ya, Hapus'})">
+            onsubmit="return customConfirm(event, 'Yakin ingin menghapus history transaksi ini? Data ini hanya akan dihapus dari history, stok tidak akan terpengaruh.', {type: 'danger', title: 'Hapus History Transaksi', confirmText: 'Ya, Hapus'})">
             @csrf
             @method('DELETE')
             <button type="submit" class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors inline-flex items-center gap-2">
