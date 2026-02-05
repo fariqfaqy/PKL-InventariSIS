@@ -109,11 +109,9 @@
         </div>
 
         <!-- Pagination -->
-        @if($assignments->hasPages())
-            <div class="px-6 py-4 border-t border-gray-200">
-                {{ $assignments->links() }}
-            </div>
-        @endif
+        <div class="px-6 py-4 border-t border-gray-200">
+            {{ $assignments->links() }}
+        </div>
     </div>
 
 <script>

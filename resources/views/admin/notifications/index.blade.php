@@ -71,10 +71,8 @@
         @endforelse
     </div>
 
-    @if($notifications->hasPages())
     <div class="mt-6">
         {{ $notifications->links() }}
     </div>
-    @endif
 </div>
 @endsection

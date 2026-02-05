@@ -30,7 +30,7 @@ class PermintaanController extends Controller
             ->whereNull('parent_request_id')
             ->whereNotIn('status', ['completed', 'cancelled'])
             ->orderBy('tanggal_request', 'desc')
-            ->get();
+            ->get(); // Changed to get() for collection filtering in view
         
         // Request perubahan (yang punya parent_request_id)
         // Exclude yang parent-nya sudah completed/cancelled
@@ -40,7 +40,8 @@ class PermintaanController extends Controller
                 $query->whereNotIn('status', ['completed', 'cancelled']);
             })
             ->orderBy('tanggal_request', 'desc')
-            ->get();
+            ->paginate(10, ['*'], 'change_page')
+            ->withQueryString();
         
         // History data dengan sub-tabs
         // 1. Sedang Dipakai - sudah disetujui tapi belum selesai
@@ -49,39 +50,22 @@ class PermintaanController extends Controller
             ->whereNotNull('diproses_oleh')
             ->where('status', 'sedang_dipakai')
             ->orderBy('tanggal', 'desc')
-            ->get();
-        
-        // Add active rentals from RequestBarang (barang_pinjam)
-        $activeRentals = RequestBarang::with(['user', 'stock'])
-            ->where('tipe_request', 'pinjam_material')
-            ->where('status', 'approved')
-            ->orderBy('tanggal_request', 'desc')
-            ->get();
-        
-        // Merge both collections
-        $sedangDipakai = $sedangDipakai->merge($activeRentals);
+            ->paginate(10, ['*'], 'active_page')
+            ->withQueryString();
         
         // 2. Selesai - sudah selesai
         $selesai = OutgoingTransaction::with(['stock', 'user'])
             ->where('status', 'selesai')
             ->orderBy('tanggal_selesai', 'desc')
-            ->get();
-        
-        // Add completed rentals from RequestBarang (barang_pinjam)
-        $completedRentals = RequestBarang::with(['user', 'stock'])
-            ->where('tipe_request', 'pinjam_material')
-            ->where('status', 'completed')
-            ->orderBy('updated_at', 'desc')
-            ->get();
-        
-        // Merge completed rentals
-        $selesai = $selesai->merge($completedRentals);
+            ->paginate(10, ['*'], 'completed_page')
+            ->withQueryString();
         
         // 3. Ditolak/Dibatalkan - request yang rejected atau cancelled
         $ditolakDibatalkan = RequestBarang::with(['user', 'stock'])
             ->whereIn('status', ['rejected', 'cancelled'])
             ->orderBy('tanggal_request', 'desc')
-            ->get();
+            ->paginate(10, ['*'], 'rejected_page')
+            ->withQueryString();
         
         // Count by status for stats
         $stats = [
@@ -508,6 +492,58 @@ class PermintaanController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Gagal memperpanjang peminjaman: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Set rental dates - isi tanggal untuk peminjaman yang belum memiliki tanggal
+     */
+    public function setRentalDates(Request $request, $id)
+    {
+        $permintaan = RequestBarang::with('stock')->findOrFail($id);
+        
+        // Validasi: harus tipe pinjam_material dan status approved
+        if ($permintaan->tipe_request !== 'pinjam_material') {
+            return back()->with('error', 'Hanya peminjaman material yang dapat diatur tanggalnya!');
+        }
+        
+        if ($permintaan->status !== 'approved') {
+            return back()->with('error', 'Hanya peminjaman yang sudah disetujui yang bisa diatur tanggalnya!');
+        }
+        
+        $validated = $request->validate([
+            'tanggal_mulai_sewa' => 'required|date|before_or_equal:today',
+            'tanggal_akhir_sewa' => 'required|date|after:tanggal_mulai_sewa',
+        ], [
+            'tanggal_mulai_sewa.required' => 'Tanggal pinjam harus diisi',
+            'tanggal_mulai_sewa.date' => 'Format tanggal tidak valid',
+            'tanggal_mulai_sewa.before_or_equal' => 'Tanggal pinjam tidak boleh di masa depan',
+            'tanggal_akhir_sewa.required' => 'Tanggal kembali harus diisi',
+            'tanggal_akhir_sewa.date' => 'Format tanggal tidak valid',
+            'tanggal_akhir_sewa.after' => 'Tanggal kembali harus setelah tanggal pinjam',
+        ]);
+        
+        DB::beginTransaction();
+        try {
+            // Update tanggal di RequestBarang
+            $permintaan->update([
+                'tanggal_mulai_sewa' => $validated['tanggal_mulai_sewa'],
+                'tanggal_akhir_sewa' => $validated['tanggal_akhir_sewa'],
+            ]);
+            
+            // Update tanggal di OutgoingTransaction jika ada
+            OutgoingTransaction::where('id_request', $id)
+                ->update([
+                    'tanggal_mulai_pakai' => $validated['tanggal_mulai_sewa'],
+                    'tanggal_akhir_pakai' => $validated['tanggal_akhir_sewa'],
+                ]);
+            
+            DB::commit();
+            
+            return back()->with('success', 'Tanggal peminjaman berhasil diisi! Pinjam: ' . \Carbon\Carbon::parse($validated['tanggal_mulai_sewa'])->format('d/m/Y') . ', Kembali: ' . \Carbon\Carbon::parse($validated['tanggal_akhir_sewa'])->format('d/m/Y'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal mengisi tanggal peminjaman: ' . $e->getMessage());
         }
     }
 

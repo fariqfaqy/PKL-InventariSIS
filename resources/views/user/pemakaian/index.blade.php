@@ -69,8 +69,11 @@
             </button>
             <button onclick="switchTab('aset-sewa')" id="tab-aset-sewa" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm tab-button">
                 Aset Sewa Saya
-                @if($sedangDipakai->count() > 0)
-                    <span class="ml-2 bg-purple-500 text-white rounded-full px-2 py-0.5 text-xs font-semibold">{{ $sedangDipakai->count() }}</span>
+                @php
+                    $asetSewaCount = $sedangDipakai->where('kategori', 'aset_sewa')->count();
+                @endphp
+                @if($asetSewaCount > 0)
+                    <span class="ml-2 bg-purple-500 text-white rounded-full px-2 py-0.5 text-xs font-semibold">{{ $asetSewaCount }}</span>
                 @endif
             </button>
             <button onclick="switchTab('history')" id="tab-history" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm tab-button">
@@ -338,10 +341,24 @@
                                         Pembatalan
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                        <x-heroicon-o-pencil-square class="w-3 h-3 mr-1" />
-                                        Perubahan
-                                    </span>
+                                    @php
+                                        $isExtension = $item->parentRequest && 
+                                                      $item->qty === $item->parentRequest->qty && 
+                                                      $item->tanggal_akhir_sewa && 
+                                                      $item->parentRequest->tanggal_akhir_sewa &&
+                                                      $item->tanggal_akhir_sewa->gt($item->parentRequest->tanggal_akhir_sewa);
+                                    @endphp
+                                    @if($isExtension)
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <x-heroicon-o-arrow-path class="w-3 h-3 mr-1" />
+                                            Perpanjangan
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                            <x-heroicon-o-pencil-square class="w-3 h-3 mr-1" />
+                                            Perubahan Qty
+                                        </span>
+                                    @endif
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -413,17 +430,23 @@
                     </tbody>
                 </table>
             </div>
+            
+            <!-- Pagination -->
+            <div class="px-6 py-4 border-t border-gray-200">
+                {{ $changeRequests->links() }}
+            </div>
         </div>
     </div>
     
     <!-- Aset Sewa Tab Content -->
     <div id="content-aset-sewa" class="tab-content hidden">
         @php
-            $asetSedangDigunakan = $sedangDipakai; // Aset sewa yang sedang digunakan
-            $asetSelesai = $selesai; // Aset sewa yang sudah selesai
+            // Filter hanya Aset Sewa (kategori = 'aset_sewa'), exclude Material Umum
+            $asetSedangDigunakan = $sedangDipakai->where('kategori', 'aset_sewa');
+            $asetSelesai = $selesai->where('kategori', 'aset_sewa');
         @endphp
 
-        @if($sedangDipakai->count() > 0 || $selesai->count() > 0)
+        @if($asetSedangDigunakan->count() > 0 || $asetSelesai->count() > 0)
             <!-- Sub-tabs untuk Aset Sewa -->
             <div class="mb-4">
                 <div class="border-b border-gray-200">
@@ -856,6 +879,11 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="px-6 py-4 border-t border-gray-200">
+                    {{ $ditolakDibatalkan->links() }}
                 </div>
             </div>
         </div>

@@ -29,7 +29,7 @@ class BarangRakController extends Controller
             });
         }
 
-        $assignments = $query->orderBy('rack')->orderBy('namabarang')->paginate(15)->withQueryString();
+        $assignments = $query->orderBy('rack')->orderBy('namabarang')->paginate(10)->withQueryString();
         $racks = ['1a', '1b', '1c', '2a', '2b', '2c'];
 
         return view('user.barang-rak.index', compact('assignments', 'racks'));

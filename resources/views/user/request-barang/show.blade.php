@@ -160,6 +160,35 @@
                         </button>
                     </form>
                     <p class="text-xs text-gray-500 text-center">Anda hanya bisa menghapus permintaan yang masih pending</p>
+                @elseif($request->status === 'approved' && $request->tipe_request === 'pinjam_material' && $request->tanggal_akhir_sewa)
+                    <button type="button" onclick="openExtendModal()" 
+                            class="w-full px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center mb-3">
+                        <x-heroicon-o-arrow-path class="h-5 w-5 mr-2" />
+                        Request Perpanjangan
+                    </button>
+                    <p class="text-xs text-gray-500 text-center">Ajukan perpanjangan durasi peminjaman</p>
+                    
+                    @php
+                        $now = \Carbon\Carbon::now();
+                        $tanggalKembali = \Carbon\Carbon::parse($request->tanggal_akhir_sewa);
+                        $daysUntilReturn = $now->diffInDays($tanggalKembali, false);
+                    @endphp
+                    
+                    @if($daysUntilReturn >= 0)
+                        <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                            <p class="text-xs text-blue-700 font-medium text-center">
+                                <x-heroicon-o-clock class="w-4 h-4 inline" />
+                                Sisa waktu: {{ $daysUntilReturn }} hari
+                            </p>
+                        </div>
+                    @else
+                        <div class="mt-4 p-3 bg-red-50 rounded-lg">
+                            <p class="text-xs text-red-700 font-medium text-center">
+                                <x-heroicon-o-exclamation-triangle class="w-4 h-4 inline" />
+                                Terlambat {{ abs($daysUntilReturn) }} hari
+                            </p>
+                        </div>
+                    @endif
                 @else
                     <div class="text-center text-gray-500">
                         <x-heroicon-o-information-circle class="h-12 w-12 mx-auto mb-2 text-gray-400" />
@@ -177,4 +206,100 @@
         </div>
     </div>
 </div>
+
+<!-- Extend Modal -->
+@if($request->status === 'approved' && $request->tipe_request === 'pinjam_material' && $request->tanggal_akhir_sewa)
+<div id="extendModal" class="hidden fixed inset-0 backdrop-blur-sm bg-white/30 z-50 flex items-center justify-center transition-all duration-300 opacity-0" onclick="closeExtendModal()">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 transform scale-95 transition-all duration-300" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-gray-800">Request Perpanjangan</h3>
+            <button onclick="closeExtendModal()" class="text-gray-400 hover:text-gray-600">
+                <x-heroicon-o-x-mark class="w-6 h-6" />
+            </button>
+        </div>
+
+        <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+            <div class="flex items-start gap-3">
+                <x-heroicon-o-information-circle class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div>
+                    <p class="text-sm font-medium text-blue-800 mb-1">Tanggal Kembali Saat Ini:</p>
+                    <p class="text-lg font-bold text-blue-900">{{ $request->tanggal_akhir_sewa->format('d/m/Y') }}</p>
+                </div>
+            </div>
+        </div>
+
+        <form action="{{ route('user.request-barang.request-extend', $request->id_request) }}" method="POST" 
+              onsubmit="return customConfirm(event, 'Kirim request perpanjangan peminjaman?', {type: 'info', title: 'Request Perpanjangan', confirmText: 'Ya, Kirim'})">
+            @csrf
+            <div class="mb-6">
+                <label for="tanggal_akhir_sewa_baru" class="block text-sm font-medium text-gray-700 mb-2">
+                    Tanggal Kembali Baru <span class="text-red-500">*</span>
+                </label>
+                <input type="date" 
+                       id="tanggal_akhir_sewa_baru" 
+                       name="tanggal_akhir_sewa_baru" 
+                       min="{{ \Carbon\Carbon::parse($request->tanggal_akhir_sewa)->addDay()->format('Y-m-d') }}"
+                       value="{{ \Carbon\Carbon::parse($request->tanggal_akhir_sewa)->addDays(7)->format('Y-m-d') }}"
+                       required
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <p class="mt-2 text-xs text-gray-500">Pilih tanggal kembali baru (setelah {{ $request->tanggal_akhir_sewa->format('d/m/Y') }})</p>
+            </div>
+
+            <div class="mb-6">
+                <label for="alasan_perpanjangan" class="block text-sm font-medium text-gray-700 mb-2">
+                    Alasan Perpanjangan <span class="text-red-500">*</span>
+                </label>
+                <textarea id="alasan_perpanjangan" 
+                          name="alasan_perpanjangan" 
+                          rows="3"
+                          required
+                          placeholder="Jelaskan alasan Anda meminta perpanjangan..."
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="button" onclick="closeExtendModal()" 
+                        class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                    Batal
+                </button>
+                <button type="submit" 
+                        class="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg font-medium">
+                    Kirim Request
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openExtendModal() {
+    const modal = document.getElementById('extendModal');
+    modal.classList.remove('hidden');
+    
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modal.querySelector('div').classList.remove('scale-95');
+        modal.querySelector('div').classList.add('scale-100');
+    }, 10);
+}
+
+function closeExtendModal() {
+    const modal = document.getElementById('extendModal');
+    modal.classList.add('opacity-0');
+    modal.querySelector('div').classList.remove('scale-100');
+    modal.querySelector('div').classList.add('scale-95');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeExtendModal();
+    }
+});
+</script>
+@endif
+
 @endsection

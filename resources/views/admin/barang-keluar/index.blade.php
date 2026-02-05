@@ -294,11 +294,9 @@
             </table>
         </div>
 
-        @if($barangKeluar->hasPages())
         <div class="px-6 py-4 border-t border-gray-200">
             {{ $barangKeluar->links() }}
         </div>
-        @endif
     </div>
 
 <!-- AJAX Live Search & Pagination Script -->

@@ -17,15 +17,9 @@ class StokBarangController extends Controller
     {
         $query = Stock::query();
 
-        // Filter berdasarkan kategori
-        if ($request->filled('kategori') && in_array($request->kategori, ['aset_sewa', 'material_umum', 'aset_tetap'])) {
-            $query->where('kategori', $request->kategori);
-            
-            // For Aset Sewa: Load user relationship (pengguna disimpan di Stock)
-            if ($request->kategori === 'aset_sewa') {
-                $query->with(['user.division']);
-            }
-        }
+        // USER HANYA BISA LIHAT MATERIAL UMUM
+        // Aset Sewa dan Aset Tetap hanya untuk admin
+        $query->where('kategori', 'material_umum');
 
         // Filter berdasarkan sub_kategori (khusus untuk Material Umum)
         if ($request->filled('sub_kategori') && in_array($request->sub_kategori, ['barang_habis_pakai', 'barang_pinjam'])) {

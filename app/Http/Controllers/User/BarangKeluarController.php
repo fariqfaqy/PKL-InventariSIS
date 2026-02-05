@@ -19,16 +19,9 @@ class BarangKeluarController extends Controller
         $query = OutgoingTransaction::with(['stock', 'user.division']);
         // TIDAK ada filter user_id - tampilkan semua transaksi untuk semua user
         
-        // Filter by kategori
-        if ($request->filled('kategori') && in_array($request->kategori, ['aset_sewa', 'material_umum', 'aset_tetap'])) {
-            $query->where('kategori', $request->kategori);
-            
-            // For Aset Sewa: only show 'selesai' status (exclude sedang_dipakai & ditarik)
-            // Konsisten dengan Admin - hanya tampilkan yang sudah diselesaikan
-            if ($request->kategori === 'aset_sewa' && !$request->filled('status_filter')) {
-                $query->where('status', 'selesai');
-            }
-        }
+        // USER HANYA BISA LIHAT MATERIAL UMUM
+        // Aset Sewa dan Aset Tetap hanya untuk admin
+        $query->where('kategori', 'material_umum');
         
         // Filter by sub_kategori (khusus Material Umum)
         if ($request->filled('sub_kategori') && in_array($request->sub_kategori, ['barang_habis_pakai', 'barang_pinjam'])) {

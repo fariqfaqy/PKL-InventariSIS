@@ -17,69 +17,44 @@
         </div>
     </div>
 
-    <!-- Category Header -->
-    @if(!request('kategori'))
-    <!-- Header Semua Barang -->
+    <!-- Category Header - USER HANYA LIHAT MATERIAL UMUM -->
     <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <!-- Header Material Umum -->
         <div class="border-b border-gray-200 bg-cyan-50 px-6 py-4">
             <div class="flex items-center gap-3">
-                <x-heroicon-o-cube class="w-6 h-6 text-cyan-600" />
-                <h2 class="text-lg font-semibold text-cyan-900">Semua Barang</h2>
-            </div>
-        </div>
-    </div>
-    @elseif(request('kategori'))
-    <div class="bg-white rounded-xl shadow-md overflow-hidden">
-        <!-- Category Header -->
-        <div class="border-b border-gray-200 bg-cyan-50 px-6 py-4">
-            <div class="flex items-center gap-3">
-                @if(request('kategori') == 'aset_sewa')
-                    <x-heroicon-o-computer-desktop class="w-6 h-6 text-cyan-600" />
-                    <h2 class="text-lg font-semibold text-cyan-900">Aset Sewa</h2>
-                @elseif(request('kategori') == 'material_umum')
-                    <x-heroicon-o-shopping-bag class="w-6 h-6 text-cyan-600" />
-                    <h2 class="text-lg font-semibold text-cyan-900">Material Umum</h2>
-                @elseif(request('kategori') == 'aset_tetap')
-                    <x-heroicon-o-building-office class="w-6 h-6 text-cyan-600" />
-                    <h2 class="text-lg font-semibold text-cyan-900">Aset Tetap</h2>
-                @endif
+                <x-heroicon-o-shopping-bag class="w-6 h-6 text-cyan-600" />
+                <h2 class="text-lg font-semibold text-cyan-900">Material Umum</h2>
             </div>
         </div>
 
         <!-- Sub-tabs untuk Material Umum -->
-        @if(request('kategori') == 'material_umum')
-            <div class="bg-blue-50 border-b border-blue-200">
-                <nav class="flex -mb-px">
-                    <button onclick="window.location.href='{{ route('user.stok-barang.index', ['kategori' => 'material_umum']) }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ !request('sub_kategori') ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
-                        <span class="inline-flex items-center gap-1">
-                            <x-heroicon-o-squares-2x2 class="w-3 h-3" />
-                            Semua Material
-                        </span>
-                    </button>
-                    <button onclick="window.location.href='{{ route('user.stok-barang.index', ['kategori' => 'material_umum', 'sub_kategori' => 'barang_habis_pakai']) }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_habis_pakai' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
-                        <span class="inline-flex items-center gap-1">
-                            <x-heroicon-o-archive-box class="w-3 h-3" />
-                            Barang Habis Pakai
-                        </span>
-                    </button>
-                    <button onclick="window.location.href='{{ route('user.stok-barang.index', ['kategori' => 'material_umum', 'sub_kategori' => 'barang_pinjam']) }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_pinjam' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
-                        <span class="inline-flex items-center gap-1">
-                            <x-heroicon-o-arrow-path class="w-3 h-3" />
-                            Barang Pinjam
-                        </span>
-                    </button>
-                </nav>
-            </div>
-        @endif
+        <div class="bg-blue-50 border-b border-blue-200">
+            <nav class="flex -mb-px">
+                <button onclick="window.location.href='{{ route('user.stok-barang.index') }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ !request('sub_kategori') ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                    <span class="inline-flex items-center gap-1">
+                        <x-heroicon-o-squares-2x2 class="w-3 h-3" />
+                        Semua Material
+                    </span>
+                </button>
+                <button onclick="window.location.href='{{ route('user.stok-barang.index', ['sub_kategori' => 'barang_habis_pakai']) }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_habis_pakai' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                    <span class="inline-flex items-center gap-1">
+                        <x-heroicon-o-archive-box class="w-3 h-3" />
+                        Barang Habis Pakai
+                    </span>
+                </button>
+                <button onclick="window.location.href='{{ route('user.stok-barang.index', ['sub_kategori' => 'barang_pinjam']) }}'" class="flex-1 py-3 px-4 text-center border-b-2 font-medium text-xs transition-colors {{ request('sub_kategori') == 'barang_pinjam' ? 'border-blue-500 text-blue-700' : 'border-transparent text-blue-600 hover:text-blue-800 hover:border-blue-300' }}">
+                    <span class="inline-flex items-center gap-1">
+                        <x-heroicon-o-arrow-path class="w-3 h-3" />
+                        Barang Pinjam
+                    </span>
+                </button>
+            </nav>
+        </div>
     </div>
-    @endif
 
     <!-- Filter Section -->
     <div class="bg-white rounded-xl shadow-md p-4">
         <form method="GET" action="{{ route('user.stok-barang.index') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            @if(request('kategori'))
-                <input type="hidden" name="kategori" value="{{ request('kategori') }}">
-            @endif
             @if(request('sub_kategori'))
                 <input type="hidden" name="sub_kategori" value="{{ request('sub_kategori') }}">
             @endif
@@ -89,8 +64,7 @@
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Kode atau nama barang..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
             </div>
 
-            <!-- Filter Rak (hanya untuk Material Umum) -->
-            @if(!request('kategori') || request('kategori') == 'material_umum')
+            <!-- Filter Rak -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Filter Rak</label>
                 <select name="rack" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent">
@@ -99,11 +73,7 @@
                         <option value="{{ $rack }}" {{ request('rack') == $rack ? 'selected' : '' }}>Rak {{ strtoupper($rack) }}</option>
                     @endforeach
                 </select>
-                @if(!request('kategori'))
-                    <p class="text-xs text-gray-500 mt-1">Filter rak hanya untuk Material Umum</p>
-                @endif
             </div>
-            @endif
 
             <!-- Filter Status Stok -->
             <div>
@@ -122,7 +92,7 @@
                     <x-heroicon-o-magnifying-glass class="w-4 h-4" />
                     <span class="font-medium">Filter</span>
                 </button>
-                <a href="{{ route('user.stok-barang.index', array_filter(['kategori' => request('kategori'), 'sub_kategori' => request('sub_kategori')])) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300">
+                <a href="{{ route('user.stok-barang.index', array_filter(['sub_kategori' => request('sub_kategori')])) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all duration-300">
                     <x-heroicon-o-x-mark class="w-4 h-4" />
                     <span class="font-medium">Reset</span>
                 </a>
@@ -140,25 +110,13 @@
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Kode Barang</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Gambar</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Barang</th>
-                        @if(!request('kategori'))
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">Kategori</th>
-                        @endif
-                        @if(request('kategori') == 'material_umum' && !request('sub_kategori'))
+                        @if(!request('sub_kategori'))
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Sub Kategori</th>
-                        @endif
-                        @if(request('kategori') == 'aset_sewa')
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Status Kondisi</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Pengguna</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Durasi</th>
                         @endif
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Stok</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Rak</th>
-                        @if(request('kategori') == 'material_umum')
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Terakhir Update</th>
-                        @endif
-                        @if(request('kategori') != 'aset_sewa')
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Penginput</th>
-                        @endif
                         <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Aksi</th>
                     </tr>
                 </thead>
@@ -183,32 +141,7 @@
                         <td class="px-4 py-3 text-sm text-gray-900">
                             {{ $stock->namabarang }}
                         </td>
-                        @if(!request('kategori'))
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                            @if($stock->kategori === 'aset_sewa')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                    <x-heroicon-o-computer-desktop class="w-3 h-3 mr-1" />
-                                    Aset Sewa
-                                </span>
-                            @elseif($stock->kategori === 'aset_tetap')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
-                                    <x-heroicon-o-building-office class="w-3 h-3 mr-1" />
-                                    Aset Tetap
-                                </span>
-                            @elseif($stock->kategori === 'material_umum')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                    <x-heroicon-o-shopping-bag class="w-3 h-3 mr-1" />
-                                    Material Umum
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                    <x-heroicon-o-question-mark-circle class="w-3 h-3 mr-1" />
-                                    {{ ucfirst(str_replace('_', ' ', $stock->kategori)) }}
-                                </span>
-                            @endif
-                        </td>
-                        @endif
-                        @if(request('kategori') == 'material_umum' && !request('sub_kategori'))
+                        @if(!request('sub_kategori'))
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                             @if($stock->sub_kategori === 'barang_habis_pakai')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -220,57 +153,6 @@
                                     <x-heroicon-o-arrow-path-rounded-square class="w-3 h-3 mr-1" />
                                     Barang Pinjam
                                 </span>
-                            @else
-                                <span class="text-gray-400 text-xs">-</span>
-                            @endif
-                        </td>
-                        @endif
-                        @if(request('kategori') == 'aset_sewa')
-                        <td class="px-4 py-3 whitespace-nowrap text-sm">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $stock->status_kondisi_badge ?? 'bg-gray-100 text-gray-800' }}">
-                                {{ $stock->status_kondisi_label ?? 'Digunakan' }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                            @if($stock->user)
-                                <div class="flex flex-col">
-                                    <span class="font-medium text-gray-800">{{ $stock->user->name }}</span>
-                                    <span class="text-xs text-gray-500">{{ $stock->user->division->nama_divisi ?? '-' }}</span>
-                                    @if($stock->tanggal_mulai_pakai && $stock->tanggal_akhir_pakai)
-                                    <span class="text-xs text-gray-400 mt-1">
-                                        {{ \Carbon\Carbon::parse($stock->tanggal_mulai_pakai)->format('d/m/Y') }} - 
-                                        {{ \Carbon\Carbon::parse($stock->tanggal_akhir_pakai)->format('d/m/Y') }}
-                                    </span>
-                                    @endif
-                                </div>
-                            @else
-                                <span class="text-gray-400 text-xs">Tidak ada pengguna</span>
-                            @endif
-                        </td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                            @if($stock->tanggal_mulai_pakai && $stock->tanggal_akhir_pakai)
-                                @php
-                                    $start = \Carbon\Carbon::parse($stock->tanggal_mulai_pakai)->startOfDay();
-                                    $end = \Carbon\Carbon::parse($stock->tanggal_akhir_pakai)->startOfDay();
-                                    $today = now()->startOfDay();
-                                    $daysTotal = $start->diffInDays($end) + 1;
-                                    $daysRemaining = $today->diffInDays($end, false);
-                                    $isExpired = $daysRemaining < 0;
-                                @endphp
-                                <div class="flex flex-col">
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $isExpired ? 'bg-red-100 text-red-800' : 'bg-indigo-100 text-indigo-800' }}">
-                                        {{ $daysTotal }} hari
-                                    </span>
-                                    @if($isExpired)
-                                        <span class="text-xs text-red-600 font-medium mt-1">
-                                            Lewat {{ abs($daysRemaining) }} hari
-                                        </span>
-                                    @elseif($daysRemaining >= 0)
-                                        <span class="text-xs text-gray-500 mt-1">
-                                            Sisa {{ $daysRemaining }} hari
-                                        </span>
-                                    @endif
-                                </div>
                             @else
                                 <span class="text-gray-400 text-xs">-</span>
                             @endif
@@ -290,7 +172,6 @@
                                 <span class="text-gray-400 text-xs">-</span>
                             @endif
                         </td>
-                        @if(request('kategori') == 'material_umum')
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                             <div class="flex items-center gap-1.5">
                                 <x-heroicon-o-clock class="w-4 h-4 text-gray-400" />
@@ -298,12 +179,9 @@
                             </div>
                             <div class="text-xs text-gray-500 mt-0.5">{{ $stock->updated_at->format('H:i') }}</div>
                         </td>
-                        @endif
-                        @if(request('kategori') != 'aset_sewa')
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                             {{ $stock->penginput }}
                         </td>
-                        @endif
                         <td class="px-4 py-3 whitespace-nowrap text-center text-sm font-medium">
                             <div class="flex items-center justify-center gap-2">
                                 <a href="{{ route('user.stok-barang.show', $stock->idbarang) }}" class="text-blue-600 hover:text-blue-700 transition-colors" title="Detail">
@@ -323,11 +201,11 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="{{ request('kategori') == 'aset_sewa' ? '11' : (request('kategori') == 'material_umum' && request('sub_kategori') ? '9' : (request('kategori') == 'material_umum' ? '10' : (request('kategori') == 'aset_tetap' ? '8' : '9'))) }}" class="px-6 py-12 text-center">
+                        <td colspan="{{ request('sub_kategori') ? '8' : '9' }}" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center justify-center text-gray-500">
                                 <x-heroicon-o-inbox class="w-16 h-16 mb-4 opacity-30" />
                                 <p class="text-lg font-medium">Belum ada data stok barang</p>
-                                <p class="text-sm mt-1">Stok barang akan muncul setelah admin menambahkan data</p>
+                                <p class="text-sm mt-1">Stok barang Material Umum akan muncul setelah admin menambahkan data</p>
                             </div>
                         </td>
                     </tr>
@@ -337,11 +215,9 @@
         </div>
 
         <!-- Pagination -->
-        @if($stocks->hasPages())
         <div class="px-6 py-4 border-t border-gray-200">
             {{ $stocks->links() }}
         </div>
-        @endif
     </div>
 
 <!-- QR Code Modal -->

@@ -58,8 +58,19 @@ return new class extends Migration
             $table->date('tanggal_akhir_sewa')->nullable()
                   ->comment('Tanggal akhir sewa (hanya untuk aset_sewa)');
             
+            // Usage Info (untuk tracking pemakaian aset_sewa)
+            $table->unsignedBigInteger('user_id')->nullable()
+                  ->comment('User yang sedang menggunakan aset (hanya untuk aset_sewa)');
+            $table->date('tanggal_mulai_pakai')->nullable()
+                  ->comment('Tanggal mulai pakai aktual oleh user');
+            $table->date('tanggal_akhir_pakai')->nullable()
+                  ->comment('Tanggal akhir pakai aktual oleh user');
+            
             // Timestamps
             $table->timestamps();
+            
+            // Foreign Keys
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
             
             // ✅ CARA LARAVEL: Index menggunakan method Laravel
             // Index untuk performance query berdasarkan kategori dan status
@@ -67,16 +78,33 @@ return new class extends Migration
         });
         
         // ❌ CHECK Constraint harus pakai raw SQL (Laravel tidak support)
-        // Validasi: aset_sewa HARUS stock = 1
+        // Validasi: aset_sewa stock <= 1 (allow 0 saat selesai)
         DB::statement("
             ALTER TABLE stock 
             ADD CONSTRAINT check_aset_sewa_qty 
-            CHECK (kategori != 'aset_sewa' OR stock = 1)
+            CHECK (kategori != 'aset_sewa' OR stock <= 1)
         ");
         
         // ❌ COMMENT juga harus pakai raw SQL (PostgreSQL specific)
         DB::statement("COMMENT ON COLUMN stock.kodebarang IS 'Kode unik barang - untuk aset_sewa harus benar-benar unik (1 kode = 1 item fisik)'");
         DB::statement("COMMENT ON COLUMN stock.status_kondisi IS 'Status kondisi aset: tersedia (ready), digunakan (in use), diperbaiki (under repair), rusak (broken), hilang (lost)'");
+        
+        // Create stock_histories table untuk real-time tracking
+        Schema::create('stock_histories', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('stock_id');
+            $table->string('event_type'); // created, user_assigned, period_extended, status_changed, completed, stock_updated
+            $table->text('description');
+            $table->json('old_values')->nullable();
+            $table->json('new_values')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->timestamps();
+            
+            $table->foreign('stock_id')->references('idbarang')->on('stock')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
+            $table->index('event_type');
+            $table->index('created_at');
+        });
     }
 
     /**
@@ -84,6 +112,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('stock_histories');
         Schema::dropIfExists('stock');
     }
 };

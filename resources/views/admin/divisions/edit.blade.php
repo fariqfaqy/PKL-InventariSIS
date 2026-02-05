@@ -44,12 +44,13 @@
                     <input type="text" name="kode_divisi" id="kode_divisi" required
                         value="{{ old('kode_divisi', $division->kode_divisi) }}"
                         placeholder="Contoh: IT-001"
-                        maxlength="10"
+                        maxlength="5"
+                        style="text-transform: uppercase;"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#14a2ba] focus:border-transparent @error('kode_divisi') border-red-500 @enderror">
                     @error('kode_divisi')
                     <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
-                    <p class="mt-1 text-xs text-gray-500">Maksimal 10 karakter</p>
+                    <p class="mt-1 text-xs text-gray-500">Maksimal 5 karakter</p>
                 </div>
 
                 <!-- Kepala Divisi -->

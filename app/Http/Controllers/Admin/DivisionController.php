@@ -35,11 +35,13 @@ class DivisionController extends Controller
     {
         $validated = $request->validate([
             'nama_divisi' => 'required|string|max:255',
-            'kode_divisi' => 'required|string|max:10|unique:divisions,kode_divisi',
+            'kode_divisi' => 'required|string|max:5|unique:divisions,kode_divisi',
             'deskripsi' => 'nullable|string',
             'kepala_divisi' => 'nullable|string|max:255',
         ]);
 
+        // Convert kode_divisi to uppercase
+        $validated['kode_divisi'] = strtoupper($validated['kode_divisi']);
         $validated['is_active'] = $request->has('is_active');
 
         Division::create($validated);
@@ -72,11 +74,13 @@ class DivisionController extends Controller
     {
         $validated = $request->validate([
             'nama_divisi' => 'required|string|max:255',
-            'kode_divisi' => 'required|string|max:10|unique:divisions,kode_divisi,' . $division->id,
+            'kode_divisi' => 'required|string|max:5|unique:divisions,kode_divisi,' . $division->id,
             'deskripsi' => 'nullable|string',
             'kepala_divisi' => 'nullable|string|max:255',
         ]);
 
+        // Convert kode_divisi to uppercase
+        $validated['kode_divisi'] = strtoupper($validated['kode_divisi']);
         $validated['is_active'] = $request->has('is_active');
 
         $division->update($validated);

@@ -181,11 +181,9 @@
         </div>
 
         <!-- Pagination -->
-        @if($users->hasPages())
         <div class="bg-gray-50 px-4 py-3 border-t border-gray-200">
             {{ $users->links() }}
         </div>
-        @endif
     </div>
 </div>
 @endsection

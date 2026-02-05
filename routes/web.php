@@ -71,6 +71,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::post('permintaan/{id}/update-status', [\App\Http\Controllers\Admin\PermintaanController::class, 'updateStatus'])->name('permintaan.update-status');
     Route::patch('permintaan/{id}/mark-complete', [\App\Http\Controllers\Admin\PermintaanController::class, 'markComplete'])->name('permintaan.mark-complete');
     Route::post('permintaan/{id}/extend-rental', [\App\Http\Controllers\Admin\PermintaanController::class, 'extendRental'])->name('permintaan.extend-rental');
+    Route::post('permintaan/{id}/set-rental-dates', [\App\Http\Controllers\Admin\PermintaanController::class, 'setRentalDates'])->name('permintaan.set-rental-dates');
     Route::post('permintaan/{id}/complete-rental', [\App\Http\Controllers\Admin\PermintaanController::class, 'completeRental'])->name('permintaan.complete-rental');
     
     // Notifications
@@ -134,6 +135,7 @@ Route::prefix('user')->name('user.')->middleware(['auth', 'role:user'])->group(f
     Route::put('/request-barang/{id}', [\App\Http\Controllers\User\RequestBarangController::class, 'update'])->name('request-barang.update');
     Route::delete('/request-barang/{id}', [\App\Http\Controllers\User\RequestBarangController::class, 'destroy'])->name('request-barang.destroy');
     Route::post('/request-barang/{id}/request-cancel', [\App\Http\Controllers\User\RequestBarangController::class, 'requestCancel'])->name('request-barang.request-cancel');
+    Route::post('/request-barang/{id}/request-extend', [\App\Http\Controllers\User\RequestBarangController::class, 'requestExtend'])->name('request-barang.request-extend');
     Route::patch('/request-barang/{id}/complete', [\App\Http\Controllers\User\RequestBarangController::class, 'complete'])->name('request-barang.complete');
     
     // Activity Log (User hanya lihat log sendiri) - Disabled temporarily

@@ -32,37 +32,11 @@
                     <span class="font-medium">Dashboard</span>
                 </a>
 
-                <!-- Stok Barang (Parent with Submenu) -->
-                <div class="space-y-1">
-                    <button onclick="toggleSubmenu('stok-barang-user')" class="w-full flex items-center justify-between gap-3 px-4 py-3 {{ request()->routeIs('user.stok-barang.*') ? 'text-[#14a2ba] bg-[#14a2ba]/5' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
-                        <div class="flex items-center gap-3">
-                            <x-heroicon-o-cube-transparent class="w-5 h-5 {{ request()->routeIs('user.stok-barang.*') ? 'text-[#14a2ba]' : 'group-hover:text-[#14a2ba]' }}" />
-                            <span class="font-medium">Stok Barang</span>
-                        </div>
-                        <x-heroicon-o-chevron-down id="stok-barang-user-icon" class="w-4 h-4 transition-transform duration-200 {{ request()->routeIs('user.stok-barang.*') ? 'rotate-180' : '' }}" />
-                    </button>
-                    
-                    <!-- Submenu Stok Barang -->
-                    <div id="stok-barang-user-submenu" class="{{ request()->routeIs('user.stok-barang.*') ? '' : 'hidden' }} ml-4 space-y-1">
-                        <!-- Aset Sewa -->
-                        <a href="{{ route('user.stok-barang.index', ['kategori' => 'aset_sewa']) }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('user.stok-barang.*') && request('kategori') == 'aset_sewa' ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200">
-                            <x-heroicon-o-computer-desktop class="w-4 h-4" />
-                            <span class="text-sm font-medium">Aset Sewa</span>
-                        </a>
-                        
-                        <!-- Material Umum -->
-                        <a href="{{ route('user.stok-barang.index', ['kategori' => 'material_umum']) }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('user.stok-barang.*') && request('kategori') == 'material_umum' ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200">
-                            <x-heroicon-o-shopping-bag class="w-4 h-4" />
-                            <span class="text-sm font-medium">Material Umum</span>
-                        </a>
-                        
-                        <!-- Aset Tetap -->
-                        <a href="{{ route('user.stok-barang.index', ['kategori' => 'aset_tetap']) }}" class="flex items-center gap-3 px-4 py-2 {{ request()->routeIs('user.stok-barang.*') && request('kategori') == 'aset_tetap' ? 'text-[#14a2ba] bg-[#14a2ba]/10' : 'text-gray-600 hover:bg-gray-100' }} rounded-lg transition-all duration-200">
-                            <x-heroicon-o-building-office class="w-4 h-4" />
-                            <span class="text-sm font-medium">Aset Tetap</span>
-                        </a>
-                    </div>
-                </div>
+                <!-- Material Umum -->
+                <a href="{{ route('user.stok-barang.index') }}" class="flex items-center gap-3 px-4 py-3 {{ request()->routeIs('user.stok-barang.*') ? 'text-[#14a2ba] bg-[#14a2ba]/5' : 'text-gray-700 hover:bg-gray-100' }} rounded-lg transition-all duration-200 group">
+                    <x-heroicon-o-shopping-bag class="w-5 h-5 {{ request()->routeIs('user.stok-barang.*') ? 'text-[#14a2ba]' : 'group-hover:text-[#14a2ba]' }}" />
+                    <span class="font-medium">Material Umum</span>
+                </a>
 
                 <!-- Kelola Barang (Parent) -->
                 <div class="space-y-1">

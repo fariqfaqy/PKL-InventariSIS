@@ -85,13 +85,19 @@ class BarangKeluarController extends Controller
             ->where('stock', '>', 0)
             ->orderBy('namabarang')
             ->get();
+        
+        // Aset Tetap: Items with stock > 0
+        $stocksAsetTetap = Stock::where('kategori', 'aset_tetap')
+            ->where('stock', '>', 0)
+            ->orderBy('namabarang')
+            ->get();
             
-        // Get all users for dropdown (untuk Material Umum)
+        // Get all users for dropdown (untuk Material Umum dan Aset Tetap)
         $users = \App\Models\User::with('division')
             ->orderBy('name')
             ->get();
             
-        return view('admin.barang-keluar.create', compact('stocksMaterialUmum', 'asetSewaAktif', 'users'));
+        return view('admin.barang-keluar.create', compact('stocksMaterialUmum', 'asetSewaAktif', 'stocksAsetTetap', 'users'));
     }
 
     /**
@@ -151,19 +157,70 @@ class BarangKeluarController extends Controller
                 ->with('success', 'Aset Sewa berhasil diselesaikan! Aset telah dikembalikan.');
         }
         
+        // ASET TETAP: Similar to Material Umum but different kategori
+        if ($kategori === 'aset_tetap') {
+            $validated = $request->validate([
+                'kategori' => 'required|in:aset_tetap',
+                'idbarang' => 'required|exists:stock,idbarang',
+                'tanggal' => 'required|date',
+                'penerima' => 'required|string',
+                'qty' => 'required|integer|min:1',
+                'keterangan' => 'nullable|string',
+            ]);
+            
+            // Get stock data
+            $stock = Stock::findOrFail($validated['idbarang']);
+            
+            // Validate kategori match
+            if ($stock->kategori !== 'aset_tetap') {
+                return back()->withErrors(['idbarang' => 'Barang ini bukan Aset Tetap!'])
+                    ->withInput();
+            }
+            
+            // Check if stock is sufficient
+            if ($stock->stock < $validated['qty']) {
+                return back()->withErrors(['qty' => 'Stok tidak mencukupi! Stok tersedia: ' . $stock->stock])
+                    ->withInput();
+            }
+            
+            // Create outgoing transaction
+            OutgoingTransaction::create([
+                'idbarang' => $validated['idbarang'],
+                'tanggal' => $validated['tanggal'],
+                'penerima' => $validated['penerima'],
+                'qty' => $validated['qty'],
+                'namabarang_k' => $stock->namabarang,
+                'kodebarang_k' => $stock->kodebarang,
+                'penginput' => Auth::user()->name,
+                'user_id' => Auth::id(),
+                'kategori' => 'aset_tetap',
+                'status' => 'selesai',
+                'keterangan' => $validated['keterangan'] ?? null,
+            ]);
+            
+            // Update stock quantity
+            $stock->decrement('stock', $validated['qty']);
+            
+            return redirect()->route('admin.barang-keluar.index', ['kategori' => 'aset_tetap'])
+                ->with('success', 'Aset Tetap berhasil dikeluarkan!');
+        }
+        
         // MATERIAL UMUM: Normal outgoing transaction
         $validated = $request->validate([
             'kategori' => 'required|in:material_umum',
             'sub_kategori' => 'required|in:barang_habis_pakai,barang_pinjam',
             'idbarang' => 'required|exists:stock,idbarang',
             'tanggal' => 'required|date',
-            'penerima' => 'required|string',
+            'user_id' => 'required|exists:users,id',
             'qty' => 'required|integer|min:1',
             'keterangan' => 'nullable|string',
         ]);
 
         // Get stock data
         $stock = Stock::findOrFail($validated['idbarang']);
+        
+        // Get user data for penerima name
+        $user = \App\Models\User::findOrFail($validated['user_id']);
         
         // Validate kategori match
         if ($stock->kategori !== 'material_umum') {
@@ -178,18 +235,23 @@ class BarangKeluarController extends Controller
         }
 
         // Create outgoing transaction
+        // Status logic:
+        // - barang_habis_pakai: langsung 'selesai' (tidak perlu dikembalikan)
+        // - barang_pinjam: 'sedang_dipakai' (harus dikembalikan)
+        $status = $validated['sub_kategori'] === 'barang_pinjam' ? 'sedang_dipakai' : 'selesai';
+        
         OutgoingTransaction::create([
             'idbarang' => $validated['idbarang'],
             'tanggal' => $validated['tanggal'],
-            'penerima' => $validated['penerima'],
+            'penerima' => $user->name,
             'qty' => $validated['qty'],
             'namabarang_k' => $stock->namabarang,
             'kodebarang_k' => $stock->kodebarang,
             'penginput' => Auth::user()->name,
-            'user_id' => Auth::id(),
+            'user_id' => $validated['user_id'], // User yang menerima barang
             'kategori' => $stock->kategori,
             'tipe_request' => $validated['sub_kategori'] === 'barang_pinjam' ? 'pinjam_material' : 'pakai_habis_pakai',
-            'status' => 'selesai',
+            'status' => $status,
             'keterangan' => $validated['keterangan'] ?? null,
         ]);
 

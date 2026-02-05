@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('divisions', function (Blueprint $table) {
             $table->id();
             $table->string('nama_divisi');
-            $table->string('kode_divisi')->unique();
+            $table->string('kode_divisi', 5)->unique();
             $table->text('deskripsi')->nullable();
             $table->string('kepala_divisi')->nullable();
             $table->boolean('is_active')->default(true);

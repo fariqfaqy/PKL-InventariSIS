@@ -42,7 +42,7 @@ class ActivityLogController extends Controller
             $query->whereDate('date', '<=', $request->date_to);
         }
 
-        $logs = $query->paginate(50);
+        $logs = $query->paginate(10)->withQueryString();
 
         // Statistics - hanya hitung sekali
         $stats = [

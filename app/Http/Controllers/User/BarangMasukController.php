@@ -19,10 +19,8 @@ class BarangMasukController extends Controller
             ->join('stock', 'masuk.idbarang', '=', 'stock.idbarang')
             ->select('masuk.*', 'stock.kategori', 'stock.sub_kategori');
         
-        // Filter by kategori if provided
-        if ($request->filled('kategori') && in_array($request->kategori, ['aset_sewa', 'material_umum', 'aset_tetap'])) {
-            $query->where('stock.kategori', $request->kategori);
-        }
+        // USER HANYA BISA LIHAT MATERIAL UMUM
+        $query->where('stock.kategori', 'material_umum');
 
         // Filter by sub_kategori (khusus untuk Material Umum)
         if ($request->filled('sub_kategori') && in_array($request->sub_kategori, ['barang_habis_pakai', 'barang_pinjam'])) {

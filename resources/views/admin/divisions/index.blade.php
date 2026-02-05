@@ -167,11 +167,9 @@
         </div>
 
         <!-- Pagination -->
-        @if($divisions->hasPages())
         <div class="bg-gray-50 px-4 py-3 border-t border-gray-200">
             {{ $divisions->links() }}
         </div>
-        @endif
     </div>
 </div>
 @endsection

@@ -72,7 +72,7 @@
                     </div>
 
                     <!-- Konfirmasi Password -->
-                    <div class="md:col-span-4">
+                    <div>
                         <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-2">
                             Konfirmasi Password <span class="text-red-500">*</span>
                         </label>

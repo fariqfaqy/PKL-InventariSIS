@@ -17,7 +17,7 @@ class PemakaianController extends Controller
     /**
      * Items per page for pagination
      */
-    private const ITEMS_PER_PAGE = 20;
+    private const ITEMS_PER_PAGE = 10;
 
     /**
      * Display a listing of user's pemakaian.
@@ -63,7 +63,8 @@ class PemakaianController extends Controller
                 $query->whereNotIn('status', ['completed', 'cancelled']);
             })
             ->orderBy('tanggal_request', 'desc')
-            ->get();
+            ->paginate(10, ['*'], 'change_page')
+            ->withQueryString();
 
         // Ambil history pemakaian berdasarkan status
         // 1. Sedang dipakai - Aset Sewa yang sedang digunakan user ini (dari Stock, bukan OutgoingTransaction)
@@ -131,7 +132,8 @@ class PemakaianController extends Controller
             ->where('user_id', Auth::id())
             ->whereIn('status', ['rejected', 'cancelled'])
             ->orderBy('tanggal_request', 'desc')
-            ->get();
+            ->paginate(10, ['*'], 'rejected_page')
+            ->withQueryString();
         
         // 4. Aset Sewa yang di-assign admin ke user ini
         // Sudah tercakup dalam $sedangDipakai dan $selesai (karena pakai user_id filter)

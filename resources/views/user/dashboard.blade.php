@@ -113,7 +113,7 @@
 <div class="bg-white rounded-xl shadow-md p-6">
     <div class="flex items-center gap-2 mb-4">
         <x-heroicon-o-clock class="w-5 h-5 text-[#14a2ba]" />
-        <h3 class="text-lg font-bold text-gray-800">Barang yang Sedang Digunakan</h3>
+        <h3 class="text-lg font-bold text-gray-800">Aset Sewa yang Sedang Digunakan</h3>
     </div>
     
     <div id="pemakaian-container">
@@ -177,8 +177,8 @@
         @else
         <div id="empty-state" class="text-center py-8 text-gray-500">
             <x-heroicon-o-inbox class="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p class="text-sm">Tidak ada barang yang sedang digunakan</p>
-            <p class="text-xs text-gray-400 mt-1">Barang yang sedang Anda gunakan (aset sewa & material pinjam) akan muncul di sini</p>
+            <p class="text-sm">Tidak ada aset sewa yang sedang digunakan</p>
+            <p class="text-xs text-gray-400 mt-1">Aset sewa yang sedang Anda gunakan akan muncul di sini</p>
         </div>
         @endif
     </div>
@@ -205,8 +205,8 @@ function updatePemakaianTable(data) {
                     <svg class="w-12 h-12 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
                     </svg>
-                    <p class="text-sm">Tidak ada barang yang sedang digunakan</p>
-                    <p class="text-xs text-gray-400 mt-1">Barang yang sedang Anda gunakan (aset sewa & material pinjam) akan muncul di sini</p>
+                    <p class="text-sm">Tidak ada aset sewa yang sedang digunakan</p>
+                    <p class="text-xs text-gray-400 mt-1">Aset sewa yang sedang Anda gunakan akan muncul di sini</p>
                 </div>
             `;
         }

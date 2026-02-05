@@ -349,6 +349,11 @@
                     </tbody>
                 </table>
             </div>
+            
+            <!-- Pagination -->
+            <div class="px-6 py-4 border-t border-gray-200">
+                {{ $changeRequests->links() }}
+            </div>
         </div>
     </div>
 
@@ -500,6 +505,11 @@
                         </tbody>
                     </table>
                 </div>
+                
+                <!-- Pagination -->
+                <div class="px-6 py-4 border-t border-gray-200">
+                    {{ $sedangDipakai->links() }}
+                </div>
             </div>
         </div>
 
@@ -622,6 +632,11 @@
                         </tbody>
                     </table>
                 </div>
+                
+                <!-- Pagination -->
+                <div class="px-6 py-4 border-t border-gray-200">
+                    {{ $selesai->links() }}
+                </div>
             </div>
         </div>
 
@@ -718,6 +733,11 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="px-6 py-4 border-t border-gray-200">
+                    {{ $ditolakDibatalkan->links() }}
                 </div>
             </div>
         </div>

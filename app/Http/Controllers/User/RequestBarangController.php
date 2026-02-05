@@ -22,14 +22,16 @@ class RequestBarangController extends Controller
             ->where('user_id', Auth::id())
             ->whereNull('parent_request_id')
             ->orderBy('tanggal_request', 'desc')
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
         
         // Request perubahan (yang punya parent_request_id)
         $changeRequests = RequestBarang::with(['stock', 'parentRequest'])
             ->where('user_id', Auth::id())
             ->whereNotNull('parent_request_id')
             ->orderBy('tanggal_request', 'desc')
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
         
         return view('user.request-barang.index', compact('requests', 'changeRequests'));
     }
@@ -418,5 +420,62 @@ class RequestBarangController extends Controller
             DB::rollBack();
             return back()->with('error', 'Gagal menandai selesai: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Request extension - create change request to extend rental period
+     * User membuat request perpanjangan untuk barang pinjam
+     */
+    public function requestExtend(Request $request, $id)
+    {
+        $requestBarang = RequestBarang::with(['stock'])
+            ->where('user_id', Auth::id())
+            ->findOrFail($id);
+        
+        // Validasi: harus tipe pinjam_material
+        if ($requestBarang->tipe_request !== 'pinjam_material') {
+            return back()->with('error', 'Hanya peminjaman material yang dapat diperpanjang!');
+        }
+        
+        // Validasi: harus status approved
+        if ($requestBarang->status !== 'approved') {
+            return back()->with('error', 'Hanya peminjaman yang sudah disetujui yang bisa diperpanjang!');
+        }
+        
+        // Validasi: harus ada tanggal akhir sewa
+        if (!$requestBarang->tanggal_akhir_sewa) {
+            return back()->with('error', 'Peminjaman ini tidak memiliki tanggal kembali!');
+        }
+        
+        $validated = $request->validate([
+            'tanggal_akhir_sewa_baru' => 'required|date|after:' . $requestBarang->tanggal_akhir_sewa->format('Y-m-d'),
+            'alasan_perpanjangan' => 'required|string|max:500',
+        ], [
+            'tanggal_akhir_sewa_baru.required' => 'Tanggal kembali baru harus diisi',
+            'tanggal_akhir_sewa_baru.date' => 'Format tanggal tidak valid',
+            'tanggal_akhir_sewa_baru.after' => 'Tanggal kembali baru harus setelah tanggal saat ini (' . $requestBarang->tanggal_akhir_sewa->format('d/m/Y') . ')',
+            'alasan_perpanjangan.required' => 'Alasan perpanjangan harus diisi',
+            'alasan_perpanjangan.max' => 'Alasan perpanjangan maksimal 500 karakter',
+        ]);
+        
+        // Create new change request untuk perpanjangan
+        RequestBarang::create([
+            'user_id' => Auth::id(),
+            'idbarang' => $requestBarang->idbarang,
+            'qty' => $requestBarang->qty,
+            'tipe_request' => $requestBarang->tipe_request,
+            'request_type' => 'change', // Tipe: perubahan
+            'keperluan' => 'PERPANJANGAN REQUEST #' . $requestBarang->id_request,
+            'penerima' => $requestBarang->penerima,
+            'catatan_user' => 'Request perpanjangan durasi peminjaman. Alasan: ' . $validated['alasan_perpanjangan'],
+            'tanggal_mulai_sewa' => $requestBarang->tanggal_mulai_sewa,
+            'tanggal_akhir_sewa' => $validated['tanggal_akhir_sewa_baru'], // Tanggal baru
+            'status' => 'pending',
+            'tanggal_request' => now(),
+            'parent_request_id' => $requestBarang->id_request, // Link ke request asli
+        ]);
+        
+        return redirect()->route('user.request-barang.show', $id)
+            ->with('success', 'Request perpanjangan berhasil dibuat! Menunggu persetujuan admin untuk memperpanjang durasi peminjaman sampai ' . \Carbon\Carbon::parse($validated['tanggal_akhir_sewa_baru'])->format('d/m/Y') . '.');
     }
 }
