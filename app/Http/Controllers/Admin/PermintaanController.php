@@ -174,6 +174,8 @@ class PermintaanController extends Controller
                     if ($parentKeluarEntry) {
                         $parentKeluarEntry->update([
                             'qty' => $qtyBaru,
+                            'tanggal_pinjam' => $permintaan->tanggal_mulai_sewa,
+                            'tanggal_kembali' => $permintaan->tanggal_akhir_sewa,
                             'tanggal_mulai_pakai' => $permintaan->tanggal_mulai_sewa,
                             'tanggal_akhir_pakai' => $permintaan->tanggal_akhir_sewa,
                         ]);
@@ -213,11 +215,9 @@ class PermintaanController extends Controller
                 Stock::where('idbarang', $permintaan->idbarang)
                     ->decrement('stock', $permintaan->qty);
                 
-                // Hanya buat OutgoingTransaction untuk pakai_habis_pakai
-                // Untuk pinjam_material, stok berkurang tapi tidak ada entry di barang keluar
-                // Barang keluar dibuat manual oleh admin jika perlu
+                // Create outgoing transaction untuk tracking pemakaian/peminjaman
                 if ($permintaan->tipe_request === 'pakai_habis_pakai') {
-                    // Create outgoing transaction (barang keluar) dengan link ke request
+                    // Barang habis pakai - langsung selesai (tidak perlu dikembalikan)
                     OutgoingTransaction::create([
                         'id_request' => $permintaan->id_request,
                         'user_id' => $permintaan->user_id,
@@ -233,6 +233,26 @@ class PermintaanController extends Controller
                         'tipe_request' => 'permintaan',
                         'status' => 'selesai',
                         'tanggal_selesai' => now(),
+                        'status_approval' => 'approved',
+                    ]);
+                } else {
+                    // Barang pinjam - status sedang_dipakai (harus dikembalikan)
+                    OutgoingTransaction::create([
+                        'id_request' => $permintaan->id_request,
+                        'user_id' => $permintaan->user_id,
+                        'idbarang' => $permintaan->idbarang,
+                        'tanggal' => now(),
+                        'penerima' => $permintaan->penerima ?? $permintaan->user->name,
+                        'qty' => $permintaan->qty,
+                        'namabarang_k' => $permintaan->stock->namabarang,
+                        'kodebarang_k' => $permintaan->stock->kodebarang,
+                        'penginput' => $permintaan->user->name,
+                        'diproses_oleh' => Auth::user()->name,
+                        'kategori' => $permintaan->stock->kategori,
+                        'tipe_request' => 'peminjaman',
+                        'status' => 'sedang_dipakai',
+                        'tanggal_pinjam' => $permintaan->tanggal_pemakaian ?? now(),
+                        'tanggal_kembali' => $permintaan->estimasi_pengembalian,
                         'status_approval' => 'approved',
                     ]);
                 }

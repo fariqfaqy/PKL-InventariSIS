@@ -368,12 +368,17 @@ class PemakaianController extends Controller
     {
         DB::beginTransaction();
         try {
-            $pemakaian = OutgoingTransaction::where('penginput', Auth::user()->name)
+            $pemakaian = OutgoingTransaction::where('user_id', Auth::id())
                 ->where('status', 'sedang_dipakai')
                 ->findOrFail($id);
 
             // Update status dan tanggal selesai
-            // Stok TIDAK dikembalikan, tetap berkurang dan barang tetap di tabel keluar
+            // Untuk Material Umum Pinjam: kembalikan stok
+            if ($pemakaian->kategori === 'material_umum' && $pemakaian->tipe_request === 'peminjaman') {
+                Stock::where('idbarang', $pemakaian->idbarang)
+                    ->increment('stock', $pemakaian->qty);
+            }
+            
             $pemakaian->update([
                 'status' => 'selesai',
                 'tanggal_selesai' => now(),

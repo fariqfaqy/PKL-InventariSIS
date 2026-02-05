@@ -45,6 +45,7 @@
                 @foreach($stocks as $stock)
                     <option value="{{ $stock->idbarang }}" 
                             data-kategori="{{ $stock->kategori }}"
+                            data-subkategori="{{ $stock->sub_kategori }}"
                             data-stock="{{ $stock->stock }}"
                             data-nama="{{ $stock->namabarang }}"
                             data-kode="{{ $stock->kodebarang }}"
@@ -103,14 +104,15 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label for="tanggal_mulai_sewa" class="block text-sm font-medium text-gray-700 mb-2">
-                        Tanggal Mulai Sewa<span class="text-red-500">*</span>
+                        Tanggal Mulai Pinjam<span class="text-red-500">*</span>
                     </label>
-                    <input type="date" id="tanggal_mulai_sewa" name="tanggal_mulai_sewa" value="{{ old('tanggal_mulai_sewa', $requestBarang->tanggal_mulai_sewa?->format('Y-m-d')) }}"
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <input type="date" id="tanggal_mulai_sewa" name="tanggal_mulai_sewa" value="{{ old('tanggal_mulai_sewa', $requestBarang->tanggal_mulai_sewa?->format('Y-m-d')) }}" readonly
+                           class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-100 cursor-not-allowed">
+                    <p class="text-xs text-gray-500 mt-1">Tanggal mulai pinjam tidak dapat diubah</p>
                 </div>
                 <div>
                     <label for="tanggal_akhir_sewa" class="block text-sm font-medium text-gray-700 mb-2">
-                        Tanggal Akhir Sewa<span class="text-red-500">*</span>
+                        Tanggal Selesai Pinjam<span class="text-red-500">*</span>
                     </label>
                     <input type="date" id="tanggal_akhir_sewa" name="tanggal_akhir_sewa" value="{{ old('tanggal_akhir_sewa', $requestBarang->tanggal_akhir_sewa?->format('Y-m-d')) }}"
                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
@@ -177,8 +179,11 @@ function updateBarangInfo() {
             qtyInput.max = selectedOption.dataset.stock;
         }
         
-        // Show/hide rental section based on kategori
-        if (selectedOption.dataset.kategori === 'aset_sewa') {
+        // Show/hide rental section based on kategori or sub_kategori
+        const subKategori = selectedOption.dataset.subkategori;
+        const kategori = selectedOption.dataset.kategori;
+        
+        if (kategori === 'aset_sewa' || subKategori === 'barang_pinjam') {
             rentalSection.classList.remove('hidden');
             tanggalMulaiInput.required = true;
             tanggalAkhirInput.required = true;
