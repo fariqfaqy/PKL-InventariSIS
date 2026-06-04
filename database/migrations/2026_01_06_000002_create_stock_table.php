@@ -79,15 +79,17 @@ return new class extends Migration
         
         // ❌ CHECK Constraint harus pakai raw SQL (Laravel tidak support)
         // Validasi: aset_sewa stock <= 1 (allow 0 saat selesai)
-        DB::statement("
-            ALTER TABLE stock 
-            ADD CONSTRAINT check_aset_sewa_qty 
-            CHECK (kategori != 'aset_sewa' OR stock <= 1)
-        ");
-        
-        // ❌ COMMENT juga harus pakai raw SQL (PostgreSQL specific)
-        DB::statement("COMMENT ON COLUMN stock.kodebarang IS 'Kode unik barang - untuk aset_sewa harus benar-benar unik (1 kode = 1 item fisik)'");
-        DB::statement("COMMENT ON COLUMN stock.status_kondisi IS 'Status kondisi aset: tersedia (ready), digunakan (in use), diperbaiki (under repair), rusak (broken), hilang (lost)'");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("
+                ALTER TABLE stock 
+                ADD CONSTRAINT check_aset_sewa_qty 
+                CHECK (kategori != 'aset_sewa' OR stock <= 1)
+            ");
+            
+            // ❌ COMMENT juga harus pakai raw SQL (PostgreSQL specific)
+            DB::statement("COMMENT ON COLUMN stock.kodebarang IS 'Kode unik barang - untuk aset_sewa harus benar-benar unik (1 kode = 1 item fisik)'");
+            DB::statement("COMMENT ON COLUMN stock.status_kondisi IS 'Status kondisi aset: tersedia (ready), digunakan (in use), diperbaiki (under repair), rusak (broken), hilang (lost)'");
+        }
         
         // Create stock_histories table untuk real-time tracking
         Schema::create('stock_histories', function (Blueprint $table) {
